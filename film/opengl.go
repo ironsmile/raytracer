@@ -22,9 +22,9 @@ type GlWindow struct {
 	width  int
 	height int
 
-	renderChan      chan *PixelInfo
-	swapBuffersChan chan bool
-	renderStopChan  chan bool
+	renderChan        chan *PixelInfo
+	refreshScreenChan chan bool
+	renderStopChan    chan bool
 
 	window *glfw3.Window
 }
@@ -65,7 +65,7 @@ func (g *GlWindow) Init(width int, height int) error {
 	}
 
 	g.renderChan = make(chan *PixelInfo, chanBuffer)
-	g.swapBuffersChan = make(chan bool)
+	g.refreshScreenChan = make(chan bool)
 	g.renderStopChan = make(chan bool)
 
 	g.window.MakeContextCurrent()
@@ -94,91 +94,79 @@ func (g *GlWindow) renderRoutine() {
 
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
-	gl.Viewport(0, 0, g.width, g.height)
 	gl.Ortho(0, float64(g.width), float64(g.height), 0, 0, 1)
 	gl.Disable(gl.DEPTH_TEST)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
-	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	defer func() {
+	texture := gl.GenTexture()
+
+	gl.PushAttrib(gl.ENABLE_BIT)
+	gl.Enable(gl.TEXTURE_2D)
+	texture.Bind(gl.TEXTURE_2D)
+
+	gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+	texture.Unbind(gl.TEXTURE_2D)
+	gl.PopAttrib()
+	gl.Disable(gl.TEXTURE_2D)
+
+	displayTexture := func() {
 		g.window.MakeContextCurrent()
 
-		texture := gl.GenTexture()
+		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.PushAttrib(gl.ENABLE_BIT)
 		gl.Enable(gl.TEXTURE_2D)
 		texture.Bind(gl.TEXTURE_2D)
 
-		gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-		// texture.Unbind(gl.TEXTURE_2D)
-		// gl.PopAttrib()
-
-		// gl.PushAttrib(gl.ENABLE_BIT)
-		// gl.Enable(gl.TEXTURE_2D)
-		// texture.Bind(gl.TEXTURE_2D)
-
-		fmt.Println("O? Why TexImage2D? Why did you do this?")
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
 			pixBuffer)
-		// fmt.Println("MipMap, was it you then?")
-		// gl.GenerateMipmap(gl.TEXTURE_2D)
 
-		fmt.Println("Ohhh here it goes!")
-
-		texture.Unbind(gl.TEXTURE_2D)
-		gl.PopAttrib()
-
-		fmt.Println("Beware. Will activate texture")
-
-		// gl.ActiveTexture(gl.TEXTURE0)
-
-		fmt.Println("Will enable texture_2d?")
-		gl.Enable(gl.TEXTURE_2D)
-
-		fmt.Println("Will bind texture?")
-		texture.Bind(gl.TEXTURE_2D)
-
-		fmt.Println("Textured polygon!")
 		gl.Begin(gl.POLYGON)
 
-		gl.TexCoord2f(0, 1)
+		gl.TexCoord2f(0, 0)
 		gl.Vertex2i(0, 0)
 
-		gl.TexCoord2f(1, 1)
+		gl.TexCoord2f(1, 0)
 		gl.Vertex2i(g.width, 0)
 
-		gl.TexCoord2f(1, 0)
+		gl.TexCoord2f(1, 1)
 		gl.Vertex2i(g.width, g.height)
 
-		gl.TexCoord2f(0, 0)
+		gl.TexCoord2f(0, 1)
 		gl.Vertex2i(0, g.height)
 
 		gl.End()
 
-		fmt.Println("Polygon")
-
+		texture.Unbind(gl.TEXTURE_2D)
+		gl.PopAttrib()
 		gl.Disable(gl.TEXTURE_2D)
+
+		g.window.SwapBuffers()
+	}
+
+	defer func() {
+		polygonTime := time.Now()
+		displayTexture()
 
 		fmt.Println("GL rendering goroutine exited.")
 		fmt.Printf("GL Points drawing: %s\n", pointsTime)
+		fmt.Printf("GL Textured Polygon: %s\n", time.Since(polygonTime))
 		fmt.Printf("GL SwapBuffers: %s\n", swapBuffersTime)
 
-		g.window.SwapBuffers()
 	}()
 
-	renderPixel := func(pixel *PixelInfo) {
-		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3] = pixel.RedFloat
-		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3+1] = pixel.GreenFloat
-		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3+2] = pixel.BlueFloat
-		// gl.Color3f(pixel.RedFloat, pixel.GreenFloat, pixel.BlueFloat)
-		// gl.Vertex2i(pixel.GlMatrixX, pixel.GlMatrixY)
+	addPixelToBuffer := func(pixel *PixelInfo) {
+		ind := g.width*pixel.GlMatrixY*3 + pixel.GlMatrixX*3
+		pixBuffer[ind] = pixel.RedFloat
+		pixBuffer[ind+1] = pixel.GreenFloat
+		pixBuffer[ind+2] = pixel.BlueFloat
 	}
 
 	fmt.Printf("GL Init time: %s\n", time.Since(renderStart))
@@ -190,20 +178,20 @@ func (g *GlWindow) renderRoutine() {
 			g.window.MakeContextCurrent()
 
 			pointsTime += timed(func() {
-				renderPixel(pInfo)
+				addPixelToBuffer(pInfo)
 			})
 
-		case _ = <-g.swapBuffersChan:
+		case _ = <-g.refreshScreenChan:
 			swapBuffersTime += timed(func() {
-				g.window.SwapBuffers()
+				displayTexture()
 			})
-			g.swapBuffersChan <- true
+			g.refreshScreenChan <- true
 		case _ = <-g.renderStopChan:
 			g.window.MakeContextCurrent()
 
 			for pInfo := range g.renderChan {
 				pointsTime += timed(func() {
-					renderPixel(pInfo)
+					addPixelToBuffer(pInfo)
 				})
 			}
 			g.renderStopChan <- true
@@ -215,7 +203,7 @@ func (g *GlWindow) renderRoutine() {
 }
 
 func (g *GlWindow) closeWindow() {
-	close(g.swapBuffersChan)
+	close(g.refreshScreenChan)
 	close(g.renderStopChan)
 	g.window.Destroy()
 	glfw3.Terminate()
@@ -254,8 +242,8 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 }
 
 func (g *GlWindow) Ping() {
-	g.swapBuffersChan <- true
-	_ = <-g.swapBuffersChan
+	g.refreshScreenChan <- true
+	_ = <-g.refreshScreenChan
 }
 
 func (g *GlWindow) Width() int {
