@@ -15,10 +15,10 @@ const (
 )
 
 func main() {
-	win := film.NewGlWIndow()
-	// win := film.NewNullFilm()
-	// win := film.NewImage("/tmp/rendered.png")
-	err := win.Init(WIDTH, HEIGHT)
+	output := film.NewGlWIndow()
+	// output := film.NewNullFilm()
+	// output := film.NewImage("/tmp/rendered.png")
+	err := output.Init(WIDTH, HEIGHT)
 
 	if err != nil {
 		fmt.Errorf("%s\n", err.Error())
@@ -30,15 +30,15 @@ func main() {
 
 	fmt.Println("Initializing scene...")
 	tracer.Scene.InitScene()
-	tracer.SetTarget(win)
+	tracer.SetTarget(output)
 
 	fmt.Println("Initializing renderer...")
 	tracer.InitRender()
 
-	renderTimer := time.Now()
 	fmt.Println("Rendering...")
+	renderTimer := time.Now()
 	_ = tracer.Render()
 	fmt.Printf("Rendering finished - %s\n", time.Since(renderTimer))
 
-	win.Wait()
+	output.Wait()
 }

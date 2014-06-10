@@ -79,7 +79,7 @@ func (g *GlWindow) Init(width int, height int) error {
 func (g *GlWindow) renderRoutine() {
 
 	var pointsTime time.Duration
-	var swapBuffersTime time.Duration
+	var refreshTime time.Duration
 	renderStart := time.Now()
 
 	timed := func(fnc func()) time.Duration {
@@ -98,6 +98,8 @@ func (g *GlWindow) renderRoutine() {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	texture := gl.GenTexture()
 
@@ -158,7 +160,7 @@ func (g *GlWindow) renderRoutine() {
 		fmt.Println("GL rendering goroutine exited.")
 		fmt.Printf("GL Points drawing: %s\n", pointsTime)
 		fmt.Printf("GL Textured Polygon: %s\n", time.Since(polygonTime))
-		fmt.Printf("GL SwapBuffers: %s\n", swapBuffersTime)
+		fmt.Printf("GL screen refreshes: %s\n", refreshTime)
 
 	}()
 
@@ -182,7 +184,7 @@ func (g *GlWindow) renderRoutine() {
 			})
 
 		case _ = <-g.refreshScreenChan:
-			swapBuffersTime += timed(func() {
+			refreshTime += timed(func() {
 				displayTexture()
 			})
 			g.refreshScreenChan <- true
