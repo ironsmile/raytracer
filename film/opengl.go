@@ -88,37 +88,101 @@ func (g *GlWindow) renderRoutine() {
 		return time.Since(s)
 	}
 
-	defer func() {
-		gl.End()
-		fmt.Println("GL rendering goroutine exited.")
-		fmt.Printf("GL Points drawing: %s\n", pointsTime)
-		fmt.Printf("GL SwapBuffers: %s\n", swapBuffersTime)
-		g.window.MakeContextCurrent()
-		g.window.SwapBuffers()
-	}()
+	pixBuffer := make([]float32, g.width*g.height*3)
 
 	g.window.MakeContextCurrent()
 
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
+	gl.Viewport(0, 0, g.width, g.height)
 	gl.Ortho(0, float64(g.width), float64(g.height), 0, 0, 1)
 	gl.Disable(gl.DEPTH_TEST)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
-	gl.Translatef(0.375, 0.375, 0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	// gl.DrawPixels(width, height, format, typ, pixels)
-	// b := gl.GenBuffer()
-	// b.Bind(gl.ARRAY_BUFFER)
+	defer func() {
+		g.window.MakeContextCurrent()
+
+		texture := gl.GenTexture()
+
+		gl.PushAttrib(gl.ENABLE_BIT)
+		gl.Enable(gl.TEXTURE_2D)
+		texture.Bind(gl.TEXTURE_2D)
+
+		gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+		// texture.Unbind(gl.TEXTURE_2D)
+		// gl.PopAttrib()
+
+		// gl.PushAttrib(gl.ENABLE_BIT)
+		// gl.Enable(gl.TEXTURE_2D)
+		// texture.Bind(gl.TEXTURE_2D)
+
+		fmt.Println("O? Why TexImage2D? Why did you do this?")
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
+			pixBuffer)
+		// fmt.Println("MipMap, was it you then?")
+		// gl.GenerateMipmap(gl.TEXTURE_2D)
+
+		fmt.Println("Ohhh here it goes!")
+
+		texture.Unbind(gl.TEXTURE_2D)
+		gl.PopAttrib()
+
+		fmt.Println("Beware. Will activate texture")
+
+		// gl.ActiveTexture(gl.TEXTURE0)
+
+		fmt.Println("Will enable texture_2d?")
+		gl.Enable(gl.TEXTURE_2D)
+
+		fmt.Println("Will bind texture?")
+		texture.Bind(gl.TEXTURE_2D)
+
+		fmt.Println("Textured polygon!")
+		gl.Begin(gl.POLYGON)
+
+		gl.TexCoord2f(0, 1)
+		gl.Vertex2i(0, 0)
+
+		gl.TexCoord2f(1, 1)
+		gl.Vertex2i(g.width, 0)
+
+		gl.TexCoord2f(1, 0)
+		gl.Vertex2i(g.width, g.height)
+
+		gl.TexCoord2f(0, 0)
+		gl.Vertex2i(0, g.height)
+
+		gl.End()
+
+		fmt.Println("Polygon")
+
+		gl.Disable(gl.TEXTURE_2D)
+
+		fmt.Println("GL rendering goroutine exited.")
+		fmt.Printf("GL Points drawing: %s\n", pointsTime)
+		fmt.Printf("GL SwapBuffers: %s\n", swapBuffersTime)
+
+		g.window.SwapBuffers()
+	}()
 
 	renderPixel := func(pixel *PixelInfo) {
-		gl.Color3f(pixel.RedFloat, pixel.GreenFloat, pixel.BlueFloat)
-		gl.Vertex2i(pixel.GlMatrixX, pixel.GlMatrixY)
+		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3] = pixel.RedFloat
+		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3+1] = pixel.GreenFloat
+		pixBuffer[g.width*pixel.GlMatrixY*3+pixel.GlMatrixX*3+2] = pixel.BlueFloat
+		// gl.Color3f(pixel.RedFloat, pixel.GreenFloat, pixel.BlueFloat)
+		// gl.Vertex2i(pixel.GlMatrixX, pixel.GlMatrixY)
 	}
 
 	fmt.Printf("GL Init time: %s\n", time.Since(renderStart))
 
-	gl.Begin(gl.POINTS)
 	for {
 
 		select {
