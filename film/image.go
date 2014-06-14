@@ -21,10 +21,6 @@ func (i *Image) Wait() {
 
 }
 
-func (i *Image) Ping() {
-
-}
-
 func (i *Image) Init(width int, height int) error {
 	i.width = width
 	i.height = height

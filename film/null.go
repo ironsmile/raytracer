@@ -25,10 +25,6 @@ func (n *NullFilm) Init(width int, height int) error {
 	return nil
 }
 
-func (n *NullFilm) Ping() {
-
-}
-
 func (n *NullFilm) Done() {
 
 }

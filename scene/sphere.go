@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ironsmile/raytracer/common"
+	"github.com/ironsmile/raytracer/geometry"
 )
 
 type Sphere struct {
 	BasePrimitive
 
-	Center   *common.Vector
+	Center   *geometry.Point
 	SqRadius float64
 	Radius   float64
 	RRadius  float64
@@ -20,7 +20,7 @@ func (s *Sphere) GetType() int {
 	return SPHERE
 }
 
-func (s *Sphere) Intersect(ray *common.Ray, dist float64) (int, float64) {
+func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 	v := ray.Origin.Minus(s.Center)
 	b := -v.Product(ray.Direction)
 	det := b*b - v.Product(v) + s.SqRadius
@@ -53,7 +53,7 @@ func (s *Sphere) Intersect(ray *common.Ray, dist float64) (int, float64) {
 	return retval, retdist
 }
 
-func (s *Sphere) GetNormal(pos *common.Vector) *common.Vector {
+func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
 	return pos.Minus(s.Center).MultiplyScalar(s.RRadius)
 }
 
@@ -61,7 +61,7 @@ func (s *Sphere) String() string {
 	return fmt.Sprintf("Sphere<center=%s, radius=%f>", s.Center, s.Radius)
 }
 
-func NewSphere(center common.Vector, radius float64) *Sphere {
+func NewSphere(center geometry.Point, radius float64) *Sphere {
 	s := new(Sphere)
 	s.Center = &center
 	s.SqRadius = radius * radius

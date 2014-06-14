@@ -8,7 +8,6 @@ type Film interface {
 
 	Init(width int, height int) error
 	Set(x int, y int, clr color.Color) error
-	Ping()
 	Done()
 	Wait()
 }

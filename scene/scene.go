@@ -3,7 +3,7 @@ package scene
 import (
 	"fmt"
 
-	"github.com/ironsmile/raytracer/common"
+	"github.com/ironsmile/raytracer/geometry"
 )
 
 const (
@@ -39,7 +39,7 @@ func (s *Scene) GetPrimitive(index int) Primitive {
 	return s.Primitives[index]
 }
 
-func (s *Scene) Intersect(ray *common.Ray) (Primitive, float64) {
+func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64) {
 	retdist := 1000000.0
 	var prim Primitive = nil
 
@@ -65,58 +65,58 @@ func (s *Scene) InitScene() {
 	s.Primitives = make([]Primitive, 0)
 	s.Lights = make([]Primitive, 0)
 
-	plane := NewPlanePrim(*common.NewVector(0, 1, 0), 4)
+	plane := NewPlanePrim(*geometry.NewVector(0, 1, 0), 4)
 	plane.Name = "plane"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
-	plane.Mat.Color = common.NewColor(0.4, 0.3, 0.3)
+	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = NewPlanePrim(*common.NewVector(1, 0, 0), 11)
+	plane = NewPlanePrim(*geometry.NewVector(1, 0, 0), 11)
 	plane.Name = "plane"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
-	plane.Mat.Color = common.NewColor(0.4, 0.3, 0.3)
+	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
 
 	s.Primitives = append(s.Primitives, plane)
 
-	sphere := NewSphere(*common.NewVector(1, -0.8, 3), 2.5)
+	sphere := NewSphere(*geometry.NewPoint(1, -0.8, 3), 2.5)
 	sphere.Name = "big sphere"
 	sphere.Mat.Refl = 0.8
 	sphere.Mat.Diff = 0.9
-	sphere.Mat.Color = common.NewColor(1, 0, 0)
+	sphere.Mat.Color = geometry.NewColor(1, 0, 0)
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	sphere = NewSphere(*common.NewVector(-5.5, -0.5, 7), 2)
+	sphere = NewSphere(*geometry.NewPoint(-5.5, -0.5, 7), 2)
 	sphere.Name = "small sphere"
 	sphere.Mat.Refl = 0.9
 	sphere.Mat.Diff = 0.4
-	sphere.Mat.Color = common.NewColor(0.7, 0.7, 1)
+	sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	sphere = NewSphere(*common.NewVector(-6.5, -2.5, 25), 1.5)
+	sphere = NewSphere(*geometry.NewPoint(-6.5, -2.5, 25), 1.5)
 	sphere.Name = "small sphere far away"
 	sphere.Mat.Refl = 0.9
 	sphere.Mat.Diff = 0.4
-	sphere.Mat.Color = common.NewColor(0.5, 1, 0)
+	sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	sphere = NewSphere(*common.NewVector(0, 5, 5), 0.1)
+	sphere = NewSphere(*geometry.NewPoint(0, 5, 5), 0.1)
 	sphere.Name = "Visible light source"
 	sphere.Light = true
-	sphere.Mat.Color = common.NewColor(0.9, 0.9, 0.9)
+	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	sphere = NewSphere(*common.NewVector(2, 5, 1), 0.1)
+	sphere = NewSphere(*geometry.NewPoint(2, 5, 1), 0.1)
 	sphere.Name = "Invisible lightsource"
 	sphere.Light = true
-	sphere.Mat.Color = common.NewColor(0.9, 0.9, 0.9)
+	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)

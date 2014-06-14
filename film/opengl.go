@@ -25,6 +25,7 @@ type GlWindow struct {
 	renderChan        chan *PixelInfo
 	refreshScreenChan chan bool
 	renderStopChan    chan bool
+	refreshStopChan   chan bool
 
 	window *glfw3.Window
 }
@@ -67,13 +68,31 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.renderChan = make(chan *PixelInfo, chanBuffer)
 	g.refreshScreenChan = make(chan bool)
 	g.renderStopChan = make(chan bool)
+	g.refreshStopChan = make(chan bool)
 
 	g.window.MakeContextCurrent()
 	g.window.SwapBuffers()
 
 	go g.renderRoutine()
+	go g.refreshScreenRoutine()
 
 	return nil
+}
+
+func (g *GlWindow) refreshScreenRoutine() {
+	refreshTime := 30 * time.Millisecond
+	timer := time.NewTimer(refreshTime)
+
+	defer timer.Stop()
+	for {
+		select {
+		case _ = <-timer.C:
+			timer.Reset(refreshTime)
+			g.RefreshScreen()
+		case _ = <-g.refreshStopChan:
+			return
+		}
+	}
 }
 
 func (g *GlWindow) renderRoutine() {
@@ -212,6 +231,9 @@ func (g *GlWindow) closeWindow() {
 }
 
 func (g *GlWindow) Done() {
+	g.refreshStopChan <- true
+	close(g.refreshStopChan)
+
 	g.renderStopChan <- true
 	close(g.renderChan)
 	_ = <-g.renderStopChan
@@ -229,21 +251,19 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 
 	ri, gi, bi, _ := clr.RGBA()
 
-	pInfo := new(PixelInfo)
-
-	pInfo.RedFloat = float32(ri) / 65535.0
-	pInfo.GreenFloat = float32(gi) / 65535.0
-	pInfo.BlueFloat = float32(bi) / 65535.0
-
-	pInfo.GlMatrixX = x
-	pInfo.GlMatrixY = y
+	pInfo := &PixelInfo{
+		float32(ri) / 65535.0,
+		float32(gi) / 65535.0,
+		float32(bi) / 65535.0,
+		x,
+		y}
 
 	g.renderChan <- pInfo
 
 	return nil
 }
 
-func (g *GlWindow) Ping() {
+func (g *GlWindow) RefreshScreen() {
 	g.refreshScreenChan <- true
 	_ = <-g.refreshScreenChan
 }

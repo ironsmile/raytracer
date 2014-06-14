@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"math"
 	"sync"
-	"time"
 
-	"github.com/ironsmile/raytracer/common"
+	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/film"
+	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/scene"
 )
 
@@ -41,12 +41,12 @@ func (e *Engine) InitRender() {
 	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
-func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
-	scene.Primitive, float64, *common.Color) {
+func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
+	scene.Primitive, float64, *geometry.Color) {
 
-	retColor := common.NewColor(0, 0, 0)
+	retColor := geometry.NewColor(0, 0, 0)
 
-	if depth > common.TRACEDEPTH {
+	if depth > geometry.TRACEDEPTH {
 		return nil, 0, retColor
 	}
 
@@ -64,7 +64,7 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 
 	primMat := prim.GetMaterial()
 
-	pi := ray.Origin.Plus(ray.Direction.MultiplyScalar(retdist))
+	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
@@ -74,8 +74,8 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 		L.Normalize()
 
 		if light.GetType() == scene.SPHERE {
-			piOffset := pi.Plus(L.MultiplyScalar(EPSION))
-			shadowRay := common.NewRay(*piOffset, *L)
+			piOffset := pi.PlusVector(L.MultiplyScalar(EPSION))
+			shadowRay := &geometry.Ray{Origin: piOffset, Direction: L}
 			// shadowRay.Debug = ray.Debug
 
 			intersected, _ := e.Scene.Intersect(shadowRay)
@@ -91,8 +91,8 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 			dot := N.Product(L)
 			if dot > 0 {
 				weight := dot * primMat.Diff * shade
-				retColor = retColor.Vector().Plus(light.GetMaterial().Color.Vector().
-					Multiply(primMat.Color.Vector()).MultiplyScalar(weight)).Color()
+				retColor = retColor.Plus(light.GetMaterial().Color.
+					Multiply(primMat.Color).MultiplyScalar(weight))
 			}
 		}
 
@@ -102,8 +102,8 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * shade
-				retColor = retColor.Vector().Plus(light.GetMaterial().Color.
-					Vector().MultiplyScalar(spec)).Color()
+				retColor = retColor.Plus(light.GetMaterial().Color.
+					MultiplyScalar(spec))
 			}
 		}
 
@@ -114,12 +114,13 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 		N := prim.GetNormal(pi)
 		R := ray.Direction.Minus(N.MultiplyScalar(ray.Direction.Product(N) * 2.0))
 
-		refRay := common.NewRay(*pi.Plus(R.MultiplyScalar(EPSION)), *R)
+		refRay := &geometry.Ray{Origin: pi.PlusVector(R.MultiplyScalar(EPSION)),
+			Direction: R}
 		// refRay.Debug = ray.Debug
 		_, _, refColor := e.Raytrace(refRay, depth+1)
 
-		retColor = retColor.Vector().Plus(primMat.Color.Vector().Multiply(
-			refColor.Vector()).MultiplyScalar(primMat.Refl)).Color()
+		retColor = retColor.Plus(primMat.Color.Multiply(
+			refColor).MultiplyScalar(primMat.Refl))
 	}
 
 	return prim, retdist, retColor
@@ -127,24 +128,8 @@ func (e *Engine) Raytrace(ray *common.Ray, depth int64) (
 
 func (e *Engine) Render() bool {
 
-	refreshTime := 30 * time.Millisecond
-	timer := time.NewTimer(refreshTime)
-	timerStop := make(chan bool)
-
-	go func() {
-		defer timer.Stop()
-		for {
-			select {
-			case _ = <-timer.C:
-				e.Dest.Ping()
-				timer.Reset(refreshTime)
-			case _ = <-timerStop:
-				return
-			}
-		}
-	}()
-
-	origin := common.NewVector(0, 0, -5)
+	cam := camera.NewCamera(e.Dest.Width(), e.Dest.Height())
+	cam.Set(geometry.NewPoint(0, 0, -5))
 
 	quads := 16
 	quadWidth := int(e.Width) / quads
@@ -162,21 +147,18 @@ func (e *Engine) Render() bool {
 			quadYStop := quadYStart + quadHeight - 1
 
 			wg.Add(1)
-			go e.subRender(origin, quadXStart, quadXStop, quadYStart, quadYStop, &wg)
+			go e.subRender(cam, quadXStart, quadXStop, quadYStart, quadYStop, &wg)
 		}
 	}
 
 	wg.Wait()
-
-	timerStop <- true
-	close(timerStop)
 
 	e.Dest.Done()
 
 	return true
 }
 
-func (e *Engine) subRender(origin *common.Vector, startX, stopX, startY, stopY int,
+func (e *Engine) subRender(cam *camera.Camera, startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -186,10 +168,10 @@ func (e *Engine) subRender(origin *common.Vector, startX, stopX, startY, stopY i
 		SX := e.WX1 + e.DiffX*float64(startX)
 		for x := startX; x <= stopX; x++ {
 
-			dir := common.NewVector(SX, SY, 0).Minus(origin)
+			dir := cam.GetWorldPosition(SX, SY)
 			dir.Normalize()
 
-			r := common.NewRay(*origin, *dir)
+			r := &geometry.Ray{Origin: cam.Origin, Direction: dir}
 
 			// if x == 290 && y == 624 {
 			// 	r.Debug = true

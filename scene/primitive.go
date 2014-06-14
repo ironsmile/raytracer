@@ -1,14 +1,14 @@
 package scene
 
 import (
-	"github.com/ironsmile/raytracer/common"
+	"github.com/ironsmile/raytracer/geometry"
 )
 
 type Primitive interface {
 	GetType() int
-	Intersect(*common.Ray, float64) (int, float64)
-	GetNormal(*common.Vector) *common.Vector
-	GetColor() common.Color
+	Intersect(*geometry.Ray, float64) (int, float64)
+	GetNormal(*geometry.Point) *geometry.Vector
+	GetColor() geometry.Color
 	GetMaterial() Material
 	IsLight() bool
 	GetName() string
@@ -28,7 +28,7 @@ func (p *BasePrimitive) IsLight() bool {
 	return p.Light
 }
 
-func (b *BasePrimitive) GetColor() common.Color {
+func (b *BasePrimitive) GetColor() geometry.Color {
 	return *b.Mat.Color
 }
 

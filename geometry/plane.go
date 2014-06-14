@@ -1,4 +1,4 @@
-package common
+package geometry
 
 type Plane struct {
 	N Vector
