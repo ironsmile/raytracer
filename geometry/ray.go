@@ -3,7 +3,17 @@ package geometry
 type Ray struct {
 	Origin    *Point
 	Direction *Vector
-	Debug     bool
+
+	Mint float64
+	Maxt float64
+
+	Time float64
+
+	Debug bool
+}
+
+func (r *Ray) AtTime(time float64) *Point {
+	return r.Origin.PlusVector(r.Direction.MultiplyScalar(time))
 }
 
 func NewRay(origin Point, dir Vector) *Ray {
