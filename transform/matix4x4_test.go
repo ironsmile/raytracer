@@ -1,6 +1,7 @@
 package transform
 
 import (
+	"math"
 	"testing"
 )
 
@@ -134,12 +135,12 @@ func TestInversion(t *testing.T) {
 	}
 
 	expected := NewMatrix(
-		-0.500000, -0.666667, 0.833333, 0.333333,
-		0.333333, 0.444444, -0.222222, -0.222222,
-		0.333333, -0.222222, 0.111111, 0.111111,
-		-0.500000, 0.333333, -0.166667, 0.333333)
+		-0.500000, 0.333333, 0.333333, -0.500000,
+		-0.666667, 0.444444, -0.222222, 0.333333,
+		0.833333, -0.222222, 0.111111, -0.166667,
+		0.333333, -0.222222, 0.111111, 0.333333)
 
-	if *expected != *inverted {
+	if !equal(expected, inverted) {
 		t.Errorf("Expected %s but got %s", expected, inverted)
 	}
 
@@ -235,4 +236,18 @@ func BenchmarkInversion(t *testing.B) {
 	for i := 0; i < t.N; i++ {
 		one.Inverse()
 	}
+}
+
+func equal(one, other *Matrix4x4) bool {
+	eps := 0.000001
+
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if math.Abs(float64(one.els[i][j]-other.els[i][j])) > eps {
+				return false
+			}
+		}
+	}
+
+	return true
 }
