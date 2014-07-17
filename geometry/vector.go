@@ -86,3 +86,9 @@ func (v *Vector) Point() *Point {
 func NewVector(X, Y, Z float64) *Vector {
 	return &Vector{X, Y, Z}
 }
+
+func Normalize(vec *Vector) *Vector {
+	v := vec.Copy()
+	v.Normalize()
+	return v
+}
