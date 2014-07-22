@@ -2,7 +2,10 @@ package geometry
 
 import (
 	"fmt"
+	"math"
 )
+
+var COMPARE_PRECISION = 1e-7
 
 type Point struct {
 	X, Y, Z float64
@@ -30,6 +33,19 @@ func (p *Point) MultiplyScalar(sclr float64) *Point {
 
 func (p *Point) String() string {
 	return fmt.Sprintf("Point<%f, %f, %f>", p.X, p.Y, p.Z)
+}
+
+func (p *Point) Equals(other *Point) bool {
+	if math.Abs(p.X-other.X) > COMPARE_PRECISION {
+		return false
+	}
+	if math.Abs(p.Y-other.Y) > COMPARE_PRECISION {
+		return false
+	}
+	if math.Abs(p.Z-other.Z) > COMPARE_PRECISION {
+		return false
+	}
+	return true
 }
 
 func NewPoint(x, y, z float64) *Point {

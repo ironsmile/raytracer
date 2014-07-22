@@ -72,6 +72,19 @@ func (v *Vector) Copy() *Vector {
 	return &Vector{v.X, v.Y, v.Z}
 }
 
+func (v *Vector) Equals(other *Vector) bool {
+	if math.Abs(v.X-other.X) > COMPARE_PRECISION {
+		return false
+	}
+	if math.Abs(v.Y-other.Y) > COMPARE_PRECISION {
+		return false
+	}
+	if math.Abs(v.Z-other.Z) > COMPARE_PRECISION {
+		return false
+	}
+	return true
+}
+
 func (v *Vector) Normalize() {
 	l := 1.0 / v.Length()
 	v.X *= l
