@@ -1,7 +1,6 @@
 package transform
 
 import (
-	"math"
 	"testing"
 )
 
@@ -67,13 +66,13 @@ func TestMultiplication(t *testing.T) {
 		3, 0, 5, 5,
 		3, 5, 0, 2)
 
-	if *result != *expected {
+	if !result.Equals(expected) {
 		t.Errorf("Multiplication did not work. Expected %s but got %s", expected, result)
 	}
 
 	result = one.Multiply(ident)
 
-	if *result != *one {
+	if !result.Equals(one) {
 		t.Errorf("Multiplication with identity did not yield self but %s", result)
 	}
 }
@@ -101,7 +100,7 @@ func TestTransposition(t *testing.T) {
 
 	transposed := one.Transpose()
 
-	if *transposed != *expected {
+	if !transposed.Equals(expected) {
 		t.Errorf("Transposition failed! Expected %s but got %s", expected, transposed)
 	}
 }
@@ -119,7 +118,7 @@ func TestInversion(t *testing.T) {
 		t.Errorf("Identity has no inverse? Wrong!")
 	}
 
-	if *inverted != *ident {
+	if !inverted.Equals(ident) {
 		t.Errorf("Inversion of identity returned %s", inverted)
 	}
 
@@ -135,12 +134,12 @@ func TestInversion(t *testing.T) {
 	}
 
 	expected := NewMatrix(
-		-0.500000, 0.333333, 0.333333, -0.500000,
-		-0.666667, 0.444444, -0.222222, 0.333333,
-		0.833333, -0.222222, 0.111111, -0.166667,
-		0.333333, -0.222222, 0.111111, 0.333333)
+		-0.5000000, 0.3333333, 0.3333333, -0.5000000,
+		-0.6666667, 0.4444444, -0.2222222, 0.3333333,
+		0.8333333, -0.2222222, 0.1111111, -0.1666667,
+		0.3333333, -0.2222222, 0.1111111, 0.3333333)
 
-	if !equal(expected, inverted) {
+	if !expected.Equals(inverted) {
 		t.Errorf("Expected %s but got %s", expected, inverted)
 	}
 
@@ -171,19 +170,19 @@ func TestEquals(t *testing.T) {
 		2, 0, 0, 3,
 		0, 1.23, 0, 2)
 
-	eq := *one == *other
+	eq := one.Equals(other)
 
 	if eq != true {
 		t.Errorf("Equals method said %s is different from %s", one, other)
 	}
 
-	eq = *one == *different
+	eq = one.Equals(different)
 
 	if eq != false {
 		t.Errorf("Equals method said that %s and %s are the same", one, different)
 	}
 
-	eq = *one == *epsDifferent
+	eq = one.Equals(epsDifferent)
 
 	if eq != true {
 		t.Errorf("Equals said that %s and %s are different", one,
@@ -236,18 +235,4 @@ func BenchmarkInversion(t *testing.B) {
 	for i := 0; i < t.N; i++ {
 		one.Inverse()
 	}
-}
-
-func equal(one, other *Matrix4x4) bool {
-	eps := 0.000001
-
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 4; j++ {
-			if math.Abs(float64(one.els[i][j]-other.els[i][j])) > eps {
-				return false
-			}
-		}
-	}
-
-	return true
 }

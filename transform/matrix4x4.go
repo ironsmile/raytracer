@@ -5,6 +5,8 @@ import (
 	"math"
 )
 
+var COMPARE_PRECISION = 1e-7
+
 type Matrix4x4 struct {
 	els [4][4]float32
 }
@@ -214,6 +216,18 @@ func (m *Matrix4x4) Inverse() (*Matrix4x4, error) {
 	inverted.els = minv
 
 	return inverted, nil
+}
+
+func (m *Matrix4x4) Equals(other *Matrix4x4) bool {
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			if math.Abs(float64(m.els[i][j]-other.els[i][j])) > COMPARE_PRECISION {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (m *Matrix4x4) String() string {

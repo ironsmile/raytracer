@@ -65,6 +65,12 @@ func (t *Transform) Ray(ray *geometry.Ray) *geometry.Ray {
 	return &ret
 }
 
+func (t *Transform) Multiply(other *Transform) *Transform {
+	mat := t.mat.Multiply(other.mat)
+	invMat := t.matInv.Multiply(other.matInv)
+	return NewTransformationWihtInverse(mat, invMat)
+}
+
 func NewTransformation(mat *Matrix4x4) *Transform {
 	inv, _ := mat.Inverse()
 	return &Transform{mat, inv}
