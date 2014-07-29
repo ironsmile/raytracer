@@ -1,6 +1,8 @@
 package transform
 
 import (
+	"fmt"
+
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -67,8 +69,16 @@ func (t *Transform) Ray(ray *geometry.Ray) *geometry.Ray {
 
 func (t *Transform) Multiply(other *Transform) *Transform {
 	mat := t.mat.Multiply(other.mat)
-	invMat := t.matInv.Multiply(other.matInv)
+	invMat := other.matInv.Multiply(t.matInv)
 	return NewTransformationWihtInverse(mat, invMat)
+}
+
+func (t *Transform) Equals(other *Transform) bool {
+	return t.mat.Equals(other.mat) && t.matInv.Equals(other.matInv)
+}
+
+func (t *Transform) String() string {
+	return fmt.Sprintf("Transformation with %s", t.mat)
 }
 
 func NewTransformation(mat *Matrix4x4) *Transform {

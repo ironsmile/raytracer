@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-var COMPARE_PRECISION = 1e-7
+var COMPARE_PRECISION = 1e-6
 
 type Matrix4x4 struct {
 	els [4][4]float32

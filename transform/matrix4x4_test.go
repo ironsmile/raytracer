@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestIndexing(t *testing.T) {
+func TestMatrixIndexing(t *testing.T) {
 	m := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
@@ -39,7 +39,7 @@ func TestIndexing(t *testing.T) {
 
 }
 
-func TestMultiplication(t *testing.T) {
+func TestMatrixMultiplication(t *testing.T) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
@@ -77,7 +77,7 @@ func TestMultiplication(t *testing.T) {
 	}
 }
 
-func TestTransposition(t *testing.T) {
+func TestMatrixTransposition(t *testing.T) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
@@ -105,7 +105,7 @@ func TestTransposition(t *testing.T) {
 	}
 }
 
-func TestInversion(t *testing.T) {
+func TestMatrixInversion(t *testing.T) {
 	ident := NewMatrix(
 		1, 0, 0, 0,
 		0, 1, 0, 0,
@@ -145,7 +145,7 @@ func TestInversion(t *testing.T) {
 
 }
 
-func TestEquals(t *testing.T) {
+func TestMatrixEquals(t *testing.T) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3.345, 3, 0,
@@ -195,7 +195,7 @@ func TestEquals(t *testing.T) {
    Benchmarks
 */
 
-func BenchmarkMultiplication(t *testing.B) {
+func BenchmarkMatrixMultiplication(t *testing.B) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
@@ -213,7 +213,7 @@ func BenchmarkMultiplication(t *testing.B) {
 	}
 }
 
-func BenchmarkTransposition(t *testing.B) {
+func BenchmarkMatrixTransposition(t *testing.B) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
@@ -225,7 +225,7 @@ func BenchmarkTransposition(t *testing.B) {
 	}
 }
 
-func BenchmarkInversion(t *testing.B) {
+func BenchmarkMatrixInversion(t *testing.B) {
 	one := NewMatrix(
 		0, 1, 2, 0,
 		1, 3, 0, 1,
