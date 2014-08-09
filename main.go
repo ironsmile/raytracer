@@ -5,8 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
+	"github.com/ironsmile/raytracer/geometry"
 )
 
 const (
@@ -25,12 +27,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	cam := camera.NewBasicCamera()
+	cam.SetOrigin(geometry.NewPoint(0, 0, -5))
+
 	fmt.Println("Creating new engine...")
 	tracer := engine.NewEngine()
 
 	fmt.Println("Initializing scene...")
 	tracer.Scene.InitScene()
-	tracer.SetTarget(output)
+	tracer.SetTarget(output, cam)
 
 	fmt.Println("Initializing renderer...")
 	tracer.InitRender()

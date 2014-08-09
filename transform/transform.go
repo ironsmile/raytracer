@@ -81,6 +81,20 @@ func (t *Transform) String() string {
 	return fmt.Sprintf("Transformation with %s", t.mat)
 }
 
+func (t *Transform) SwapsHandedness() bool {
+	m := t.mat.els
+	det := ((m[0][0] *
+		(m[1][1]*m[2][2] -
+			m[1][2]*m[2][1])) -
+		(m[0][1] *
+			(m[1][0]*m[2][2] -
+				m[1][2]*m[2][0])) +
+		(m[0][2] *
+			(m[1][0]*m[2][1] -
+				m[1][1]*m[2][0])))
+	return det < 0.0
+}
+
 func NewTransformation(mat *Matrix4x4) *Transform {
 	inv, _ := mat.Inverse()
 	return &Transform{mat, inv}

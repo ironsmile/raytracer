@@ -48,6 +48,10 @@ func (p *Point) Equals(other *Point) bool {
 	return true
 }
 
+func (p *Point) Vector() *Vector {
+	return &Vector{p.X, p.Y, p.Z}
+}
+
 func NewPoint(x, y, z float64) *Point {
 	return &Point{x, y, z}
 }

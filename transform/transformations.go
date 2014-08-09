@@ -22,17 +22,17 @@ func Translate(delta *geometry.Vector) *Transform {
 	return NewTransformationWihtInverse(m, mInv)
 }
 
-func Scale(x, y, z float32) *Transform {
+func Scale(x, y, z float64) *Transform {
 	m := NewMatrix(
-		x, 0, 0, 0,
-		0, y, 0, 0,
-		0, 0, z, 0,
+		float32(x), 0, 0, 0,
+		0, float32(y), 0, 0,
+		0, 0, float32(z), 0,
 		0, 0, 0, 1)
 
 	mInv := NewMatrix(
-		1.0/x, 0, 0, 0,
-		0, 1.0/y, 0, 0,
-		0, 0, 1.0/z, 0,
+		float32(1.0/x), 0, 0, 0,
+		0, float32(1.0/y), 0, 0,
+		0, 0, float32(1.0/z), 0,
 		0, 0, 0, 1)
 
 	return NewTransformationWihtInverse(m, mInv)
@@ -145,4 +145,16 @@ func LookAt(pos, look *geometry.Point, up *geometry.Vector) *Transform {
 	inv, _ := m.Inverse()
 
 	return NewTransformationWihtInverse(inv, m)
+}
+
+func Perspective(fov, n, f float64) *Transform {
+	persp := NewMatrix(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, float32(f/(f-n)), float32(-f*n/(f-n)),
+		0, 0, 1, 0)
+
+	invTanAng := 1.0 / math.Tan(geometry.Radians(fov)) / 2.0
+
+	return Scale(invTanAng, invTanAng, 1).Multiply(NewTransformation(persp))
 }

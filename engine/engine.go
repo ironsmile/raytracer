@@ -20,12 +20,14 @@ type Engine struct {
 	Scene                                    *scene.Scene
 	Dest                                     film.Film
 	Width, Height                            int64
+	Camera                                   camera.Camera
 }
 
-func (e *Engine) SetTarget(target film.Film) {
+func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Width = int64(target.Width())
 	e.Height = int64(target.Height())
 	e.Dest = target
+	e.Camera = cam
 }
 
 func (e *Engine) InitRender() {
@@ -128,9 +130,6 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 
 func (e *Engine) Render() bool {
 
-	cam := camera.NewCamera(e.Dest.Width(), e.Dest.Height())
-	cam.Set(geometry.NewPoint(0, 0, -5))
-
 	quads := 16
 	quadWidth := int(e.Width) / quads
 	quadHeight := int(e.Height) / quads
@@ -147,7 +146,7 @@ func (e *Engine) Render() bool {
 			quadYStop := quadYStart + quadHeight - 1
 
 			wg.Add(1)
-			go e.subRender(cam, quadXStart, quadXStop, quadYStart, quadYStop, &wg)
+			go e.subRender(quadXStart, quadXStop, quadYStart, quadYStop, &wg)
 		}
 	}
 
@@ -158,7 +157,7 @@ func (e *Engine) Render() bool {
 	return true
 }
 
-func (e *Engine) subRender(cam *camera.Camera, startX, stopX, startY, stopY int,
+func (e *Engine) subRender(startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -168,10 +167,7 @@ func (e *Engine) subRender(cam *camera.Camera, startX, stopX, startY, stopY int,
 		SX := e.WX1 + e.DiffX*float64(startX)
 		for x := startX; x <= stopX; x++ {
 
-			dir := cam.GetWorldPosition(SX, SY)
-			dir.Normalize()
-
-			r := &geometry.Ray{Origin: cam.Origin, Direction: dir}
+			r, weight := e.Camera.GenerateRay(SX, SY)
 
 			// if x == 290 && y == 624 {
 			// 	r.Debug = true
@@ -179,7 +175,7 @@ func (e *Engine) subRender(cam *camera.Camera, startX, stopX, startY, stopY int,
 
 			_, _, accColor := e.Raytrace(r, 1)
 
-			e.Dest.Set(x, y, accColor)
+			e.Dest.Set(x, y, accColor.MultiplyScalar(weight))
 
 			SX += e.DiffX
 
