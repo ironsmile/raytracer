@@ -16,11 +16,11 @@ func (t *Transform) Inverse() *Transform {
 }
 
 func (t *Transform) IsIdentity() bool {
-	return *t.mat == *NewMatrix(
+	return t.mat.Equals(NewMatrix(
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		0, 0, 0, 1)
+		0, 0, 0, 1))
 }
 
 func (t *Transform) Point(point *geometry.Point) *geometry.Point {

@@ -154,7 +154,7 @@ func Perspective(fov, n, f float64) *Transform {
 		0, 0, float32(f/(f-n)), float32(-f*n/(f-n)),
 		0, 0, 1, 0)
 
-	invTanAng := 1.0 / math.Tan(geometry.Radians(fov)) / 2.0
+	invTanAng := 1.0 / math.Tan(geometry.Radians(fov)/2.0)
 
 	return Scale(invTanAng, invTanAng, 1).Multiply(NewTransformation(persp))
 }

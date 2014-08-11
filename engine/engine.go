@@ -167,11 +167,12 @@ func (e *Engine) subRender(startX, stopX, startY, stopY int,
 		SX := e.WX1 + e.DiffX*float64(startX)
 		for x := startX; x <= stopX; x++ {
 
-			r, weight := e.Camera.GenerateRay(SX, SY)
+			// r, weight := e.Camera.GenerateRay(SX, SY)
+			r, weight := e.Camera.GenerateRay(float64(x), float64(y))
 
-			// if x == 290 && y == 624 {
-			// 	r.Debug = true
-			// }
+			if x == camera.DEBUG_X && y == camera.DEBUG_Y {
+				fmt.Printf("Final ray:\n%v\n", r)
+			}
 
 			_, _, accColor := e.Raytrace(r, 1)
 
