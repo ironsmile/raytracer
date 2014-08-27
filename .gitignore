@@ -4,4 +4,6 @@ cpp/*
 *.sublime-project
 *.sublime-workspace
 raytracer
+*.prof
+*.mprof
 

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/ironsmile/raytracer/camera"
@@ -18,20 +21,33 @@ const (
 	HEIGHT = 768
 )
 
+var (
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	memprofile = flag.String("memprofile", "", "write memory profile to this file")
+)
+
 func main() {
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	hasWindow := glfw3.Init()
 
 	if !hasWindow {
-		fmt.Errorf("Initializing glfw3 failed")
-		os.Exit(1)
+		log.Fatal("Initializing glfw3 failed")
 	}
 
 	window, err := glfw3.CreateWindow(WIDTH, HEIGHT, "Raytracer", nil, nil)
 
 	if err != nil {
-		fmt.Errorf("%s\n", err.Error())
-		os.Exit(1)
+		log.Fatal("%s\n", err.Error())
 	}
 
 	window.SetCloseCallback(func(w *glfw3.Window) {
@@ -44,8 +60,7 @@ func main() {
 	err = output.Init(WIDTH, HEIGHT)
 
 	if err != nil {
-		fmt.Errorf("%s\n", err.Error())
-		os.Exit(1)
+		log.Fatal("%s\n", err.Error())
 	}
 
 	fmt.Println("Creating camera...")
@@ -87,6 +102,16 @@ func main() {
 	fmt.Println("Destroying window and terminating glfw3")
 	window.Destroy()
 	glfw3.Terminate()
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.WriteHeapProfile(f)
+		f.Close()
+		return
+	}
 }
 
 func pollEvents(window *glfw3.Window, cam camera.Camera) {
