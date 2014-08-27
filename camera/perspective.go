@@ -88,3 +88,40 @@ func NewPerspectiveCamera(
 
 	return out
 }
+
+// func MakePerspectiveCamera(f film.Film) Camera {
+// 	pos := geometry.NewPoint(0, 0, -5)
+// 	lookAtPoint := geometry.NewPoint(0, 0, 1)
+// 	up := geometry.NewVector(0, 1, 0)
+
+// 	camToWorld := transform.LookAt(pos, lookAtPoint, up)
+
+// 	oStart := camToWorld.Point(geometry.NewPoint(0, 0, 0))
+// 	fmt.Printf("Cam Origin: %s\n", oStart)
+
+// 	sOpen := 0.0
+// 	sClose := 1.0
+// 	lenRad := 1.5
+// 	focalDist := 1e30
+// 	frame := float64(WIDTH) / float64(HEIGHT)
+// 	fov := 90.0
+
+// 	screen := [4]float64{}
+
+// 	if frame > 1.0 {
+// 		screen[0] = -frame
+// 		screen[1] = frame
+// 		screen[2] = -1.0
+// 		screen[3] = 1.0
+// 	} else {
+// 		screen[0] = -1.0
+// 		screen[1] = 1.0
+// 		screen[2] = -1.0 / frame
+// 		screen[3] = 1.0 / frame
+// 	}
+
+// 	fmt.Printf("cameraToWorld transformation:\n%s\n", camToWorld)
+
+// 	return NewPerspectiveCamera(camToWorld, screen, sOpen, sClose, lenRad,
+// 		focalDist, fov, f)
+// }

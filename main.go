@@ -9,7 +9,8 @@ import (
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/transform"
+
+	"github.com/go-gl/glfw3"
 )
 
 const (
@@ -18,10 +19,29 @@ const (
 )
 
 func main() {
-	output := film.NewGlWIndow()
+
+	hasWindow := glfw3.Init()
+
+	if !hasWindow {
+		fmt.Errorf("Initializing glfw3 failed")
+		os.Exit(1)
+	}
+
+	window, err := glfw3.CreateWindow(WIDTH, HEIGHT, "Raytracer", nil, nil)
+
+	if err != nil {
+		fmt.Errorf("%s\n", err.Error())
+		os.Exit(1)
+	}
+
+	window.SetCloseCallback(func(w *glfw3.Window) {
+		window.SetShouldClose(true)
+	})
+
+	output := film.NewGlWIndow(window)
 	// output := film.NewNullFilm()
 	// output := film.NewImage("/tmp/rendered.png")
-	err := output.Init(WIDTH, HEIGHT)
+	err = output.Init(WIDTH, HEIGHT)
 
 	if err != nil {
 		fmt.Errorf("%s\n", err.Error())
@@ -33,6 +53,14 @@ func main() {
 	cam := MakePinholeCamera(output)
 	// cam := MakePerspectiveCamera(output)
 
+	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
+		action glfw3.Action, mods glfw3.ModifierKey) {
+		if key == glfw3.KeyEscape {
+			window.SetShouldClose(true)
+			return
+		}
+	})
+
 	fmt.Println("Creating new engine...")
 	tracer := engine.NewEngine()
 
@@ -43,49 +71,37 @@ func main() {
 	fmt.Println("Initializing renderer...")
 	tracer.InitRender()
 
-	fmt.Println("Rendering...")
-	renderTimer := time.Now()
-	_ = tracer.Render()
-	fmt.Printf("Rendering finished - %s\n", time.Since(renderTimer))
+	for !window.ShouldClose() {
 
-	output.Wait()
-}
+		fmt.Println("Rendering...")
+		renderTimer := time.Now()
+		_ = tracer.Render()
+		fmt.Printf("Rendering finished - %s\n", time.Since(renderTimer))
 
-func MakePerspectiveCamera(f film.Film) camera.Camera {
-	pos := geometry.NewPoint(0, 0, -5)
-	lookAtPoint := geometry.NewPoint(0, 0, 1)
-	up := geometry.NewVector(0, 1, 0)
-
-	camToWorld := transform.LookAt(pos, lookAtPoint, up)
-
-	oStart := camToWorld.Point(geometry.NewPoint(0, 0, 0))
-	fmt.Printf("Cam Origin: %s\n", oStart)
-
-	sOpen := 0.0
-	sClose := 1.0
-	lenRad := 1.5
-	focalDist := 1e30
-	frame := float64(WIDTH) / float64(HEIGHT)
-	fov := 90.0
-
-	screen := [4]float64{}
-
-	if frame > 1.0 {
-		screen[0] = -frame
-		screen[1] = frame
-		screen[2] = -1.0
-		screen[3] = 1.0
-	} else {
-		screen[0] = -1.0
-		screen[1] = 1.0
-		screen[2] = -1.0 / frame
-		screen[3] = 1.0 / frame
+		glfw3.WaitEvents()
+		pollEvents(window, cam)
 	}
 
-	fmt.Printf("cameraToWorld transformation:\n%s\n", camToWorld)
+	output.Wait()
 
-	return camera.NewPerspectiveCamera(camToWorld, screen, sOpen, sClose, lenRad,
-		focalDist, fov, f)
+	fmt.Println("Destroying window and terminating glfw3")
+	window.Destroy()
+	glfw3.Terminate()
+}
+
+func pollEvents(window *glfw3.Window, cam camera.Camera) {
+	if window.GetKey(glfw3.KeyW) == glfw3.Press {
+		cam.Forward(0.25)
+	}
+	if window.GetKey(glfw3.KeyS) == glfw3.Press {
+		cam.Backward(0.25)
+	}
+	if window.GetKey(glfw3.KeyA) == glfw3.Press {
+		cam.Left(0.25)
+	}
+	if window.GetKey(glfw3.KeyD) == glfw3.Press {
+		cam.Right(0.25)
+	}
 }
 
 func MakePinholeCamera(f film.Film) camera.Camera {
@@ -93,15 +109,13 @@ func MakePinholeCamera(f film.Film) camera.Camera {
 	lookAtPoint := geometry.NewPoint(0, 0, 1)
 	up := geometry.NewVector(0, 1, 0)
 
-	camToWorld := transform.LookAt(pos, lookAtPoint, up).Inverse()
-
-	return camera.NewPinholeCamera(camToWorld, 1, f)
+	return camera.NewPinholeCamera(pos, lookAtPoint, up, 1, f)
 }
 
-func MakeStackOverflowCamera(f film.Film) camera.Camera {
-	pos := geometry.NewPoint(0, 0, -5)
-	lookAtPoint := geometry.NewPoint(0, 0, 1)
-	up := geometry.NewVector(0, 1, 0)
+// func MakeStackOverflowCamera(f film.Film) camera.Camera {
+// 	pos := geometry.NewPoint(0, 0, -5)
+// 	lookAtPoint := geometry.NewPoint(0, 0, 1)
+// 	up := geometry.NewVector(0, 1, 0)
 
-	return camera.NewStackOverflowCamera(pos, lookAtPoint, up, f)
-}
+// 	return camera.NewStackOverflowCamera(pos, lookAtPoint, up, f)
+// }

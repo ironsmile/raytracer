@@ -126,6 +126,8 @@ func (e *Engine) Render() bool {
 
 	var wg sync.WaitGroup
 
+	e.Dest.StartFrame()
+
 	for quadIndX := 0; quadIndX < quads; quadIndX++ {
 		for quadIndY := 0; quadIndY < quads; quadIndY++ {
 
@@ -142,7 +144,7 @@ func (e *Engine) Render() bool {
 
 	wg.Wait()
 
-	e.Dest.Done()
+	e.Dest.DoneFrame()
 
 	return true
 }

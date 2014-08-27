@@ -13,6 +13,10 @@ type PinholeCamera struct {
 	screen     [4]float64
 
 	rasterW, rasterH float64
+
+	origin *geometry.Point
+	lookAt *geometry.Point
+	up     *geometry.Vector
 }
 
 func (p *PinholeCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray, float64) {
@@ -26,9 +30,53 @@ func (p *PinholeCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray, fl
 	return p.camToWorld.Ray(ray), 1.0
 }
 
-func NewPinholeCamera(camToWorld *transform.Transform, dist float64,
-	f film.Film) *PinholeCamera {
-	cam := &PinholeCamera{Film: f, camToWorld: camToWorld, distance: dist}
+func (p *PinholeCamera) Forward(speed float64) error {
+	dir := geometry.Normalize(p.lookAt.Minus(p.origin)).MultiplyScalar(speed)
+	p.move(dir)
+	return nil
+}
+
+func (p *PinholeCamera) Backward(speed float64) error {
+	dir := geometry.Normalize(p.lookAt.Minus(p.origin)).MultiplyScalar(speed).Neg()
+	p.move(dir)
+	return nil
+}
+
+func (p *PinholeCamera) Left(speed float64) error {
+	dir := geometry.Normalize(p.lookAt.Minus(p.origin))
+	dir = p.up.Cross(dir).MultiplyScalar(speed).Neg()
+	p.move(dir)
+	return nil
+}
+
+func (p *PinholeCamera) Right(speed float64) error {
+	dir := geometry.Normalize(p.lookAt.Minus(p.origin))
+	dir = p.up.Cross(dir).MultiplyScalar(speed)
+	p.move(dir)
+	return nil
+}
+
+func (p *PinholeCamera) move(dir *geometry.Vector) {
+	p.origin = p.origin.PlusVector(dir)
+	p.lookAt = p.lookAt.PlusVector(dir)
+	p.computeMatrix()
+}
+
+func (p *PinholeCamera) computeMatrix() {
+	p.camToWorld = transform.LookAt(p.origin, p.lookAt, p.up).Inverse()
+}
+
+func NewPinholeCamera(camPosition, camLookAtPoint *geometry.Point,
+	camUp *geometry.Vector, dist float64, f film.Film) *PinholeCamera {
+
+	cam := &PinholeCamera{
+		Film:     f,
+		origin:   camPosition,
+		lookAt:   camLookAtPoint,
+		up:       camUp,
+		distance: dist}
+
+	cam.computeMatrix()
 
 	cam.rasterW = float64(f.Width())
 	cam.rasterH = float64(f.Height())

@@ -8,6 +8,8 @@ type Film interface {
 
 	Init(width int, height int) error
 	Set(x int, y int, clr color.Color) error
-	Done()
+
+	StartFrame()
+	DoneFrame()
 	Wait()
 }

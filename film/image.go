@@ -38,7 +38,7 @@ func (i *Image) Height() int {
 	return i.height
 }
 
-func (i *Image) Done() {
+func (i *Image) DoneFrame() {
 	out, err := os.Create(i.filename)
 
 	if err != nil {
@@ -54,6 +54,10 @@ func (i *Image) Done() {
 	if err != nil {
 		fmt.Errorf("%s\n", err.Error())
 	}
+}
+
+func (i *Image) StartFrame() {
+
 }
 
 func (i *Image) Set(x, y int, clr color.Color) error {

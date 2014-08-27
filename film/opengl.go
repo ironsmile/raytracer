@@ -24,8 +24,9 @@ type GlWindow struct {
 
 	renderChan        chan *PixelInfo
 	refreshScreenChan chan bool
-	renderStopChan    chan bool
-	refreshStopChan   chan bool
+	renderFinishChan  chan bool
+	frameFinishChan   chan bool
+	renderTasksChan   chan chan *PixelInfo
 
 	window *glfw3.Window
 }
@@ -34,65 +35,17 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.width = width
 	g.height = height
 
-	hasWindow := glfw3.Init()
-
-	if !hasWindow {
-		return fmt.Errorf("Initializing glfw3 failed")
-	}
-
-	window, err := glfw3.CreateWindow(g.width, g.height, "Raytracer", nil, nil)
-
-	if err != nil {
-		return err
-	}
-
-	g.window = window
-
-	g.window.SetCloseCallback(func(w *glfw3.Window) {
-		g.window.SetShouldClose(true)
-	})
-
-	g.window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
-		action glfw3.Action, mods glfw3.ModifierKey) {
-		if key != glfw3.KeyEscape {
-			return
-		}
-		g.window.SetShouldClose(true)
-	})
-
-	chanBuffer := g.width * g.height
-	if chanBuffer > 1e7 {
-		chanBuffer = 1e7
-	}
-
-	g.renderChan = make(chan *PixelInfo, chanBuffer)
 	g.refreshScreenChan = make(chan bool)
-	g.renderStopChan = make(chan bool)
-	g.refreshStopChan = make(chan bool)
+	g.renderFinishChan = make(chan bool)
+	g.frameFinishChan = make(chan bool)
+	g.renderTasksChan = make(chan chan *PixelInfo)
 
 	g.window.MakeContextCurrent()
 	g.window.SwapBuffers()
 
 	go g.renderRoutine()
-	go g.refreshScreenRoutine()
 
 	return nil
-}
-
-func (g *GlWindow) refreshScreenRoutine() {
-	refreshTime := 30 * time.Millisecond
-	timer := time.NewTimer(refreshTime)
-
-	defer timer.Stop()
-	for {
-		select {
-		case _ = <-timer.C:
-			timer.Reset(refreshTime)
-			g.RefreshScreen()
-		case _ = <-g.refreshStopChan:
-			return
-		}
-	}
 }
 
 func (g *GlWindow) renderRoutine() {
@@ -138,6 +91,8 @@ func (g *GlWindow) renderRoutine() {
 	gl.Disable(gl.TEXTURE_2D)
 
 	displayTexture := func() {
+		textureTime := time.Now()
+
 		g.window.MakeContextCurrent()
 
 		gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -170,15 +125,13 @@ func (g *GlWindow) renderRoutine() {
 		gl.Disable(gl.TEXTURE_2D)
 
 		g.window.SwapBuffers()
+
+		fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
+		fmt.Printf("GL Points drawing: %s\n", pointsTime)
 	}
 
 	defer func() {
-		polygonTime := time.Now()
-		displayTexture()
-
 		fmt.Println("GL rendering goroutine exited.")
-		fmt.Printf("GL Points drawing: %s\n", pointsTime)
-		fmt.Printf("GL Textured Polygon: %s\n", time.Since(polygonTime))
 		fmt.Printf("GL screen refreshes: %s\n", refreshTime)
 
 	}()
@@ -192,59 +145,83 @@ func (g *GlWindow) renderRoutine() {
 
 	fmt.Printf("GL Init time: %s\n", time.Since(renderStart))
 
+	renderChan := <-g.renderTasksChan
+	pointsTime = 0
+
 	for {
 
 		select {
-		case pInfo := <-g.renderChan:
-			g.window.MakeContextCurrent()
+		// case pInfo := <-renderChan:
 
-			pointsTime += timed(func() {
-				addPixelToBuffer(pInfo)
-			})
+		// 	pointsTime += timed(func() {
+		// 		if pInfo != nil {
+		// 			addPixelToBuffer(pInfo)
+		// 		}
+		// 	})
 
 		case _ = <-g.refreshScreenChan:
+
 			refreshTime += timed(func() {
 				displayTexture()
 			})
 			g.refreshScreenChan <- true
-		case _ = <-g.renderStopChan:
-			g.window.MakeContextCurrent()
 
-			for pInfo := range g.renderChan {
+		case _ = <-g.renderFinishChan:
+			g.renderFinishChan <- true
+			return
+
+		case _ = <-g.frameFinishChan:
+
+			for pInfo := range renderChan {
 				pointsTime += timed(func() {
 					addPixelToBuffer(pInfo)
 				})
 			}
-			g.renderStopChan <- true
+			g.frameFinishChan <- true
+			displayTexture()
 
-			return
+		case renderChan = <-g.renderTasksChan:
+			pointsTime = 0
 		}
 
 	}
 }
 
-func (g *GlWindow) closeWindow() {
-	close(g.refreshScreenChan)
-	close(g.renderStopChan)
-	g.window.Destroy()
-	glfw3.Terminate()
-}
-
-func (g *GlWindow) Done() {
-	g.refreshStopChan <- true
-	close(g.refreshStopChan)
-
-	g.renderStopChan <- true
-	close(g.renderChan)
-	_ = <-g.renderStopChan
-}
-
 func (g *GlWindow) Wait() {
-	for !g.window.ShouldClose() {
-		glfw3.WaitEvents()
+
+	fmt.Println("Sending rendering finish")
+	g.renderFinishChan <- true
+
+	fmt.Println("Receiving finished ack")
+	_ = <-g.renderFinishChan
+
+	fmt.Println("Closing refreshScreenChan")
+	close(g.refreshScreenChan)
+
+	fmt.Println("Closing renderFinishChan")
+	close(g.renderFinishChan)
+
+	fmt.Println("Closing frameFinishChan")
+	close(g.frameFinishChan)
+
+	fmt.Println("Closing renderTasksChan")
+	close(g.renderTasksChan)
+}
+
+func (g *GlWindow) StartFrame() {
+	chanBuffer := g.width * g.height
+	if chanBuffer > 1e7 {
+		chanBuffer = 1e7
 	}
 
-	g.closeWindow()
+	g.renderChan = make(chan *PixelInfo, chanBuffer)
+	g.renderTasksChan <- g.renderChan
+}
+
+func (g *GlWindow) DoneFrame() {
+	g.frameFinishChan <- true
+	close(g.renderChan)
+	_ = <-g.frameFinishChan
 }
 
 func (g *GlWindow) Set(x int, y int, clr color.Color) error {
@@ -276,7 +253,7 @@ func (g *GlWindow) Height() int {
 	return g.height
 }
 
-func NewGlWIndow() *GlWindow {
-	win := new(GlWindow)
-	return win
+func NewGlWIndow(window *glfw3.Window) *GlWindow {
+	gwWin := &GlWindow{window: window}
+	return gwWin
 }

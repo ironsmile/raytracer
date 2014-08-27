@@ -25,7 +25,11 @@ func (n *NullFilm) Init(width int, height int) error {
 	return nil
 }
 
-func (n *NullFilm) Done() {
+func (n *NullFilm) DoneFrame() {
+
+}
+
+func (n *NullFilm) StartFrame() {
 
 }
 
