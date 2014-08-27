@@ -22,23 +22,23 @@ type GlWindow struct {
 	width  int
 	height int
 
-	renderChan        chan *PixelInfo
 	refreshScreenChan chan bool
 	renderFinishChan  chan bool
 	frameFinishChan   chan bool
-	renderTasksChan   chan chan *PixelInfo
 
 	window *glfw3.Window
+
+	pixBuffer []float32
 }
 
 func (g *GlWindow) Init(width int, height int) error {
 	g.width = width
 	g.height = height
 
+	g.pixBuffer = make([]float32, g.width*g.height*3)
 	g.refreshScreenChan = make(chan bool)
 	g.renderFinishChan = make(chan bool)
 	g.frameFinishChan = make(chan bool)
-	g.renderTasksChan = make(chan chan *PixelInfo)
 
 	g.window.MakeContextCurrent()
 	g.window.SwapBuffers()
@@ -50,17 +50,7 @@ func (g *GlWindow) Init(width int, height int) error {
 
 func (g *GlWindow) renderRoutine() {
 
-	var pointsTime time.Duration
-	var refreshTime time.Duration
 	renderStart := time.Now()
-
-	timed := func(fnc func()) time.Duration {
-		s := time.Now()
-		fnc()
-		return time.Since(s)
-	}
-
-	pixBuffer := make([]float32, g.width*g.height*3)
 
 	g.window.MakeContextCurrent()
 
@@ -102,7 +92,7 @@ func (g *GlWindow) renderRoutine() {
 		texture.Bind(gl.TEXTURE_2D)
 
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
-			pixBuffer)
+			g.pixBuffer)
 
 		gl.Begin(gl.POLYGON)
 
@@ -127,43 +117,20 @@ func (g *GlWindow) renderRoutine() {
 		g.window.SwapBuffers()
 
 		fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
-		fmt.Printf("GL Points drawing: %s\n", pointsTime)
 	}
 
 	defer func() {
 		fmt.Println("GL rendering goroutine exited.")
-		fmt.Printf("GL screen refreshes: %s\n", refreshTime)
-
 	}()
 
-	addPixelToBuffer := func(pixel *PixelInfo) {
-		ind := g.width*pixel.GlMatrixY*3 + pixel.GlMatrixX*3
-		pixBuffer[ind] = pixel.RedFloat
-		pixBuffer[ind+1] = pixel.GreenFloat
-		pixBuffer[ind+2] = pixel.BlueFloat
-	}
-
 	fmt.Printf("GL Init time: %s\n", time.Since(renderStart))
-
-	renderChan := <-g.renderTasksChan
-	pointsTime = 0
 
 	for {
 
 		select {
-		// case pInfo := <-renderChan:
-
-		// 	pointsTime += timed(func() {
-		// 		if pInfo != nil {
-		// 			addPixelToBuffer(pInfo)
-		// 		}
-		// 	})
-
 		case _ = <-g.refreshScreenChan:
 
-			refreshTime += timed(func() {
-				displayTexture()
-			})
+			displayTexture()
 			g.refreshScreenChan <- true
 
 		case _ = <-g.renderFinishChan:
@@ -171,17 +138,8 @@ func (g *GlWindow) renderRoutine() {
 			return
 
 		case _ = <-g.frameFinishChan:
-
-			for pInfo := range renderChan {
-				pointsTime += timed(func() {
-					addPixelToBuffer(pInfo)
-				})
-			}
 			g.frameFinishChan <- true
 			displayTexture()
-
-		case renderChan = <-g.renderTasksChan:
-			pointsTime = 0
 		}
 
 	}
@@ -203,9 +161,6 @@ func (g *GlWindow) Wait() {
 
 	fmt.Println("Closing frameFinishChan")
 	close(g.frameFinishChan)
-
-	fmt.Println("Closing renderTasksChan")
-	close(g.renderTasksChan)
 }
 
 func (g *GlWindow) StartFrame() {
@@ -213,14 +168,10 @@ func (g *GlWindow) StartFrame() {
 	if chanBuffer > 1e7 {
 		chanBuffer = 1e7
 	}
-
-	g.renderChan = make(chan *PixelInfo, chanBuffer)
-	g.renderTasksChan <- g.renderChan
 }
 
 func (g *GlWindow) DoneFrame() {
 	g.frameFinishChan <- true
-	close(g.renderChan)
 	_ = <-g.frameFinishChan
 }
 
@@ -228,14 +179,10 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 
 	ri, gi, bi, _ := clr.RGBA()
 
-	pInfo := &PixelInfo{
-		float32(ri) / 65535.0,
-		float32(gi) / 65535.0,
-		float32(bi) / 65535.0,
-		x,
-		y}
-
-	g.renderChan <- pInfo
+	ind := g.width*y*3 + x*3
+	g.pixBuffer[ind] = float32(ri) / 65535.0
+	g.pixBuffer[ind+1] = float32(gi) / 65535.0
+	g.pixBuffer[ind+2] = float32(bi) / 65535.0
 
 	return nil
 }
