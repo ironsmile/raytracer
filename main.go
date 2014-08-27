@@ -29,9 +29,9 @@ func main() {
 	}
 
 	fmt.Println("Creating camera...")
+	// cam := MakeStackOverflowCamera(output)
 	cam := MakePinholeCamera(output)
 	// cam := MakePerspectiveCamera(output)
-	// cam := camera.NewDoychoCamera(geometry.NewPoint(0, 0, -5))
 
 	fmt.Println("Creating new engine...")
 	tracer := engine.NewEngine()
@@ -52,11 +52,11 @@ func main() {
 }
 
 func MakePerspectiveCamera(f film.Film) camera.Camera {
-	camOrigin := geometry.NewPoint(0, 0, -5)
+	pos := geometry.NewPoint(0, 0, -5)
+	lookAtPoint := geometry.NewPoint(0, 0, 1)
+	up := geometry.NewVector(0, 1, 0)
 
-	camToWorld := transform.LookAt(camOrigin,
-		geometry.NewPoint(0, 0, -1),
-		geometry.NewVector(0, 1, 0))
+	camToWorld := transform.LookAt(pos, lookAtPoint, up)
 
 	oStart := camToWorld.Point(geometry.NewPoint(0, 0, 0))
 	fmt.Printf("Cam Origin: %s\n", oStart)
@@ -89,10 +89,19 @@ func MakePerspectiveCamera(f film.Film) camera.Camera {
 }
 
 func MakePinholeCamera(f film.Film) camera.Camera {
-	camToWorld := transform.LookAt(
-		geometry.NewPoint(0, 0, -5),
-		geometry.NewPoint(0, 0, -1),
-		geometry.NewVector(0, 1, 0))
+	pos := geometry.NewPoint(0, 0, -5)
+	lookAtPoint := geometry.NewPoint(0, 0, 1)
+	up := geometry.NewVector(0, 1, 0)
 
-	return camera.NewPinholeCamera(camToWorld, 1e-3, f)
+	camToWorld := transform.LookAt(pos, lookAtPoint, up).Inverse()
+
+	return camera.NewPinholeCamera(camToWorld, 1, f)
+}
+
+func MakeStackOverflowCamera(f film.Film) camera.Camera {
+	pos := geometry.NewPoint(0, 0, -5)
+	lookAtPoint := geometry.NewPoint(0, 0, 1)
+	up := geometry.NewVector(0, 1, 0)
+
+	return camera.NewStackOverflowCamera(pos, lookAtPoint, up, f)
 }

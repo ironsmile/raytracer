@@ -1,8 +1,6 @@
 package camera
 
 import (
-	"fmt"
-
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/transform"
@@ -21,22 +19,9 @@ func (p *PinholeCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray, fl
 	posX := p.screen[0] + (screenX/p.rasterW)*p.screen[1]*2
 	posY := p.screen[3] + (screenY/p.rasterH)*p.screen[2]*2
 
-	origin := p.camToWorld.Point(geometry.NewPoint(0, 0, 0))
-	dir := p.camToWorld.Point(geometry.NewPoint(posX, posY, -p.distance))
-
-	return &geometry.Ray{
-		Origin:    origin,
-		Direction: geometry.Normalize(dir.Minus(origin))}, 1.0
-
-	screenP := geometry.Normalize(geometry.NewVector(posX, posY, -p.distance))
-	ray := geometry.NewRay(*origin, *screenP)
-
-	if screenX == float64(DEBUG_X) && screenY == float64(DEBUG_Y) {
-		fmt.Printf("Before transformation ray:\n%v\n", ray)
-		fmt.Printf("posX, posY: %.5f, %.5f\n", posX, posY)
-		fmt.Printf("scaleX, scaleY: %.5f, %.5f\n", (screenX / p.rasterW),
-			(screenY / p.rasterH))
-	}
+	origin := geometry.NewPoint(0, 0, 0)
+	dir := geometry.Normalize(geometry.NewVector(posX, posY, p.distance))
+	ray := geometry.NewRay(*origin, *dir)
 
 	return p.camToWorld.Ray(ray), 1.0
 }
