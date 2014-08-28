@@ -76,20 +76,27 @@ func (g *GlWindow) renderRoutine() {
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	texture.Unbind(gl.TEXTURE_2D)
-	gl.PopAttrib()
-	gl.Disable(gl.TEXTURE_2D)
+	defer func() {
+		g.window.MakeContextCurrent()
+		texture.Unbind(gl.TEXTURE_2D)
+		gl.PopAttrib()
+		gl.Disable(gl.TEXTURE_2D)
+	}()
+
+	// texture.Unbind(gl.TEXTURE_2D)
+	// gl.PopAttrib()
+	// gl.Disable(gl.TEXTURE_2D)
 
 	displayTexture := func() {
 		textureTime := time.Now()
 
 		g.window.MakeContextCurrent()
 
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		// gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		gl.PushAttrib(gl.ENABLE_BIT)
-		gl.Enable(gl.TEXTURE_2D)
-		texture.Bind(gl.TEXTURE_2D)
+		// gl.PushAttrib(gl.ENABLE_BIT)
+		// gl.Enable(gl.TEXTURE_2D)
+		// texture.Bind(gl.TEXTURE_2D)
 
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
 			g.pixBuffer)
@@ -110,9 +117,9 @@ func (g *GlWindow) renderRoutine() {
 
 		gl.End()
 
-		texture.Unbind(gl.TEXTURE_2D)
-		gl.PopAttrib()
-		gl.Disable(gl.TEXTURE_2D)
+		// texture.Unbind(gl.TEXTURE_2D)
+		// gl.PopAttrib()
+		// gl.Disable(gl.TEXTURE_2D)
 
 		g.window.SwapBuffers()
 
