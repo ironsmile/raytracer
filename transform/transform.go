@@ -24,6 +24,11 @@ func (t *Transform) IsIdentity() bool {
 }
 
 func (t *Transform) Point(point *geometry.Point) *geometry.Point {
+	p := point.Copy()
+	return t.PointIP(p)
+}
+
+func (t *Transform) PointIP(point *geometry.Point) *geometry.Point {
 	xp := float64(t.mat.els[0][0])*point.X + float64(t.mat.els[0][1])*point.Y +
 		float64(t.mat.els[0][2])*point.Z + float64(t.mat.els[0][3])
 
@@ -36,11 +41,12 @@ func (t *Transform) Point(point *geometry.Point) *geometry.Point {
 	wp := float64(t.mat.els[3][0])*point.X + float64(t.mat.els[3][1])*point.Y +
 		float64(t.mat.els[3][2])*point.Z + float64(t.mat.els[3][3])
 
-	if wp == 1.0 {
-		return geometry.NewPoint(xp, yp, zp)
-	} else {
-		return geometry.NewPoint(xp, yp, zp).MultiplyScalar(1.0 / wp)
+	point.X, point.Y, point.Z = xp, yp, zp
+
+	if wp != 1.0 {
+		point.MultiplyScalarIP(1.0 / wp)
 	}
+	return point
 }
 
 func (t *Transform) Vector(vec *geometry.Vector) *geometry.Vector {
@@ -56,6 +62,20 @@ func (t *Transform) Vector(vec *geometry.Vector) *geometry.Vector {
 	return geometry.NewVector(xp, yp, zp)
 }
 
+func (t *Transform) VectorIP(vec *geometry.Vector) *geometry.Vector {
+	xp := float64(t.mat.els[0][0])*vec.X + float64(t.mat.els[0][1])*vec.Y +
+		float64(t.mat.els[0][2])*vec.Z
+
+	yp := float64(t.mat.els[1][0])*vec.X + float64(t.mat.els[1][1])*vec.Y +
+		float64(t.mat.els[1][2])*vec.Z
+
+	zp := float64(t.mat.els[2][0])*vec.X + float64(t.mat.els[2][1])*vec.Y +
+		float64(t.mat.els[2][2])*vec.Z
+
+	vec.X, vec.Y, vec.Z = xp, yp, zp
+	return vec
+}
+
 func (t *Transform) Ray(ray *geometry.Ray) *geometry.Ray {
 
 	ret := geometry.Ray{}
@@ -65,6 +85,14 @@ func (t *Transform) Ray(ray *geometry.Ray) *geometry.Ray {
 	ret.Direction = t.Vector(ray.Direction)
 
 	return &ret
+}
+
+func (t *Transform) RayIP(ray *geometry.Ray) *geometry.Ray {
+
+	t.PointIP(ray.Origin)
+	t.VectorIP(ray.Direction)
+
+	return ray
 }
 
 func (t *Transform) Multiply(other *Transform) *Transform {

@@ -9,26 +9,17 @@ import (
 	"github.com/go-gl/glfw3"
 )
 
-type PixelInfo struct {
-	RedFloat   float32
-	GreenFloat float32
-	BlueFloat  float32
-
-	GlMatrixX int
-	GlMatrixY int
-}
-
 type GlWindow struct {
 	width  int
 	height int
 
 	refreshScreenChan chan bool
 	renderFinishChan  chan bool
-	frameFinishChan   chan bool
 
 	window *glfw3.Window
 
-	pixBuffer []float32
+	pixBuffer     []float32
+	textureBuffer []float32
 }
 
 func (g *GlWindow) Init(width int, height int) error {
@@ -36,9 +27,9 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
+	g.textureBuffer = make([]float32, g.width*g.height*3)
 	g.refreshScreenChan = make(chan bool)
 	g.renderFinishChan = make(chan bool)
-	g.frameFinishChan = make(chan bool)
 
 	g.window.MakeContextCurrent()
 	g.window.SwapBuffers()
@@ -99,7 +90,7 @@ func (g *GlWindow) renderRoutine() {
 		// texture.Bind(gl.TEXTURE_2D)
 
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
-			g.pixBuffer)
+			g.textureBuffer)
 
 		gl.Begin(gl.POLYGON)
 
@@ -136,17 +127,13 @@ func (g *GlWindow) renderRoutine() {
 
 		select {
 		case _ = <-g.refreshScreenChan:
-
-			displayTexture()
+			g.textureBuffer, g.pixBuffer = g.pixBuffer, g.textureBuffer
 			g.refreshScreenChan <- true
+			displayTexture()
 
 		case _ = <-g.renderFinishChan:
 			g.renderFinishChan <- true
 			return
-
-		case _ = <-g.frameFinishChan:
-			g.frameFinishChan <- true
-			displayTexture()
 		}
 
 	}
@@ -165,21 +152,13 @@ func (g *GlWindow) Wait() {
 
 	fmt.Println("Closing renderFinishChan")
 	close(g.renderFinishChan)
-
-	fmt.Println("Closing frameFinishChan")
-	close(g.frameFinishChan)
 }
 
 func (g *GlWindow) StartFrame() {
-	chanBuffer := g.width * g.height
-	if chanBuffer > 1e7 {
-		chanBuffer = 1e7
-	}
 }
 
 func (g *GlWindow) DoneFrame() {
-	g.frameFinishChan <- true
-	_ = <-g.frameFinishChan
+	g.RefreshScreen()
 }
 
 func (g *GlWindow) Set(x int, y int, clr color.Color) error {

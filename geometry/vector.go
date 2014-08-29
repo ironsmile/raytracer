@@ -10,23 +10,48 @@ type Vector struct {
 }
 
 func (v *Vector) String() string {
-	return fmt.Sprintf("Vector<%f, %f, %f>", v.X, v.Y, v.Z)
+	return fmt.Sprintf("Vector<%.8f, %.8f, %.8f>", v.X, v.Y, v.Z)
 }
 
 func (v *Vector) Multiply(other *Vector) *Vector {
 	return &Vector{v.X * other.X, v.Y * other.Y, v.Z * other.Z}
 }
 
+func (v *Vector) MultiplyIP(other *Vector) *Vector {
+	v.X *= other.X
+	v.Y *= other.Y
+	v.Z *= other.Z
+	return v
+}
+
 func (v *Vector) MultiplyScalar(scalar float64) *Vector {
 	return &Vector{v.X * scalar, v.Y * scalar, v.Z * scalar}
+}
+
+func (v *Vector) MultiplyScalarIP(scalar float64) *Vector {
+	v.X *= scalar
+	v.Y *= scalar
+	v.Z *= scalar
+	return v
 }
 
 func (v *Vector) Plus(other *Vector) *Vector {
 	return &Vector{v.X + other.X, v.Y + other.Y, v.Z + other.Z}
 }
 
+func (v *Vector) PlusIP(other *Vector) *Vector {
+	v.X, v.Y, v.Z = v.X+other.X, v.Y+other.Y, v.Z+other.Z
+	return v
+}
+
 func (v *Vector) Minus(other *Vector) *Vector {
 	return &Vector{v.X - other.X, v.Y - other.Y, v.Z - other.Z}
+}
+
+func (v *Vector) MinusIP(other *Vector) *Vector {
+	v.X, v.Y, v.Z = v.X-other.X, v.Y-other.Y, v.Z-other.Z
+	return v
+
 }
 
 func (v *Vector) Product(other *Vector) float64 {
@@ -56,8 +81,21 @@ func (v *Vector) Cross(other *Vector) *Vector {
 		v.X*other.Y - v.Y*other.X}
 }
 
+func (v *Vector) CrossIP(other *Vector) *Vector {
+
+	v.X, v.Y, v.Z = v.Y*other.Z-v.Z*other.Y,
+		v.Z*other.X-v.X*other.Z,
+		v.X*other.Y-v.Y*other.X
+	return v
+}
+
 func (v *Vector) Neg() *Vector {
 	return &Vector{-v.X, -v.Y, -v.Z}
+}
+
+func (v *Vector) NegIP() *Vector {
+	v.X, v.Y, v.Z = -v.X, -v.Y, -v.Z
+	return v
 }
 
 func (v *Vector) Distance(other *Vector) float64 {
@@ -85,11 +123,17 @@ func (v *Vector) Equals(other *Vector) bool {
 	return true
 }
 
-func (v *Vector) Normalize() {
+func (v *Vector) Normalize() *Vector {
+	l := 1.0 / v.Length()
+	return &Vector{v.X * l, v.Y * l, v.Z * l}
+}
+
+func (v *Vector) NormalizeIP() *Vector {
 	l := 1.0 / v.Length()
 	v.X *= l
 	v.Y *= l
 	v.Z *= l
+	return v
 }
 
 func (v *Vector) Point() *Point {
@@ -101,7 +145,5 @@ func NewVector(X, Y, Z float64) *Vector {
 }
 
 func Normalize(vec *Vector) *Vector {
-	v := vec.Copy()
-	v.Normalize()
-	return v
+	return vec.Normalize()
 }

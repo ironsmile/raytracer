@@ -19,46 +19,52 @@ type PinholeCamera struct {
 	up     *geometry.Vector
 }
 
-func (p *PinholeCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray, float64) {
-	posX := p.screen[0] + (screenX/p.rasterW)*p.screen[1]*2
-	posY := p.screen[3] + (screenY/p.rasterH)*p.screen[2]*2
+func (p *PinholeCamera) GenerateRay(x, y float64) (*geometry.Ray, float64) {
+	ray := &geometry.Ray{}
+	w := p.GenerateRayIP(x, y, ray)
+	return ray, w
+}
 
-	origin := geometry.NewPoint(0, 0, 0)
-	dir := geometry.Normalize(geometry.NewVector(posX, posY, p.distance))
-	ray := geometry.NewRay(*origin, *dir)
+func (p *PinholeCamera) GenerateRayIP(x, y float64, ray *geometry.Ray) float64 {
+	posX := p.screen[0] + (x/p.rasterW)*p.screen[1]*2
+	posY := p.screen[3] + (y/p.rasterH)*p.screen[2]*2
 
-	return p.camToWorld.Ray(ray), 1.0
+	ray.Origin = geometry.NewPoint(0, 0, 0)
+	ray.Direction = geometry.NewVector(posX, posY, p.distance).NormalizeIP()
+	p.camToWorld.RayIP(ray)
+
+	return 1.0
 }
 
 func (p *PinholeCamera) Forward(speed float64) error {
-	dir := geometry.Normalize(p.lookAt.Minus(p.origin)).MultiplyScalar(speed)
+	dir := p.lookAt.Minus(p.origin).NormalizeIP().MultiplyScalarIP(speed)
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) Backward(speed float64) error {
-	dir := geometry.Normalize(p.lookAt.Minus(p.origin)).MultiplyScalar(speed).Neg()
+	dir := p.lookAt.Minus(p.origin).NormalizeIP().MultiplyScalarIP(speed).NegIP()
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) Left(speed float64) error {
-	dir := geometry.Normalize(p.lookAt.Minus(p.origin))
-	dir = p.up.Cross(dir).MultiplyScalar(speed).Neg()
+	dir := p.lookAt.Minus(p.origin).NormalizeIP()
+	dir = p.up.Cross(dir).MultiplyScalarIP(speed).NegIP()
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) Right(speed float64) error {
-	dir := geometry.Normalize(p.lookAt.Minus(p.origin))
+	dir := p.lookAt.Minus(p.origin).NormalizeIP()
 	dir = p.up.Cross(dir).MultiplyScalar(speed)
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) move(dir *geometry.Vector) {
-	p.origin = p.origin.PlusVector(dir)
-	p.lookAt = p.lookAt.PlusVector(dir)
+	p.origin.PlusVectorIP(dir)
+	p.lookAt.PlusVectorIP(dir)
 	p.computeMatrix()
 }
 

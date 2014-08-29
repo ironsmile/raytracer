@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	"time"
 
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/film"
@@ -33,10 +34,10 @@ func (e *Engine) InitRender() {
 	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
-func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
+func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Color) (
 	scene.Primitive, float64, *geometry.Color) {
 
-	retColor := geometry.NewColor(0, 0, 0)
+	retColor.Set(0, 0, 0)
 
 	if depth > geometry.TRACEDEPTH {
 		return nil, 0, retColor
@@ -49,9 +50,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 	}
 
 	if prim.IsLight() {
-		clr := prim.GetColor()
-		retColor = &clr
-		return prim, retdist, retColor
+		return prim, retdist, prim.GetColor()
 	}
 
 	primMat := prim.GetMaterial()
@@ -62,8 +61,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 		light := e.Scene.GetLight(l)
 		shade := 1.0
 
-		L := (light.(*scene.Sphere)).Center.Minus(pi)
-		L.Normalize()
+		L := (light.(*scene.Sphere)).Center.Minus(pi).NormalizeIP()
 
 		if light.GetType() == scene.SPHERE {
 			piOffset := pi.PlusVector(L.MultiplyScalar(EPSION))
@@ -83,8 +81,8 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 			dot := N.Product(L)
 			if dot > 0 {
 				weight := dot * primMat.Diff * shade
-				retColor = retColor.Plus(light.GetMaterial().Color.
-					Multiply(primMat.Color).MultiplyScalar(weight))
+				retColor.PlusIP(light.GetMaterial().Color.
+					Multiply(primMat.Color).MultiplyScalarIP(weight))
 			}
 		}
 
@@ -94,7 +92,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * shade
-				retColor = retColor.Plus(light.GetMaterial().Color.
+				retColor.PlusIP(light.GetMaterial().Color.
 					MultiplyScalar(spec))
 			}
 		}
@@ -104,21 +102,22 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64) (
 	// Reflection
 	if primMat.Refl > 0.0 {
 		N := prim.GetNormal(pi)
-		R := ray.Direction.Minus(N.MultiplyScalar(ray.Direction.Product(N) * 2.0))
+		R := ray.Direction.Minus(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
 
 		refRay := &geometry.Ray{Origin: pi.PlusVector(R.MultiplyScalar(EPSION)),
 			Direction: R}
 		// refRay.Debug = ray.Debug
-		_, _, refColor := e.Raytrace(refRay, depth+1)
+		refColor := &geometry.Color{}
+		e.Raytrace(refRay, depth+1, refColor)
 
-		retColor = retColor.Plus(primMat.Color.Multiply(
-			refColor).MultiplyScalar(primMat.Refl))
+		retColor.PlusIP(primMat.Color.Multiply(
+			refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
 	return prim, retdist, retColor
 }
 
-func (e *Engine) Render() bool {
+func (e *Engine) Render() {
 
 	quads := 16
 	quadWidth := e.Width / quads
@@ -127,6 +126,8 @@ func (e *Engine) Render() bool {
 	var wg sync.WaitGroup
 
 	e.Dest.StartFrame()
+
+	engineTimer := time.Now()
 
 	for quadIndX := 0; quadIndX < quads; quadIndX++ {
 		for quadIndY := 0; quadIndY < quads; quadIndY++ {
@@ -144,27 +145,30 @@ func (e *Engine) Render() bool {
 
 	wg.Wait()
 
-	e.Dest.DoneFrame()
+	fmt.Printf("Engine frame time: %s\n", time.Since(engineTimer))
 
-	return true
+	e.Dest.DoneFrame()
 }
 
 func (e *Engine) subRender(startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	ray := &geometry.Ray{}
+	accColor := geometry.NewColor(0, 0, 0)
+
 	for y := startY; y <= stopY; y++ {
 		for x := startX; x <= stopX; x++ {
 
-			r, weight := e.Camera.GenerateRay(float64(x), float64(y))
+			weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
 
 			// if x == camera.DEBUG_X && y == camera.DEBUG_Y {
 			// 	fmt.Printf("Final ray:\n%v\n", r)
 			// }
 
-			_, _, accColor := e.Raytrace(r, 1)
+			e.Raytrace(ray, 1, accColor)
 
-			e.Dest.Set(x, y, accColor.MultiplyScalar(weight))
+			e.Dest.Set(x, y, accColor.MultiplyScalarIP(weight))
 
 		}
 	}

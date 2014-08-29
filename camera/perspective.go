@@ -27,7 +27,7 @@ func (p *PerspectiveCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray
 		fmt.Printf("Camera coords: %s\n", Pcamera)
 	}
 
-	ray := geometry.NewRayFull(*geometry.NewPoint(0, 0, 0), *Pcamera, 0.0,
+	ray := geometry.NewRayFull(geometry.NewPoint(0, 0, 0), Pcamera, 0.0,
 		math.MaxFloat64)
 
 	if p.lensRadius > 0.0 {

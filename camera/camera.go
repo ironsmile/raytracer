@@ -13,6 +13,7 @@ var (
 
 type Camera interface {
 	GenerateRay(float64, float64) (*geometry.Ray, float64)
+	GenerateRayIP(float64, float64, *geometry.Ray) float64
 	// GenerateRayDifferential(float64, float64) (*geometry.RayDifferential, float64)
 
 	Forward(float64) error

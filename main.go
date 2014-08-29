@@ -8,12 +8,12 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/go-gl/glfw3"
+
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
-
-	"github.com/go-gl/glfw3"
 )
 
 const (
@@ -22,8 +22,10 @@ const (
 )
 
 var (
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-	memprofile = flag.String("memprofile", "", "write memory profile to this file")
+	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
+	memprofile  = flag.String("memprofile", "", "write memory profile to this file")
+	filename    = flag.String("filename", "/tmp/rendered.png", "output file")
+	interactive = flag.Bool("interactive", false, "starts the renderer in opengl win")
 )
 
 func main() {
@@ -38,6 +40,41 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	if *interactive {
+		interactiveRenderer()
+	} else {
+		infileRenderer()
+	}
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.WriteHeapProfile(f)
+		f.Close()
+		return
+	}
+}
+
+func infileRenderer() {
+	output := film.NewImage(*filename)
+	err := output.Init(WIDTH, HEIGHT)
+	if err != nil {
+		log.Fatal("%s\n", err)
+	}
+	cam := MakePinholeCamera(output)
+	tracer := engine.NewEngine()
+	tracer.Scene.InitScene()
+	tracer.SetTarget(output, cam)
+	tracer.InitRender()
+	renderTimer := time.Now()
+	tracer.Render()
+	fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
+	output.Wait()
+}
+
+func interactiveRenderer() {
 	hasWindow := glfw3.Init()
 
 	if !hasWindow {
@@ -55,8 +92,6 @@ func main() {
 	})
 
 	output := film.NewGlWIndow(window)
-	// output := film.NewNullFilm()
-	// output := film.NewImage("/tmp/rendered.png")
 	err = output.Init(WIDTH, HEIGHT)
 
 	if err != nil {
@@ -64,9 +99,7 @@ func main() {
 	}
 
 	fmt.Println("Creating camera...")
-	// cam := MakeStackOverflowCamera(output)
 	cam := MakePinholeCamera(output)
-	// cam := MakePerspectiveCamera(output)
 
 	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
 		action glfw3.Action, mods glfw3.ModifierKey) {
@@ -90,8 +123,8 @@ func main() {
 
 		fmt.Println("Rendering...")
 		renderTimer := time.Now()
-		_ = tracer.Render()
-		fmt.Printf("Rendering finished - %s\n", time.Since(renderTimer))
+		tracer.Render()
+		fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
 
 		glfw3.WaitEvents()
 		pollEvents(window, cam)
@@ -102,16 +135,6 @@ func main() {
 	fmt.Println("Destroying window and terminating glfw3")
 	window.Destroy()
 	glfw3.Terminate()
-
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
-		return
-	}
 }
 
 func pollEvents(window *glfw3.Window, cam camera.Camera) {
@@ -136,11 +159,3 @@ func MakePinholeCamera(f film.Film) camera.Camera {
 
 	return camera.NewPinholeCamera(pos, lookAtPoint, up, 1, f)
 }
-
-// func MakeStackOverflowCamera(f film.Film) camera.Camera {
-// 	pos := geometry.NewPoint(0, 0, -5)
-// 	lookAtPoint := geometry.NewPoint(0, 0, 1)
-// 	up := geometry.NewVector(0, 1, 0)
-
-// 	return camera.NewStackOverflowCamera(pos, lookAtPoint, up, f)
-// }

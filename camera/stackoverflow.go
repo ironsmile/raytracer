@@ -27,7 +27,7 @@ func (soc *StackOverflowCamera) GenerateRay(screenX, screenY float64) (*geometry
 
 	rayDirection := imagePoint.Minus(soc.position)
 
-	return geometry.NewRay(*soc.position, *rayDirection), 1.0
+	return geometry.NewRay(soc.position, rayDirection), 1.0
 }
 
 func NewStackOverflowCamera(camPosition, camLookAtPoint *geometry.Point,
