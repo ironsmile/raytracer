@@ -17,13 +17,11 @@ func (p *PlanePrim) GetType() int {
 }
 
 func NewPlanePrim(normal geometry.Vector, d float64) *PlanePrim {
-	plPrim := new(PlanePrim)
-	plPrim.Plane = geometry.NewPlane(normal, d)
-	return plPrim
+	return &PlanePrim{Plane: geometry.NewPlane(normal, d)}
 }
 
 func (p *PlanePrim) GetNormal(_ *geometry.Point) *geometry.Vector {
-	return p.Plane.N.Copy()
+	return &p.Plane.N
 }
 
 func (p *PlanePrim) GetD() float64 {

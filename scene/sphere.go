@@ -54,7 +54,7 @@ func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 }
 
 func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
-	return pos.Minus(s.Center).MultiplyScalar(s.RRadius)
+	return pos.Minus(s.Center).MultiplyScalarIP(s.RRadius)
 }
 
 func (s *Sphere) String() string {

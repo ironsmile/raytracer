@@ -43,8 +43,8 @@ func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64) {
 	retdist := 1000000.0
 	var prim Primitive = nil
 
-	for sInd := 0; sInd < s.GetNrPrimitives(); sInd++ {
-		pr := s.GetPrimitive(sInd)
+	for sInd := 0; sInd < len(s.Primitives); sInd++ {
+		pr := s.Primitives[sInd]
 
 		if pr == nil {
 			fmt.Errorf("Primitive with index %d was nil\n", sInd)

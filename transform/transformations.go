@@ -123,8 +123,8 @@ func LookAt(pos, look *geometry.Point, up *geometry.Vector) *Transform {
 	m.els[2][3] = float32(pos.Z)
 	m.els[3][3] = 1
 
-	dir := geometry.Normalize(look.Minus(pos))
-	left := geometry.Normalize(geometry.Normalize(up).Cross(dir))
+	dir := look.Minus(pos).NormalizeIP()
+	left := up.Normalize().CrossIP(dir).NormalizeIP()
 	newUp := dir.Cross(left)
 
 	m.els[0][0] = float32(left.X)

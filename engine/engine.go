@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	EPSION = 0.00001
+	EPSION     = 0.00001
+	TRACEDEPTH = 9
 )
 
 type Engine struct {
@@ -39,7 +40,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	retColor.Set(0, 0, 0)
 
-	if depth > geometry.TRACEDEPTH {
+	if depth > TRACEDEPTH {
 		return nil, 0, retColor
 	}
 
@@ -50,7 +51,9 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	}
 
 	if prim.IsLight() {
-		return prim, retdist, prim.GetColor()
+		clr := prim.GetColor()
+		retColor.Set(clr.Red(), clr.Green(), clr.Blue())
+		return prim, retdist, retColor
 	}
 
 	primMat := prim.GetMaterial()
