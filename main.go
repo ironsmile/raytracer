@@ -62,9 +62,10 @@ func infileRenderer() {
 	}
 	cam := MakePinholeCamera(output)
 	tracer := engine.NewEngine()
-	tracer.Scene.InitScene()
+	tracer.InitRender()
 	tracer.SetTarget(output, cam)
 	tracer.InitRender()
+	tracer.Scene.InitScene()
 	renderTimer := time.Now()
 	tracer.Render()
 	fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
@@ -109,12 +110,13 @@ func interactiveRenderer() {
 	fmt.Println("Creating new engine...")
 	tracer := engine.NewFPSEngine()
 
-	fmt.Println("Initializing scene...")
-	tracer.Scene.InitScene()
 	tracer.SetTarget(output, cam)
 
 	fmt.Println("Initializing renderer...")
 	tracer.InitRender()
+
+	fmt.Println("Initializing scene...")
+	tracer.Scene.InitScene()
 
 	tracer.Render()
 
@@ -128,6 +130,7 @@ func interactiveRenderer() {
 	tracer.StopRendering()
 
 	fmt.Println("Destroying window and terminating glfw3")
+	window.MakeContextCurrent()
 	window.Destroy()
 	glfw3.Terminate()
 }

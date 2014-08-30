@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/scene"
 )
 
 type FPSEngine struct {
@@ -96,6 +95,5 @@ func (e *FPSEngine) StopRendering() {
 
 func NewFPSEngine() *FPSEngine {
 	eng := new(FPSEngine)
-	eng.Scene = scene.NewScene()
 	return eng
 }

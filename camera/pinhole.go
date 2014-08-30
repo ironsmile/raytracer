@@ -73,17 +73,18 @@ func (p *PinholeCamera) computeMatrix() {
 }
 
 func (p *PinholeCamera) Yaw(angle float64) error {
-	rotation := transform.RotateY(angle)
-	p.camToWorld.PointIP(rotation.PointIP(p.camToWorld.Inverse().PointIP(p.lookAt)))
-	p.computeMatrix()
+	p.Rotate(transform.RotateY(angle))
 	return nil
 }
 
 func (p *PinholeCamera) Pitch(angle float64) error {
-	rotation := transform.RotateX(angle)
+	p.Rotate(transform.RotateX(angle))
+	return nil
+}
+
+func (p *PinholeCamera) Rotate(rotation *transform.Transform) {
 	p.camToWorld.PointIP(rotation.PointIP(p.camToWorld.Inverse().PointIP(p.lookAt)))
 	p.computeMatrix()
-	return nil
 }
 
 func NewPinholeCamera(camPosition, camLookAtPoint *geometry.Point,

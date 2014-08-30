@@ -32,6 +32,7 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 }
 
 func (e *Engine) InitRender() {
+	e.Scene = scene.NewScene()
 	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
@@ -179,6 +180,5 @@ func (e *Engine) subRender(startX, stopX, startY, stopY int,
 
 func NewEngine() *Engine {
 	eng := new(Engine)
-	eng.Scene = scene.NewScene()
 	return eng
 }
