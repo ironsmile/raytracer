@@ -57,9 +57,9 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return prim, retdist, retColor
 	}
 
-	primMat := prim.GetMaterial()
-
 	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+
+	primMat := prim.GetMaterial()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)

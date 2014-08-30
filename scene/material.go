@@ -15,11 +15,5 @@ func (m *Material) GetSpecular() float64 {
 }
 
 func NewMaterial() *Material {
-	mat := new(Material)
-	col := geometry.NewColor(0.2, 0.2, 0.2)
-	mat.Color = col
-	mat.Refl = 0.0
-	mat.Diff = 0.2
-
-	return mat
+	return &Material{Color: nil, Refl: 0.0, Diff: 0.0}
 }

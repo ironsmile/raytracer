@@ -9,33 +9,34 @@ import (
 type PlanePrim struct {
 	BasePrimitive
 
-	Plane *geometry.Plane
+	Normal   *geometry.Vector
+	Distance float64
 }
 
 func (p *PlanePrim) GetType() int {
 	return PLANE
 }
 
-func NewPlanePrim(normal geometry.Vector, d float64) *PlanePrim {
-	return &PlanePrim{Plane: geometry.NewPlane(normal, d)}
+func NewPlanePrim(normal *geometry.Vector, d float64) *PlanePrim {
+	return &PlanePrim{Normal: normal, Distance: d}
 }
 
 func (p *PlanePrim) GetNormal(_ *geometry.Point) *geometry.Vector {
-	return &p.Plane.N
+	return p.Normal
 }
 
-func (p *PlanePrim) GetD() float64 {
-	return p.Plane.D
+func (p *PlanePrim) GetDistance() float64 {
+	return p.Distance
 }
 
 func (p *PlanePrim) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
-	d := p.Plane.N.Product(ray.Direction)
+	d := p.Normal.Product(ray.Direction)
 
 	if d == 0 {
 		return MISS, dist
 	}
 
-	dst := -(p.Plane.N.ProductPoint(ray.Origin) + p.Plane.D) / d
+	dst := -(p.Normal.ProductPoint(ray.Origin) + p.Distance) / d
 
 	if dst > 0 && dst < dist {
 		return HIT, dst
