@@ -57,7 +57,7 @@ func (p *PinholeCamera) Left(speed float64) error {
 
 func (p *PinholeCamera) Right(speed float64) error {
 	dir := p.lookAt.Minus(p.origin).NormalizeIP()
-	dir = p.up.Cross(dir).MultiplyScalar(speed)
+	dir = p.up.Cross(dir).MultiplyScalarIP(speed)
 	p.move(dir)
 	return nil
 }
@@ -70,6 +70,20 @@ func (p *PinholeCamera) move(dir *geometry.Vector) {
 
 func (p *PinholeCamera) computeMatrix() {
 	p.camToWorld = transform.LookAt(p.origin, p.lookAt, p.up).Inverse()
+}
+
+func (p *PinholeCamera) Yaw(angle float64) error {
+	rotation := transform.RotateY(angle)
+	p.camToWorld.PointIP(rotation.PointIP(p.camToWorld.Inverse().PointIP(p.lookAt)))
+	p.computeMatrix()
+	return nil
+}
+
+func (p *PinholeCamera) Pitch(angle float64) error {
+	rotation := transform.RotateX(angle)
+	p.camToWorld.PointIP(rotation.PointIP(p.camToWorld.Inverse().PointIP(p.lookAt)))
+	p.computeMatrix()
+	return nil
 }
 
 func NewPinholeCamera(camPosition, camLookAtPoint *geometry.Point,

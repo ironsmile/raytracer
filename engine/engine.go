@@ -122,7 +122,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 func (e *Engine) Render() {
 
-	quads := 16
+	quads := 8
 	quadWidth := e.Width / quads
 	quadHeight := e.Height / quads
 

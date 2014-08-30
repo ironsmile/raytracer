@@ -66,7 +66,15 @@ func (s *Scene) InitScene() {
 	s.Lights = make([]Primitive, 0)
 
 	plane := NewPlanePrim(*geometry.NewVector(0, 1, 0), 4)
-	plane.Name = "plane"
+	plane.Name = "plane-floor"
+	plane.Mat.Refl = 0
+	plane.Mat.Diff = 1.0
+	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+
+	s.Primitives = append(s.Primitives, plane)
+
+	plane = NewPlanePrim(*geometry.NewVector(0, -1, 0), 11)
+	plane.Name = "plane-ceiling"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
 	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -74,7 +82,23 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, plane)
 
 	plane = NewPlanePrim(*geometry.NewVector(1, 0, 0), 11)
-	plane.Name = "plane"
+	plane.Name = "plane-left"
+	plane.Mat.Refl = 0
+	plane.Mat.Diff = 1.0
+	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+
+	s.Primitives = append(s.Primitives, plane)
+
+	plane = NewPlanePrim(*geometry.NewVector(-1, 0, 0), 11)
+	plane.Name = "plane-right"
+	plane.Mat.Refl = 0
+	plane.Mat.Diff = 1.0
+	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+
+	s.Primitives = append(s.Primitives, plane)
+
+	plane = NewPlanePrim(*geometry.NewVector(0, 0, -1), 30)
+	plane.Name = "plane-front"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
 	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)

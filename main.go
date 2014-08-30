@@ -16,16 +16,13 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
-const (
-	WIDTH  = 1024
-	HEIGHT = 768
-)
-
 var (
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
 	memprofile  = flag.String("memprofile", "", "write memory profile to this file")
 	filename    = flag.String("filename", "/tmp/rendered.png", "output file")
 	interactive = flag.Bool("interactive", false, "starts the renderer in opengl win")
+	WIDTH       = flag.Int("w", 1024, "width in pixels")
+	HEIGHT      = flag.Int("h", 768, "height in pixels")
 )
 
 func main() {
@@ -59,7 +56,7 @@ func main() {
 
 func infileRenderer() {
 	output := film.NewImage(*filename)
-	err := output.Init(WIDTH, HEIGHT)
+	err := output.Init(*WIDTH, *HEIGHT)
 	if err != nil {
 		log.Fatal("%s\n", err)
 	}
@@ -81,7 +78,7 @@ func interactiveRenderer() {
 		log.Fatal("Initializing glfw3 failed")
 	}
 
-	window, err := glfw3.CreateWindow(WIDTH, HEIGHT, "Raytracer", nil, nil)
+	window, err := glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
@@ -92,7 +89,7 @@ func interactiveRenderer() {
 	})
 
 	output := film.NewGlWIndow(window)
-	err = output.Init(WIDTH, HEIGHT)
+	err = output.Init(*WIDTH, *HEIGHT)
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
@@ -110,7 +107,7 @@ func interactiveRenderer() {
 	})
 
 	fmt.Println("Creating new engine...")
-	tracer := engine.NewEngine()
+	tracer := engine.NewFPSEngine()
 
 	fmt.Println("Initializing scene...")
 	tracer.Scene.InitScene()
@@ -119,18 +116,16 @@ func interactiveRenderer() {
 	fmt.Println("Initializing renderer...")
 	tracer.InitRender()
 
+	tracer.Render()
+
 	for !window.ShouldClose() {
-
-		fmt.Println("Rendering...")
-		renderTimer := time.Now()
-		tracer.Render()
-		fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
-
-		glfw3.WaitEvents()
+		// glfw3.WaitEvents()
+		time.Sleep(25 * time.Millisecond)
+		glfw3.PollEvents()
 		pollEvents(window, cam)
 	}
 
-	output.Wait()
+	tracer.StopRendering()
 
 	fmt.Println("Destroying window and terminating glfw3")
 	window.Destroy()
@@ -138,17 +133,31 @@ func interactiveRenderer() {
 }
 
 func pollEvents(window *glfw3.Window, cam camera.Camera) {
+	moveSpeed := 0.15
+	rotateSpeed := 3.0
 	if window.GetKey(glfw3.KeyW) == glfw3.Press {
-		cam.Forward(0.25)
+		cam.Forward(moveSpeed)
 	}
 	if window.GetKey(glfw3.KeyS) == glfw3.Press {
-		cam.Backward(0.25)
+		cam.Backward(moveSpeed)
 	}
 	if window.GetKey(glfw3.KeyA) == glfw3.Press {
-		cam.Left(0.25)
+		cam.Left(moveSpeed)
 	}
 	if window.GetKey(glfw3.KeyD) == glfw3.Press {
-		cam.Right(0.25)
+		cam.Right(moveSpeed)
+	}
+	if window.GetKey(glfw3.KeyUp) == glfw3.Press {
+		cam.Pitch(rotateSpeed)
+	}
+	if window.GetKey(glfw3.KeyDown) == glfw3.Press {
+		cam.Pitch(-rotateSpeed)
+	}
+	if window.GetKey(glfw3.KeyLeft) == glfw3.Press {
+		cam.Yaw(-rotateSpeed)
+	}
+	if window.GetKey(glfw3.KeyRight) == glfw3.Press {
+		cam.Yaw(rotateSpeed)
 	}
 }
 

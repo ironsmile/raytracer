@@ -20,4 +20,7 @@ type Camera interface {
 	Backward(float64) error
 	Left(float64) error
 	Right(float64) error
+
+	Yaw(float64) error
+	Pitch(float64) error
 }

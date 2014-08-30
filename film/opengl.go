@@ -18,8 +18,8 @@ type GlWindow struct {
 
 	window *glfw3.Window
 
-	pixBuffer     []float32
-	textureBuffer []float32
+	pixBuffer []float32
+	// textureBuffer []float32
 }
 
 func (g *GlWindow) Init(width int, height int) error {
@@ -27,7 +27,7 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
-	g.textureBuffer = make([]float32, g.width*g.height*3)
+	// g.textureBuffer = make([]float32, g.width*g.height*3)
 	g.refreshScreenChan = make(chan bool)
 	g.renderFinishChan = make(chan bool)
 
@@ -90,7 +90,7 @@ func (g *GlWindow) renderRoutine() {
 		// texture.Bind(gl.TEXTURE_2D)
 
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
-			g.textureBuffer)
+			g.pixBuffer)
 
 		gl.Begin(gl.POLYGON)
 
@@ -127,7 +127,7 @@ func (g *GlWindow) renderRoutine() {
 
 		select {
 		case _ = <-g.refreshScreenChan:
-			g.textureBuffer, g.pixBuffer = g.pixBuffer, g.textureBuffer
+			// g.textureBuffer, g.pixBuffer = g.pixBuffer, g.textureBuffer
 			g.refreshScreenChan <- true
 			displayTexture()
 
