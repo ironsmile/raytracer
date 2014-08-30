@@ -74,6 +74,10 @@ func (g *GlWindow) renderRoutine() {
 		gl.Disable(gl.TEXTURE_2D)
 	}()
 
+	fmt.Printf("gl.RENDERER = %s\n", gl.GetString(gl.RENDERER))
+	fmt.Printf("gl.VERSION = %s\n", gl.GetString(gl.VERSION))
+	fmt.Printf("gl.VENDOR = %s\n", gl.GetString(gl.VENDOR))
+
 	// texture.Unbind(gl.TEXTURE_2D)
 	// gl.PopAttrib()
 	// gl.Disable(gl.TEXTURE_2D)

@@ -17,17 +17,28 @@ import (
 )
 
 var (
-	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
-	memprofile  = flag.String("memprofile", "", "write memory profile to this file")
-	filename    = flag.String("filename", "/tmp/rendered.png", "output file")
-	interactive = flag.Bool("interactive", false, "starts the renderer in opengl win")
-	WIDTH       = flag.Int("w", 1024, "width in pixels")
-	HEIGHT      = flag.Int("h", 768, "height in pixels")
+	cpuprofile = flag.String("cpuprofile", "",
+		"write cpu profile to file")
+	memprofile = flag.String("memprofile", "",
+		"write memory profile to this file")
+	filename = flag.String("filename", "/tmp/rendered.png",
+		"output file")
+	interactive = flag.Bool("interactive", false,
+		"starts the renderer in opengl win")
+	vsync = flag.Bool("vsync", true,
+		"control vsync for interactive renderer")
+	fullscreen = flag.Bool("fullscreen", false,
+		"run fullscreen in native resolution")
+	WIDTH = flag.Int("w", 1024,
+		"image or window width in pixels")
+	HEIGHT = flag.Int("h", 768,
+		"image or window height in pixels")
 )
 
 func main() {
 
 	flag.Parse()
+
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -62,7 +73,6 @@ func infileRenderer() {
 	}
 	cam := MakePinholeCamera(output)
 	tracer := engine.NewEngine()
-	tracer.InitRender()
 	tracer.SetTarget(output, cam)
 	tracer.InitRender()
 	tracer.Scene.InitScene()
@@ -73,16 +83,50 @@ func infileRenderer() {
 }
 
 func interactiveRenderer() {
-	hasWindow := glfw3.Init()
 
-	if !hasWindow {
+	if !glfw3.Init() {
 		log.Fatal("Initializing glfw3 failed")
 	}
+	defer glfw3.Terminate()
 
-	window, err := glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
+	var err error
+	var window *glfw3.Window
+
+	if *fullscreen {
+		monitor, err := glfw3.GetPrimaryMonitor()
+
+		if err != nil {
+			log.Fatal("Was not able to find primary monitor")
+		}
+
+		vm, err := monitor.GetVideoMode()
+
+		if err != nil {
+			log.Fatal("Was not able to get monitor video mode")
+		}
+		monW, monH := vm.Width, vm.Height
+
+		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
+
+		window, err = glfw3.CreateWindow(monW, monH, "Raytracer", monitor, nil)
+	} else {
+		window, err = glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
+	}
+
+	// fmt.Printf("swap interval: %t\n", glfw3.ExtensionSupported("SwapInterval"))
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
+	}
+
+	defer func() {
+		window.MakeContextCurrent()
+		window.Destroy()
+	}()
+
+	if *vsync {
+		window.MakeContextCurrent()
+		glfw3.SwapInterval(1)
 	}
 
 	window.SetCloseCallback(func(w *glfw3.Window) {
@@ -90,13 +134,13 @@ func interactiveRenderer() {
 	})
 
 	output := film.NewGlWIndow(window)
-	err = output.Init(*WIDTH, *HEIGHT)
+	winW, winH := window.GetFramebufferSize()
+	err = output.Init(winW, winH)
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
 	}
 
-	fmt.Println("Creating camera...")
 	cam := MakePinholeCamera(output)
 
 	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
@@ -107,16 +151,13 @@ func interactiveRenderer() {
 		}
 	})
 
-	fmt.Println("Creating new engine...")
 	tracer := engine.NewFPSEngine()
-
 	tracer.SetTarget(output, cam)
-
-	fmt.Println("Initializing renderer...")
 	tracer.InitRender()
-
-	fmt.Println("Initializing scene...")
 	tracer.Scene.InitScene()
+
+	// window.MakeContextCurrent()
+	// glfw3.SwapInterval(1)
 
 	tracer.Render()
 
@@ -128,11 +169,6 @@ func interactiveRenderer() {
 	}
 
 	tracer.StopRendering()
-
-	fmt.Println("Destroying window and terminating glfw3")
-	window.MakeContextCurrent()
-	window.Destroy()
-	glfw3.Terminate()
 }
 
 func pollEvents(window *glfw3.Window, cam camera.Camera) {
