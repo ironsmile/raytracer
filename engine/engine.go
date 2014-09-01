@@ -59,9 +59,15 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
+	if ray.Debug {
+		fmt.Printf("I did hit %s\n", prim.GetName())
+		ray.Debug = false
+	}
+
 	primMat := prim.GetMaterial()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
+		N := prim.GetNormal(pi)
 		light := e.Scene.GetLight(l)
 		shade := 1.0
 
@@ -69,6 +75,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 		if light.GetType() == scene.SPHERE {
 			piOffset := pi.PlusVector(L.MultiplyScalar(EPSION))
+
 			shadowRay := &geometry.Ray{Origin: piOffset, Direction: L}
 			// shadowRay.Debug = ray.Debug
 
@@ -78,8 +85,6 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 				shade = 0.0
 			}
 		}
-
-		N := prim.GetNormal(pi)
 
 		if primMat.Diff > 0 {
 			dot := N.Product(L)
@@ -165,10 +170,6 @@ func (e *Engine) subRender(startX, stopX, startY, stopY int,
 		for x := startX; x <= stopX; x++ {
 
 			weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
-
-			// if x == camera.DEBUG_X && y == camera.DEBUG_Y {
-			// 	fmt.Printf("Final ray:\n%v\n", r)
-			// }
 
 			e.Raytrace(ray, 1, accColor)
 

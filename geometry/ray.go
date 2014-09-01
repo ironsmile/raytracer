@@ -19,7 +19,7 @@ func (r *Ray) AtTime(time float64) *Point {
 }
 
 func NewRay(origin *Point, dir *Vector) *Ray {
-	return &Ray{Origin: origin, Direction: dir}
+	return &Ray{Origin: origin, Direction: dir.NormalizeIP(), Debug: false}
 }
 
 func NewRayFull(origin *Point, dir *Vector, start, end float64) *Ray {

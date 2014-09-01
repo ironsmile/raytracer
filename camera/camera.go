@@ -5,10 +5,8 @@ import (
 )
 
 var (
-	// DEBUG_X = 512
-	// DEBUG_Y = 384
-	DEBUG_X = 0
-	DEBUG_Y = 0
+	DEBUG_X = 400
+	DEBUG_Y = 300
 )
 
 type Camera interface {

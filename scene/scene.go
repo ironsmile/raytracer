@@ -16,6 +16,7 @@ const (
 	NOTHING = iota
 	SPHERE
 	PLANE
+	TRIANGLE
 )
 
 type Scene struct {
@@ -52,7 +53,7 @@ func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64) {
 
 		res, resDist := pr.Intersect(ray, retdist)
 
-		if res != MISS {
+		if res == HIT && resDist < retdist {
 			prim = pr
 			retdist = resDist
 		}
@@ -90,12 +91,10 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, plane)
 
 	plane = NewPlanePrim(geometry.NewVector(-1, 0, 0), 11)
-	plane.Name = "plane-right"
-	plane.Mat.Refl = 0
-	plane.Mat.Diff = 1.0
+	plane.Name = "plane-right-mirror"
+	plane.Mat.Refl = 1.0
+	plane.Mat.Diff = 0.4
 	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
-
-	s.Primitives = append(s.Primitives, plane)
 
 	s.Primitives = append(s.Primitives, plane)
 
@@ -130,6 +129,18 @@ func (s *Scene) InitScene() {
 	sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
 
 	s.Primitives = append(s.Primitives, sphere)
+
+	triangle := NewTriangle([3]*geometry.Point{
+		geometry.NewPoint(0, 3, -1.5),
+		geometry.NewPoint(3, -1, -1.5),
+		geometry.NewPoint(-3, -1, -1.5),
+	})
+	triangle.Name = "Green triangle"
+	triangle.Mat.Refl = 0.0
+	triangle.Mat.Diff = 0.3
+	triangle.Mat.Color = geometry.NewColor(0.3, 1, 0)
+
+	s.Primitives = append(s.Primitives, triangle)
 
 	sphere = NewSphere(*geometry.NewPoint(0, 5, 5), 0.1)
 	sphere.Name = "Visible light source"

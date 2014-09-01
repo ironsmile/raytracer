@@ -1,9 +1,11 @@
 package engine
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -72,9 +74,10 @@ func (e *FPSEngine) subRender(startX, stopX, startY, stopY int,
 
 					weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
 
-					// if x == camera.DEBUG_X && y == camera.DEBUG_Y {
-					//  fmt.Printf("Final ray:\n%v\n", r)
-					// }
+					if x == camera.DEBUG_X && y == camera.DEBUG_Y {
+						fmt.Printf("Debugging ray:\n%v\n", ray)
+						ray.Debug = true
+					}
 
 					e.Raytrace(ray, 1, accColor)
 

@@ -83,7 +83,7 @@ func (g *GlWindow) renderRoutine() {
 	// gl.Disable(gl.TEXTURE_2D)
 
 	displayTexture := func() {
-		textureTime := time.Now()
+		// textureTime := time.Now()
 
 		g.window.MakeContextCurrent()
 
@@ -118,7 +118,7 @@ func (g *GlWindow) renderRoutine() {
 
 		g.window.SwapBuffers()
 
-		fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
+		// fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
 	}
 
 	defer func() {

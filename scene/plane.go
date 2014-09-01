@@ -18,10 +18,13 @@ func (p *PlanePrim) GetType() int {
 }
 
 func NewPlanePrim(normal *geometry.Vector, d float64) *PlanePrim {
-	return &PlanePrim{Normal: normal, Distance: d}
+	return &PlanePrim{Normal: normal.NormalizeIP(), Distance: d}
 }
 
 func (p *PlanePrim) GetNormal(_ *geometry.Point) *geometry.Vector {
+	if p.Mat.Refl > 0.0 {
+		return p.Normal.Neg()
+	}
 	return p.Normal
 }
 
@@ -30,13 +33,13 @@ func (p *PlanePrim) GetDistance() float64 {
 }
 
 func (p *PlanePrim) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
-	d := p.Normal.Product(ray.Direction)
+	cos := p.Normal.Product(ray.Direction)
 
-	if d == 0 {
+	if cos >= 0 {
 		return MISS, dist
 	}
 
-	dst := -(p.Normal.ProductPoint(ray.Origin) + p.Distance) / d
+	dst := -(p.Normal.ProductPoint(ray.Origin) + p.Distance) / cos
 
 	if dst > 0 && dst < dist {
 		return HIT, dst
