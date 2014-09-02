@@ -53,6 +53,8 @@ func (i *Image) DoneFrame() {
 
 	if err != nil {
 		fmt.Errorf("%s\n", err.Error())
+	} else {
+		fmt.Printf("Image saved to %s\n", i.filename)
 	}
 }
 

@@ -82,7 +82,7 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = NewPlanePrim(geometry.NewVector(1, 0, 0), 11)
+	plane = NewPlanePrim(geometry.NewVector(1, 0, 0), 33)
 	plane.Name = "plane-left"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
@@ -131,9 +131,9 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 
 	triangle := NewTriangle([3]*geometry.Point{
-		geometry.NewPoint(0, 3, -1.5),
-		geometry.NewPoint(3, -1, -1.5),
-		geometry.NewPoint(-3, -1, -1.5),
+		geometry.NewPoint(-10.99, 3, 0),
+		geometry.NewPoint(-10.99, 0, -3),
+		geometry.NewPoint(-10.99, 0, 3),
 	})
 	triangle.Name = "Green triangle"
 	triangle.Mat.Refl = 0.0

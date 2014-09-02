@@ -59,10 +59,10 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
-	if ray.Debug {
-		fmt.Printf("I did hit %s\n", prim.GetName())
-		ray.Debug = false
-	}
+	// if ray.Debug {
+	// 	fmt.Printf("I did hit %s\n", prim.GetName())
+	// 	ray.Debug = false
+	// }
 
 	primMat := prim.GetMaterial()
 
@@ -126,17 +126,10 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	return prim, retdist, retColor
 }
 
-func (e *Engine) Render() {
-
+func (e *Engine) startParallelRendering(wg *sync.WaitGroup) {
 	quads := 8
 	quadWidth := e.Width / quads
 	quadHeight := e.Height / quads
-
-	var wg sync.WaitGroup
-
-	e.Dest.StartFrame()
-
-	engineTimer := time.Now()
 
 	for quadIndX := 0; quadIndX < quads; quadIndX++ {
 		for quadIndY := 0; quadIndY < quads; quadIndY++ {
@@ -148,9 +141,20 @@ func (e *Engine) Render() {
 			quadYStop := quadYStart + quadHeight - 1
 
 			wg.Add(1)
-			go e.subRender(quadXStart, quadXStop, quadYStart, quadYStop, &wg)
+			go e.startSubRender(quadXStart, quadXStop, quadYStart, quadYStop, wg)
 		}
 	}
+}
+
+func (e *Engine) Render() {
+
+	var wg sync.WaitGroup
+
+	e.Dest.StartFrame()
+
+	engineTimer := time.Now()
+
+	e.startParallelRendering(&wg)
 
 	wg.Wait()
 
@@ -159,9 +163,7 @@ func (e *Engine) Render() {
 	e.Dest.DoneFrame()
 }
 
-func (e *Engine) subRender(startX, stopX, startY, stopY int,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
+func (e *Engine) subRender(startX, stopX, startY, stopY int) {
 
 	ray := &geometry.Ray{}
 	accColor := geometry.NewColor(0, 0, 0)
@@ -177,6 +179,12 @@ func (e *Engine) subRender(startX, stopX, startY, stopY int,
 
 		}
 	}
+}
+
+func (e *Engine) startSubRender(startX, stopX, startY, stopY int,
+	wg *sync.WaitGroup) {
+	e.subRender(startX, stopX, startY, stopY)
+	defer wg.Done()
 }
 
 func NewEngine() *Engine {

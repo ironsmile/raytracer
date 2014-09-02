@@ -1,12 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"sync"
 	"time"
-
-	"github.com/ironsmile/raytracer/camera"
-	"github.com/ironsmile/raytracer/geometry"
 )
 
 type FPSEngine struct {
@@ -17,13 +13,13 @@ type FPSEngine struct {
 
 func (e *FPSEngine) Render() {
 
-	quads := 3
-	quadWidth := e.Width / quads
-	quadHeight := e.Height / quads
-
 	e.stopChan = make(chan bool)
 
 	e.Dest.StartFrame()
+
+	quads := 3
+	quadWidth := e.Width / quads
+	quadHeight := e.Height / quads
 
 	for quadIndX := 0; quadIndX < quads; quadIndX++ {
 		for quadIndY := 0; quadIndY < quads; quadIndY++ {
@@ -35,7 +31,7 @@ func (e *FPSEngine) Render() {
 			quadYStop := quadYStart + quadHeight - 1
 
 			e.wg.Add(1)
-			go e.subRender(quadXStart, quadXStop, quadYStart, quadYStop, &e.wg)
+			go e.startSubRender(quadXStart, quadXStop, quadYStart, quadYStop, &e.wg)
 		}
 	}
 
@@ -58,33 +54,16 @@ func (e *FPSEngine) screenRefresher() {
 	}
 }
 
-func (e *FPSEngine) subRender(startX, stopX, startY, stopY int,
+func (e *FPSEngine) startSubRender(startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	ray := &geometry.Ray{}
-	accColor := geometry.NewColor(0, 0, 0)
 	for {
 		select {
 		case _ = <-e.stopChan:
 			return
 		default:
-			for y := startY; y <= stopY; y++ {
-				for x := startX; x <= stopX; x++ {
-
-					weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
-
-					if x == camera.DEBUG_X && y == camera.DEBUG_Y {
-						fmt.Printf("Debugging ray:\n%v\n", ray)
-						ray.Debug = true
-					}
-
-					e.Raytrace(ray, 1, accColor)
-
-					e.Dest.Set(x, y, accColor.MultiplyScalarIP(weight))
-
-				}
-			}
+			e.subRender(startX, stopX, startY, stopY)
 		}
 
 	}
