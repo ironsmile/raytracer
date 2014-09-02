@@ -17,23 +17,7 @@ func (e *FPSEngine) Render() {
 
 	e.Dest.StartFrame()
 
-	quads := 3
-	quadWidth := e.Width / quads
-	quadHeight := e.Height / quads
-
-	for quadIndX := 0; quadIndX < quads; quadIndX++ {
-		for quadIndY := 0; quadIndY < quads; quadIndY++ {
-
-			quadXStart := quadIndX * quadWidth
-			quadXStop := quadXStart + quadWidth - 1
-
-			quadYStart := quadIndY * quadHeight
-			quadYStop := quadYStart + quadHeight - 1
-
-			e.wg.Add(1)
-			go e.startSubRender(quadXStart, quadXStop, quadYStart, quadYStop, &e.wg)
-		}
-	}
+	e.startParallelRendering(&e.wg, e.renderContinuously)
 
 	e.wg.Add(1)
 	go e.screenRefresher()
@@ -54,7 +38,7 @@ func (e *FPSEngine) screenRefresher() {
 	}
 }
 
-func (e *FPSEngine) startSubRender(startX, stopX, startY, stopY int,
+func (e *FPSEngine) renderContinuously(startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 

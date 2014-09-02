@@ -126,8 +126,9 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	return prim, retdist, retColor
 }
 
-func (e *Engine) startParallelRendering(wg *sync.WaitGroup) {
-	quads := 8
+func (e *Engine) startParallelRendering(wg *sync.WaitGroup,
+	subRendererFunction func(int, int, int, int, *sync.WaitGroup)) {
+	quads := 3
 	quadWidth := e.Width / quads
 	quadHeight := e.Height / quads
 
@@ -141,7 +142,7 @@ func (e *Engine) startParallelRendering(wg *sync.WaitGroup) {
 			quadYStop := quadYStart + quadHeight - 1
 
 			wg.Add(1)
-			go e.startSubRender(quadXStart, quadXStop, quadYStart, quadYStop, wg)
+			go subRendererFunction(quadXStart, quadXStop, quadYStart, quadYStop, wg)
 		}
 	}
 }
@@ -154,7 +155,7 @@ func (e *Engine) Render() {
 
 	engineTimer := time.Now()
 
-	e.startParallelRendering(&wg)
+	e.startParallelRendering(&wg, e.renderSingleFrame)
 
 	wg.Wait()
 
@@ -181,7 +182,7 @@ func (e *Engine) subRender(startX, stopX, startY, stopY int) {
 	}
 }
 
-func (e *Engine) startSubRender(startX, stopX, startY, stopY int,
+func (e *Engine) renderSingleFrame(startX, stopX, startY, stopY int,
 	wg *sync.WaitGroup) {
 	e.subRender(startX, stopX, startY, stopY)
 	defer wg.Done()
