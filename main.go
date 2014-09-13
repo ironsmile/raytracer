@@ -14,6 +14,7 @@ import (
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/sampler"
 )
 
 var (
@@ -49,7 +50,7 @@ func main() {
 	}
 
 	if *interactive {
-		interactiveRenderer()
+		// interactiveRenderer()
 	} else {
 		infileRenderer()
 	}
@@ -71,105 +72,115 @@ func infileRenderer() {
 	if err != nil {
 		log.Fatal("%s\n", err)
 	}
+	smpl := &sampler.SimpleSampler{}
+	err = smpl.Init(output)
+
+	if err != nil {
+		log.Fatal("%s\n", err)
+	}
+
 	cam := MakePinholeCamera(output)
 	tracer := engine.NewEngine()
 	tracer.SetTarget(output, cam)
-	tracer.InitRender()
+	tracer.InitRender(smpl)
 	tracer.Scene.InitScene()
+
 	renderTimer := time.Now()
 	tracer.Render()
 	fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
+
+	smpl.Stop()
 	output.Wait()
 }
 
-func interactiveRenderer() {
+// func interactiveRenderer() {
 
-	if !glfw3.Init() {
-		log.Fatal("Initializing glfw3 failed")
-	}
-	defer glfw3.Terminate()
+// 	if !glfw3.Init() {
+// 		log.Fatal("Initializing glfw3 failed")
+// 	}
+// 	defer glfw3.Terminate()
 
-	var err error
-	var window *glfw3.Window
+// 	var err error
+// 	var window *glfw3.Window
 
-	if *fullscreen {
-		monitor, err := glfw3.GetPrimaryMonitor()
+// 	if *fullscreen {
+// 		monitor, err := glfw3.GetPrimaryMonitor()
 
-		if err != nil {
-			log.Fatal("Was not able to find primary monitor")
-		}
+// 		if err != nil {
+// 			log.Fatal("Was not able to find primary monitor")
+// 		}
 
-		vm, err := monitor.GetVideoMode()
+// 		vm, err := monitor.GetVideoMode()
 
-		if err != nil {
-			log.Fatal("Was not able to get monitor video mode")
-		}
-		monW, monH := vm.Width, vm.Height
+// 		if err != nil {
+// 			log.Fatal("Was not able to get monitor video mode")
+// 		}
+// 		monW, monH := vm.Width, vm.Height
 
-		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
+// 		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
 
-		window, err = glfw3.CreateWindow(monW, monH, "Raytracer", monitor, nil)
-	} else {
-		window, err = glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
-	}
+// 		window, err = glfw3.CreateWindow(monW, monH, "Raytracer", monitor, nil)
+// 	} else {
+// 		window, err = glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
+// 	}
 
-	// fmt.Printf("swap interval: %t\n", glfw3.ExtensionSupported("SwapInterval"))
+// 	// fmt.Printf("swap interval: %t\n", glfw3.ExtensionSupported("SwapInterval"))
 
-	if err != nil {
-		log.Fatal("%s\n", err.Error())
-	}
+// 	if err != nil {
+// 		log.Fatal("%s\n", err.Error())
+// 	}
 
-	defer func() {
-		window.MakeContextCurrent()
-		window.Destroy()
-	}()
+// 	defer func() {
+// 		window.MakeContextCurrent()
+// 		window.Destroy()
+// 	}()
 
-	if *vsync {
-		window.MakeContextCurrent()
-		glfw3.SwapInterval(1)
-	}
+// 	if *vsync {
+// 		window.MakeContextCurrent()
+// 		glfw3.SwapInterval(1)
+// 	}
 
-	window.SetCloseCallback(func(w *glfw3.Window) {
-		window.SetShouldClose(true)
-	})
+// 	window.SetCloseCallback(func(w *glfw3.Window) {
+// 		window.SetShouldClose(true)
+// 	})
 
-	output := film.NewGlWIndow(window)
-	winW, winH := window.GetFramebufferSize()
-	err = output.Init(winW, winH)
+// 	output := film.NewGlWIndow(window)
+// 	winW, winH := window.GetFramebufferSize()
+// 	err = output.Init(winW, winH)
 
-	if err != nil {
-		log.Fatal("%s\n", err.Error())
-	}
+// 	if err != nil {
+// 		log.Fatal("%s\n", err.Error())
+// 	}
 
-	cam := MakePinholeCamera(output)
+// 	cam := MakePinholeCamera(output)
 
-	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
-		action glfw3.Action, mods glfw3.ModifierKey) {
-		if key == glfw3.KeyEscape {
-			window.SetShouldClose(true)
-			return
-		}
-	})
+// 	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
+// 		action glfw3.Action, mods glfw3.ModifierKey) {
+// 		if key == glfw3.KeyEscape {
+// 			window.SetShouldClose(true)
+// 			return
+// 		}
+// 	})
 
-	tracer := engine.NewFPSEngine()
-	tracer.SetTarget(output, cam)
-	tracer.InitRender()
-	tracer.Scene.InitScene()
+// 	tracer := engine.NewFPSEngine()
+// 	tracer.SetTarget(output, cam)
+// 	tracer.InitRender()
+// 	tracer.Scene.InitScene()
 
-	// window.MakeContextCurrent()
-	// glfw3.SwapInterval(1)
+// 	// window.MakeContextCurrent()
+// 	// glfw3.SwapInterval(1)
 
-	tracer.Render()
+// 	tracer.Render()
 
-	for !window.ShouldClose() {
-		// glfw3.WaitEvents()
-		time.Sleep(25 * time.Millisecond)
-		glfw3.PollEvents()
-		pollEvents(window, cam)
-	}
+// 	for !window.ShouldClose() {
+// 		// glfw3.WaitEvents()
+// 		time.Sleep(25 * time.Millisecond)
+// 		glfw3.PollEvents()
+// 		pollEvents(window, cam)
+// 	}
 
-	tracer.StopRendering()
-}
+// 	tracer.StopRendering()
+// }
 
 func pollEvents(window *glfw3.Window, cam camera.Camera) {
 	moveSpeed := 0.15

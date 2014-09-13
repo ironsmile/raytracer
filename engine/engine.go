@@ -9,6 +9,7 @@ import (
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
 )
 
@@ -22,6 +23,7 @@ type Engine struct {
 	Dest          film.Film
 	Width, Height int
 	Camera        camera.Camera
+	Sampler       sampler.Sampler
 }
 
 func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
@@ -31,8 +33,9 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Camera = cam
 }
 
-func (e *Engine) InitRender() {
+func (e *Engine) InitRender(smpl sampler.Sampler) {
 	e.Scene = scene.NewScene()
+	e.Sampler = smpl
 	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
@@ -155,7 +158,10 @@ func (e *Engine) Render() {
 
 	engineTimer := time.Now()
 
-	e.startParallelRendering(&wg, e.renderSingleFrame)
+	for i := 0; i < 9; i++ {
+		wg.Add(1)
+		go e.subRender(&wg)
+	}
 
 	wg.Wait()
 
@@ -164,28 +170,21 @@ func (e *Engine) Render() {
 	e.Dest.DoneFrame()
 }
 
-func (e *Engine) subRender(startX, stopX, startY, stopY int) {
-
+func (e *Engine) subRender(wg *sync.WaitGroup) {
+	defer wg.Done()
 	ray := &geometry.Ray{}
 	accColor := geometry.NewColor(0, 0, 0)
 
-	for y := startY; y <= stopY; y++ {
-		for x := startX; x <= stopX; x++ {
-
-			weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
-
-			e.Raytrace(ray, 1, accColor)
-
-			e.Dest.Set(x, y, accColor.MultiplyScalarIP(weight))
-
+	for {
+		x, y, err := e.Sampler.GetSample()
+		if err != nil {
+			return
 		}
+		weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
+		e.Raytrace(ray, 1, accColor)
+		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
-}
 
-func (e *Engine) renderSingleFrame(startX, stopX, startY, stopY int,
-	wg *sync.WaitGroup) {
-	e.subRender(startX, stopX, startY, stopY)
-	defer wg.Done()
 }
 
 func NewEngine() *Engine {
