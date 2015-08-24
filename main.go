@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -40,6 +42,10 @@ func main() {
 
 	flag.Parse()
 
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6464", nil))
+	}()
+
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -50,7 +56,7 @@ func main() {
 	}
 
 	if *interactive {
-		// interactiveRenderer()
+		interactiveRenderer()
 	} else {
 		infileRenderer()
 	}
@@ -68,21 +74,19 @@ func main() {
 
 func infileRenderer() {
 	output := film.NewImage(*filename)
-	err := output.Init(*WIDTH, *HEIGHT)
-	if err != nil {
+	if err := output.Init(*WIDTH, *HEIGHT); err != nil {
 		log.Fatal("%s\n", err)
 	}
-	smpl := &sampler.SimpleSampler{}
-	err = smpl.Init(output)
 
-	if err != nil {
+	smpl := &sampler.SimpleSampler{}
+
+	if err := smpl.Init(output); err != nil {
 		log.Fatal("%s\n", err)
 	}
 
 	cam := MakePinholeCamera(output)
-	tracer := engine.NewEngine()
+	tracer := engine.NewEngine(smpl)
 	tracer.SetTarget(output, cam)
-	tracer.InitRender(smpl)
 	tracer.Scene.InitScene()
 
 	renderTimer := time.Now()
@@ -93,85 +97,90 @@ func infileRenderer() {
 	output.Wait()
 }
 
-// func interactiveRenderer() {
+func interactiveRenderer() {
 
-// 	if err := glfw.Init(); err != nil {
-// 		log.Fatal("Initializing glfw failed. %s", err)
-// 	}
-// 	defer glfw.Terminate()
+	if err := glfw.Init(); err != nil {
+		log.Fatal("Initializing glfw failed. %s", err)
+	}
+	defer glfw.Terminate()
 
-// 	var err error
-// 	var window *glfw.Window
+	var err error
+	var window *glfw.Window
 
-// 	if *fullscreen {
-// 		monitor := glfw.GetPrimaryMonitor()
-// 		vm := monitor.GetVideoMode()
-// 		monW, monH := vm.Width, vm.Height
+	if *fullscreen {
+		monitor := glfw.GetPrimaryMonitor()
+		vm := monitor.GetVideoMode()
+		monW, monH := vm.Width, vm.Height
 
-// 		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
+		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
 
-// 		window, err = glfw.CreateWindow(monW, monH, "Raytracer", monitor, nil)
-// 	} else {
-// 		window, err = glfw.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
-// 	}
+		window, err = glfw.CreateWindow(monW, monH, "Raytracer", monitor, nil)
+	} else {
+		window, err = glfw.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
+	}
 
-// 	// fmt.Printf("swap interval: %t\n", glfw.ExtensionSupported("SwapInterval"))
+	// fmt.Printf("swap interval: %t\n", glfw.ExtensionSupported("SwapInterval"))
 
-// 	if err != nil {
-// 		log.Fatal("%s\n", err.Error())
-// 	}
+	if err != nil {
+		log.Fatal("%s\n", err.Error())
+	}
 
-// 	defer func() {
-// 		window.MakeContextCurrent()
-// 		window.Destroy()
-// 	}()
+	defer func() {
+		window.MakeContextCurrent()
+		window.Destroy()
+	}()
 
-// 	if *vsync {
-// 		window.MakeContextCurrent()
-// 		glfw.SwapInterval(1)
-// 	}
+	if *vsync {
+		window.MakeContextCurrent()
+		glfw.SwapInterval(1)
+	}
 
-// 	window.SetCloseCallback(func(w *glfw.Window) {
-// 		window.SetShouldClose(true)
-// 	})
+	window.SetCloseCallback(func(w *glfw.Window) {
+		window.SetShouldClose(true)
+	})
 
-// 	output := film.NewGlWIndow(window)
-// 	winW, winH := window.GetFramebufferSize()
-// 	err = output.Init(winW, winH)
+	output := film.NewGlWIndow(window)
+	winW, winH := window.GetFramebufferSize()
+	if err := output.Init(winW, winH); err != nil {
+		log.Fatal("%s\n", err.Error())
+	}
 
-// 	if err != nil {
-// 		log.Fatal("%s\n", err.Error())
-// 	}
+	smpl := &sampler.SimpleSampler{}
+	smpl.MakeContinuous()
 
-// 	cam := MakePinholeCamera(output)
+	if err = smpl.Init(output); err != nil {
+		log.Fatal("%s\n", err)
+	}
 
-// 	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
-// 		action glfw.Action, mods glfw.ModifierKey) {
-// 		if key == glfw.KeyEscape {
-// 			window.SetShouldClose(true)
-// 			return
-// 		}
-// 	})
+	cam := MakePinholeCamera(output)
 
-// 	tracer := engine.NewFPSEngine()
-// 	tracer.SetTarget(output, cam)
-// 	tracer.InitRender()
-// 	tracer.Scene.InitScene()
+	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
+		action glfw.Action, mods glfw.ModifierKey) {
+		if key == glfw.KeyEscape {
+			window.SetShouldClose(true)
+			return
+		}
+	})
 
-// 	// window.MakeContextCurrent()
-// 	// glfw.SwapInterval(1)
+	tracer := engine.NewFPSEngine(smpl)
+	tracer.SetTarget(output, cam)
+	tracer.Scene.InitScene()
 
-// 	tracer.Render()
+	// window.MakeContextCurrent()
+	// glfw.SwapInterval(1)
 
-// 	for !window.ShouldClose() {
-// 		// glfw.WaitEvents()
-// 		time.Sleep(25 * time.Millisecond)
-// 		glfw.PollEvents()
-// 		pollEvents(window, cam)
-// 	}
+	tracer.Render()
 
-// 	tracer.StopRendering()
-// }
+	for !window.ShouldClose() {
+		// glfw.WaitEvents()
+		time.Sleep(25 * time.Millisecond)
+		glfw.PollEvents()
+		pollEvents(window, cam)
+	}
+
+	smpl.Stop()
+	tracer.StopRendering()
+}
 
 func pollEvents(window *glfw.Window, cam camera.Camera) {
 	moveSpeed := 0.15

@@ -8,6 +8,8 @@ import (
 	"github.com/ironsmile/raytracer/sampler"
 )
 
+// The benchmark result without the sampler is 806732319 ns/op
+// Latest benchmark for the sampler            1130174954 ns/op
 func BenchmarkImageCreation(t *testing.B) {
 	output := film.NewImage("/dev/null")
 	if err := output.Init(1024, 768); err != nil {
@@ -20,9 +22,8 @@ func BenchmarkImageCreation(t *testing.B) {
 	}
 
 	cam := MakePinholeCamera(output)
-	tracer := engine.NewEngine()
+	tracer := engine.NewEngine(smpl)
 	tracer.SetTarget(output, cam)
-	tracer.InitRender(smpl)
 	tracer.Scene.InitScene()
 
 	for i := 0; i < t.N; i++ {

@@ -1,65 +1,59 @@
 package engine
 
-// import (
-// 	"sync"
-// 	"time"
-// )
+import (
+	"runtime"
+	"sync"
+	"time"
 
-// type FPSEngine struct {
-// 	Engine
-// 	wg       sync.WaitGroup
-// 	stopChan chan bool
-// }
+	"github.com/ironsmile/raytracer/sampler"
+	"github.com/ironsmile/raytracer/scene"
+)
 
-// func (e *FPSEngine) Render() {
+type FPSEngine struct {
+	Engine
+	wg       sync.WaitGroup
+	stopChan chan bool
+}
 
-// 	e.stopChan = make(chan bool)
+func (e *FPSEngine) Render() {
 
-// 	e.Dest.StartFrame()
+	e.stopChan = make(chan bool)
 
-// 	e.startParallelRendering(&e.wg, e.renderContinuously)
+	e.Dest.StartFrame()
 
-// 	e.wg.Add(1)
-// 	go e.screenRefresher()
-// }
+	for i := 0; i < runtime.NumCPU(); i++ {
+		e.wg.Add(1)
+		go e.subRender(&e.wg)
+	}
 
-// func (e *FPSEngine) screenRefresher() {
-// 	defer e.wg.Done()
+	e.wg.Add(1)
+	go e.screenRefresher()
+}
 
-// 	for {
-// 		select {
-// 		case _ = <-e.stopChan:
-// 			return
-// 		default:
-// 			e.Dest.StartFrame()
-// 			time.Sleep(20 * time.Millisecond)
-// 			e.Dest.DoneFrame()
-// 		}
-// 	}
-// }
+func (e *FPSEngine) screenRefresher() {
+	defer e.wg.Done()
 
-// func (e *FPSEngine) renderContinuously(startX, stopX, startY, stopY int,
-// 	wg *sync.WaitGroup) {
-// 	defer wg.Done()
+	for {
+		select {
+		case _ = <-e.stopChan:
+			return
+		default:
+			e.Dest.StartFrame()
+			time.Sleep(20 * time.Millisecond)
+			e.Dest.DoneFrame()
+		}
+	}
+}
 
-// 	for {
-// 		select {
-// 		case _ = <-e.stopChan:
-// 			return
-// 		default:
-// 			e.subRender(startX, stopX, startY, stopY)
-// 		}
+func (e *FPSEngine) StopRendering() {
+	close(e.stopChan)
+	e.wg.Wait()
+	e.Dest.Wait()
+}
 
-// 	}
-// }
-
-// func (e *FPSEngine) StopRendering() {
-// 	close(e.stopChan)
-// 	e.wg.Wait()
-// 	e.Dest.Wait()
-// }
-
-// func NewFPSEngine() *FPSEngine {
-// 	eng := new(FPSEngine)
-// 	return eng
-// }
+func NewFPSEngine(smpl sampler.Sampler) *FPSEngine {
+	eng := new(FPSEngine)
+	eng.Scene = scene.NewScene()
+	eng.Sampler = smpl
+	return eng
+}

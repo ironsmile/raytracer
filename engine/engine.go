@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sync"
 	"time"
 
@@ -31,12 +32,6 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Height = target.Height()
 	e.Dest = target
 	e.Camera = cam
-}
-
-func (e *Engine) InitRender(smpl sampler.Sampler) {
-	e.Scene = scene.NewScene()
-	e.Sampler = smpl
-	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
 func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Color) (
@@ -129,27 +124,6 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	return prim, retdist, retColor
 }
 
-func (e *Engine) startParallelRendering(wg *sync.WaitGroup,
-	subRendererFunction func(int, int, int, int, *sync.WaitGroup)) {
-	quads := 3
-	quadWidth := e.Width / quads
-	quadHeight := e.Height / quads
-
-	for quadIndX := 0; quadIndX < quads; quadIndX++ {
-		for quadIndY := 0; quadIndY < quads; quadIndY++ {
-
-			quadXStart := quadIndX * quadWidth
-			quadXStop := quadXStart + quadWidth - 1
-
-			quadYStart := quadIndY * quadHeight
-			quadYStop := quadYStart + quadHeight - 1
-
-			wg.Add(1)
-			go subRendererFunction(quadXStart, quadXStop, quadYStart, quadYStop, wg)
-		}
-	}
-}
-
 func (e *Engine) Render() {
 
 	var wg sync.WaitGroup
@@ -158,7 +132,7 @@ func (e *Engine) Render() {
 
 	engineTimer := time.Now()
 
-	for i := 0; i < 9; i++ {
+	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
 		go e.subRender(&wg)
 	}
@@ -187,7 +161,9 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 
 }
 
-func NewEngine() *Engine {
+func NewEngine(smpl sampler.Sampler) *Engine {
 	eng := new(Engine)
+	eng.Scene = scene.NewScene()
+	eng.Sampler = smpl
 	return eng
 }

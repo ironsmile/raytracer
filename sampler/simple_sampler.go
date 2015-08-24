@@ -3,7 +3,7 @@ package sampler
 import (
 	"fmt"
 	"image/color"
-	"sync"
+	"sync/atomic"
 
 	"github.com/ironsmile/raytracer/film"
 )
@@ -11,47 +11,44 @@ import (
 type SimpleSampler struct {
 	output film.Film
 
-	stopChan chan bool
+	stopped    bool
+	continuous bool
 
-	samplesChan chan *Sample
-	sampleFreed chan bool
-
-	stopped bool
+	currentSample uint64
+	lastSample    uint64
+	width         uint64
 }
 
 func (s *SimpleSampler) Init(f film.Film) error {
 	s.output = f
-	s.stopChan = make(chan bool)
-	s.samplesChan = make(chan *Sample, 500)
-	s.sampleFreed = make(chan bool)
 
-	var wg sync.WaitGroup
-
-	max := f.Width() * f.Height()
-	sampleGenerators := 3
-	generatorSize := max / sampleGenerators
-
-	for i := 0; i < sampleGenerators; i++ {
-		from := i * generatorSize
-		to := from + generatorSize
-		wg.Add(1)
-		go s.sampleGenerator(from, to, &wg)
-	}
-
-	go s.cleanup(&wg)
+	s.lastSample = uint64(f.Width() * f.Height())
+	s.width = uint64(f.Width())
 
 	return nil
 }
 
 func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
-	e = nil
-	smpl := <-s.samplesChan
-	if smpl == nil {
+
+	if s.stopped {
 		e = fmt.Errorf("End of sampling")
 		return
 	}
-	x, y = smpl.X, smpl.Y
-	// s.sampleFreed <- true
+
+	sample := atomic.AddUint64(&s.currentSample, 1) - 1
+
+	if !s.continuous && sample >= s.lastSample {
+		e = fmt.Errorf("End of sampling")
+		return
+	}
+
+	if s.continuous && sample >= s.lastSample {
+		sample = sample % s.lastSample
+	}
+
+	y = float64(sample / s.width)
+	x = float64(sample % s.width)
+
 	return
 }
 
@@ -63,29 +60,9 @@ func (s *SimpleSampler) Stop() {
 	if s.stopped {
 		return
 	}
-	close(s.stopChan)
-	close(s.samplesChan)
-	close(s.sampleFreed)
 	s.stopped = true
 }
 
-func (s *SimpleSampler) sampleGenerator(from, to int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	w := s.output.Width()
-	var x, y float64
-
-	for i := from; i < to; i++ {
-		y = float64(i / w)
-		x = float64(i % w)
-
-		sample := &Sample{}
-		sample.X, sample.Y = x, y
-		s.samplesChan <- sample
-	}
-}
-
-func (s *SimpleSampler) cleanup(wg *sync.WaitGroup) {
-	wg.Wait()
-	s.Stop()
+func (s *SimpleSampler) MakeContinuous() {
+	s.continuous = true
 }
