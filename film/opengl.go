@@ -5,8 +5,8 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/go-gl/gl"
-	"github.com/go-gl/glfw3"
+	"github.com/go-gl-legacy/gl"
+	"github.com/go-gl/glfw/v3.1/glfw"
 )
 
 type GlWindow struct {
@@ -16,7 +16,7 @@ type GlWindow struct {
 	refreshScreenChan chan bool
 	renderFinishChan  chan bool
 
-	window *glfw3.Window
+	window *glfw.Window
 
 	pixBuffer []float32
 	// textureBuffer []float32
@@ -190,7 +190,7 @@ func (g *GlWindow) Height() int {
 	return g.height
 }
 
-func NewGlWIndow(window *glfw3.Window) *GlWindow {
+func NewGlWIndow(window *glfw.Window) *GlWindow {
 	gwWin := &GlWindow{window: window}
 	return gwWin
 }

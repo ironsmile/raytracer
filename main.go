@@ -8,7 +8,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/go-gl/glfw3"
+	"github.com/go-gl/glfw/v3.1/glfw"
 
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
@@ -84,36 +84,28 @@ func infileRenderer() {
 
 func interactiveRenderer() {
 
-	if !glfw3.Init() {
-		log.Fatal("Initializing glfw3 failed")
+	if err := glfw.Init(); err != nil {
+		log.Fatal("Initializing glfw failed.", err)
 	}
-	defer glfw3.Terminate()
+	defer glfw.Terminate()
 
 	var err error
-	var window *glfw3.Window
+	var window *glfw.Window
 
 	if *fullscreen {
-		monitor, err := glfw3.GetPrimaryMonitor()
+		monitor := glfw.GetPrimaryMonitor()
+		vm := monitor.GetVideoMode()
 
-		if err != nil {
-			log.Fatal("Was not able to find primary monitor")
-		}
-
-		vm, err := monitor.GetVideoMode()
-
-		if err != nil {
-			log.Fatal("Was not able to get monitor video mode")
-		}
 		monW, monH := vm.Width, vm.Height
 
 		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
 
-		window, err = glfw3.CreateWindow(monW, monH, "Raytracer", monitor, nil)
+		window, err = glfw.CreateWindow(monW, monH, "Raytracer", monitor, nil)
 	} else {
-		window, err = glfw3.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
+		window, err = glfw.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
 	}
 
-	// fmt.Printf("swap interval: %t\n", glfw3.ExtensionSupported("SwapInterval"))
+	// fmt.Printf("swap interval: %t\n", glfw.ExtensionSupported("SwapInterval"))
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
@@ -126,10 +118,10 @@ func interactiveRenderer() {
 
 	if *vsync {
 		window.MakeContextCurrent()
-		glfw3.SwapInterval(1)
+		glfw.SwapInterval(1)
 	}
 
-	window.SetCloseCallback(func(w *glfw3.Window) {
+	window.SetCloseCallback(func(w *glfw.Window) {
 		window.SetShouldClose(true)
 	})
 
@@ -143,9 +135,9 @@ func interactiveRenderer() {
 
 	cam := MakePinholeCamera(output)
 
-	window.SetKeyCallback(func(w *glfw3.Window, key glfw3.Key, scancode int,
-		action glfw3.Action, mods glfw3.ModifierKey) {
-		if key == glfw3.KeyEscape {
+	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
+		action glfw.Action, mods glfw.ModifierKey) {
+		if key == glfw.KeyEscape {
 			window.SetShouldClose(true)
 			return
 		}
@@ -157,45 +149,45 @@ func interactiveRenderer() {
 	tracer.Scene.InitScene()
 
 	// window.MakeContextCurrent()
-	// glfw3.SwapInterval(1)
+	// glfw.SwapInterval(1)
 
 	tracer.Render()
 
 	for !window.ShouldClose() {
-		// glfw3.WaitEvents()
+		// glfw.WaitEvents()
 		time.Sleep(25 * time.Millisecond)
-		glfw3.PollEvents()
+		glfw.PollEvents()
 		pollEvents(window, cam)
 	}
 
 	tracer.StopRendering()
 }
 
-func pollEvents(window *glfw3.Window, cam camera.Camera) {
+func pollEvents(window *glfw.Window, cam camera.Camera) {
 	moveSpeed := 0.15
 	rotateSpeed := 3.0
-	if window.GetKey(glfw3.KeyW) == glfw3.Press {
+	if window.GetKey(glfw.KeyW) == glfw.Press {
 		cam.Forward(moveSpeed)
 	}
-	if window.GetKey(glfw3.KeyS) == glfw3.Press {
+	if window.GetKey(glfw.KeyS) == glfw.Press {
 		cam.Backward(moveSpeed)
 	}
-	if window.GetKey(glfw3.KeyA) == glfw3.Press {
+	if window.GetKey(glfw.KeyA) == glfw.Press {
 		cam.Left(moveSpeed)
 	}
-	if window.GetKey(glfw3.KeyD) == glfw3.Press {
+	if window.GetKey(glfw.KeyD) == glfw.Press {
 		cam.Right(moveSpeed)
 	}
-	if window.GetKey(glfw3.KeyUp) == glfw3.Press {
+	if window.GetKey(glfw.KeyUp) == glfw.Press {
 		cam.Pitch(rotateSpeed)
 	}
-	if window.GetKey(glfw3.KeyDown) == glfw3.Press {
+	if window.GetKey(glfw.KeyDown) == glfw.Press {
 		cam.Pitch(-rotateSpeed)
 	}
-	if window.GetKey(glfw3.KeyLeft) == glfw3.Press {
+	if window.GetKey(glfw.KeyLeft) == glfw.Press {
 		cam.Yaw(-rotateSpeed)
 	}
-	if window.GetKey(glfw3.KeyRight) == glfw3.Press {
+	if window.GetKey(glfw.KeyRight) == glfw.Press {
 		cam.Yaw(rotateSpeed)
 	}
 }
