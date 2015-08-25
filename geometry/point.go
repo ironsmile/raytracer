@@ -24,6 +24,11 @@ func (p *Point) MinusVectorIP(vec *Vector) *Point {
 	return p
 }
 
+func (p *Point) MinusInVector(other *Point, v *Vector) *Vector {
+	v.X, v.Y, v.Z = p.X-other.X, p.Y-other.Y, p.Z-other.Z
+	return v
+}
+
 func (p *Point) PlusVector(vec *Vector) *Point {
 	return &Point{p.X + vec.X, p.Y + vec.Y, p.Z + vec.Z}
 }
@@ -74,6 +79,11 @@ func (p *Point) Vector() *Vector {
 
 func (p *Point) Copy() *Point {
 	return &Point{p.X, p.Y, p.Z}
+}
+
+func (p *Point) CopyToSelf(o *Point) *Point {
+	p.X, p.Y, p.Z = o.X, o.Y, o.Z
+	return p
 }
 
 func NewPoint(x, y, z float64) *Point {

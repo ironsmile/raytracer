@@ -1,8 +1,12 @@
 package engine
 
 import (
+	"runtime"
 	"sync"
 	"time"
+
+	"github.com/ironsmile/raytracer/sampler"
+	"github.com/ironsmile/raytracer/scene"
 )
 
 type FPSEngine struct {
@@ -17,7 +21,10 @@ func (e *FPSEngine) Render() {
 
 	e.Dest.StartFrame()
 
-	e.startParallelRendering(&e.wg, e.renderContinuously)
+	for i := 0; i < runtime.NumCPU(); i++ {
+		e.wg.Add(1)
+		go e.subRender(&e.wg)
+	}
 
 	e.wg.Add(1)
 	go e.screenRefresher()
@@ -32,24 +39,9 @@ func (e *FPSEngine) screenRefresher() {
 			return
 		default:
 			e.Dest.StartFrame()
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(20 * time.Millisecond)
 			e.Dest.DoneFrame()
 		}
-	}
-}
-
-func (e *FPSEngine) renderContinuously(startX, stopX, startY, stopY int,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for {
-		select {
-		case _ = <-e.stopChan:
-			return
-		default:
-			e.subRender(startX, stopX, startY, stopY)
-		}
-
 	}
 }
 
@@ -59,7 +51,9 @@ func (e *FPSEngine) StopRendering() {
 	e.Dest.Wait()
 }
 
-func NewFPSEngine() *FPSEngine {
+func NewFPSEngine(smpl sampler.Sampler) *FPSEngine {
 	eng := new(FPSEngine)
+	eng.Scene = scene.NewScene()
+	eng.Sampler = smpl
 	return eng
 }

@@ -3,12 +3,14 @@ package engine
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sync"
 	"time"
 
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
 )
 
@@ -22,6 +24,7 @@ type Engine struct {
 	Dest          film.Film
 	Width, Height int
 	Camera        camera.Camera
+	Sampler       sampler.Sampler
 }
 
 func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
@@ -29,11 +32,6 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Height = target.Height()
 	e.Dest = target
 	e.Camera = cam
-}
-
-func (e *Engine) InitRender() {
-	e.Scene = scene.NewScene()
-	fmt.Printf("Engine initialized with viewport %dx%d\n", e.Width, e.Height)
 }
 
 func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Color) (
@@ -57,12 +55,25 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return prim, retdist, retColor
 	}
 
-	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+	var (
+		piO geometry.Point
+		pi  *geometry.Point = &piO
 
-	// if ray.Debug {
-	// 	fmt.Printf("I did hit %s\n", prim.GetName())
-	// 	ray.Debug = false
-	// }
+		piDirectionO geometry.Vector
+		piDirection  *geometry.Vector = &piDirectionO
+
+		shadowRayO geometry.Ray
+		shadowRay  *geometry.Ray = &shadowRayO
+
+		LO geometry.Vector
+		L  *geometry.Vector = &LO
+
+		piOffsetO geometry.Point
+		piOffset  *geometry.Point = &piOffsetO
+	)
+
+	piDirection.CopyToSelf(ray.Direction).MultiplyScalarIP(retdist)
+	pi.CopyToSelf(ray.Origin).PlusVectorIP(piDirection)
 
 	primMat := prim.GetMaterial()
 
@@ -71,12 +82,18 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		light := e.Scene.GetLight(l)
 		shade := 1.0
 
-		L := (light.(*scene.Sphere)).Center.Minus(pi).NormalizeIP()
+		// Reusing the same object as much as possible
+		(light.(*scene.Sphere)).Center.MinusInVector(pi, L)
+		L.NormalizeIP()
 
 		if light.GetType() == scene.SPHERE {
-			piOffset := pi.PlusVector(L.MultiplyScalar(EPSION))
+			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
 
-			shadowRay := &geometry.Ray{Origin: piOffset, Direction: L}
+			// Reusing the same object as much as possible
+			shadowRay.BackToDefaults()
+			shadowRay.Origin = piOffset
+			shadowRay.Direction = L
+
 			// shadowRay.Debug = ray.Debug
 
 			intersected, _ := e.Scene.Intersect(shadowRay)
@@ -110,41 +127,31 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	// Reflection
 	if primMat.Refl > 0.0 {
-		N := prim.GetNormal(pi)
-		R := ray.Direction.Minus(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
 
-		refRay := &geometry.Ray{Origin: pi.PlusVector(R.MultiplyScalar(EPSION)),
-			Direction: R}
+		var (
+			RO geometry.Vector
+			R  *geometry.Vector = &RO
+
+			refRayO geometry.Ray
+			refRay  *geometry.Ray = &refRayO
+		)
+
+		N := prim.GetNormal(pi)
+		R.CopyToSelf(ray.Direction)
+		R.MinusIP(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
+
+		refRay.Origin = pi.PlusVectorIP(R.MultiplyScalar(EPSION))
+		refRay.Direction = R
+
 		// refRay.Debug = ray.Debug
-		refColor := &geometry.Color{}
-		e.Raytrace(refRay, depth+1, refColor)
+		var refColor geometry.Color
+		e.Raytrace(refRay, depth+1, &refColor)
 
 		retColor.PlusIP(primMat.Color.Multiply(
-			refColor).MultiplyScalarIP(primMat.Refl))
+			&refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
 	return prim, retdist, retColor
-}
-
-func (e *Engine) startParallelRendering(wg *sync.WaitGroup,
-	subRendererFunction func(int, int, int, int, *sync.WaitGroup)) {
-	quads := 3
-	quadWidth := e.Width / quads
-	quadHeight := e.Height / quads
-
-	for quadIndX := 0; quadIndX < quads; quadIndX++ {
-		for quadIndY := 0; quadIndY < quads; quadIndY++ {
-
-			quadXStart := quadIndX * quadWidth
-			quadXStop := quadXStart + quadWidth - 1
-
-			quadYStart := quadIndY * quadHeight
-			quadYStop := quadYStart + quadHeight - 1
-
-			wg.Add(1)
-			go subRendererFunction(quadXStart, quadXStop, quadYStart, quadYStop, wg)
-		}
-	}
 }
 
 func (e *Engine) Render() {
@@ -155,7 +162,10 @@ func (e *Engine) Render() {
 
 	engineTimer := time.Now()
 
-	e.startParallelRendering(&wg, e.renderSingleFrame)
+	for i := 0; i < runtime.NumCPU(); i++ {
+		wg.Add(1)
+		go e.subRender(&wg)
+	}
 
 	wg.Wait()
 
@@ -164,31 +174,26 @@ func (e *Engine) Render() {
 	e.Dest.DoneFrame()
 }
 
-func (e *Engine) subRender(startX, stopX, startY, stopY int) {
-
+func (e *Engine) subRender(wg *sync.WaitGroup) {
+	defer wg.Done()
 	ray := &geometry.Ray{}
 	accColor := geometry.NewColor(0, 0, 0)
 
-	for y := startY; y <= stopY; y++ {
-		for x := startX; x <= stopX; x++ {
-
-			weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
-
-			e.Raytrace(ray, 1, accColor)
-
-			e.Dest.Set(x, y, accColor.MultiplyScalarIP(weight))
-
+	for {
+		x, y, err := e.Sampler.GetSample()
+		if err != nil {
+			return
 		}
+		weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
+		e.Raytrace(ray, 1, accColor)
+		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
+
 }
 
-func (e *Engine) renderSingleFrame(startX, stopX, startY, stopY int,
-	wg *sync.WaitGroup) {
-	e.subRender(startX, stopX, startY, stopY)
-	defer wg.Done()
-}
-
-func NewEngine() *Engine {
+func NewEngine(smpl sampler.Sampler) *Engine {
 	eng := new(Engine)
+	eng.Scene = scene.NewScene()
+	eng.Sampler = smpl
 	return eng
 }

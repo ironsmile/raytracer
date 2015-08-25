@@ -18,6 +18,14 @@ func (r *Ray) AtTime(time float64) *Point {
 	return r.Origin.PlusVector(r.Direction.MultiplyScalar(time))
 }
 
+func (r *Ray) BackToDefaults() {
+	r.Mint = 0.0
+	r.Maxt = 0.0
+	r.Time = 0.0
+	r.Depth = 0
+	r.Debug = false
+}
+
 func NewRay(origin *Point, dir *Vector) *Ray {
 	return &Ray{Origin: origin, Direction: dir.NormalizeIP(), Debug: false}
 }

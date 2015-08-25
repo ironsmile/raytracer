@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/sampler"
 )
 
 var (
@@ -38,6 +41,10 @@ var (
 func main() {
 
 	flag.Parse()
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6464", nil))
+	}()
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -67,25 +74,33 @@ func main() {
 
 func infileRenderer() {
 	output := film.NewImage(*filename)
-	err := output.Init(*WIDTH, *HEIGHT)
-	if err != nil {
+	if err := output.Init(*WIDTH, *HEIGHT); err != nil {
 		log.Fatal("%s\n", err)
 	}
+
+	smpl := &sampler.SimpleSampler{}
+
+	if err := smpl.Init(output); err != nil {
+		log.Fatal("%s\n", err)
+	}
+
 	cam := MakePinholeCamera(output)
-	tracer := engine.NewEngine()
+	tracer := engine.NewEngine(smpl)
 	tracer.SetTarget(output, cam)
-	tracer.InitRender()
 	tracer.Scene.InitScene()
+
 	renderTimer := time.Now()
 	tracer.Render()
 	fmt.Printf("Rendering finished: %s\n", time.Since(renderTimer))
+
+	smpl.Stop()
 	output.Wait()
 }
 
 func interactiveRenderer() {
 
 	if err := glfw.Init(); err != nil {
-		log.Fatal("Initializing glfw failed.", err)
+		log.Fatal("Initializing glfw failed. %s", err)
 	}
 	defer glfw.Terminate()
 
@@ -95,7 +110,6 @@ func interactiveRenderer() {
 	if *fullscreen {
 		monitor := glfw.GetPrimaryMonitor()
 		vm := monitor.GetVideoMode()
-
 		monW, monH := vm.Width, vm.Height
 
 		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
@@ -127,10 +141,15 @@ func interactiveRenderer() {
 
 	output := film.NewGlWIndow(window)
 	winW, winH := window.GetFramebufferSize()
-	err = output.Init(winW, winH)
-
-	if err != nil {
+	if err := output.Init(winW, winH); err != nil {
 		log.Fatal("%s\n", err.Error())
+	}
+
+	smpl := &sampler.SimpleSampler{}
+	smpl.MakeContinuous()
+
+	if err = smpl.Init(output); err != nil {
+		log.Fatal("%s\n", err)
 	}
 
 	cam := MakePinholeCamera(output)
@@ -143,9 +162,8 @@ func interactiveRenderer() {
 		}
 	})
 
-	tracer := engine.NewFPSEngine()
+	tracer := engine.NewFPSEngine(smpl)
 	tracer.SetTarget(output, cam)
-	tracer.InitRender()
 	tracer.Scene.InitScene()
 
 	// window.MakeContextCurrent()
@@ -160,6 +178,7 @@ func interactiveRenderer() {
 		pollEvents(window, cam)
 	}
 
+	smpl.Stop()
 	tracer.StopRendering()
 }
 
