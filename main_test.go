@@ -27,7 +27,9 @@ func BenchmarkImageCreation(t *testing.B) {
 	tracer.Scene.InitScene()
 
 	for i := 0; i < t.N; i++ {
+		output.StartFrame()
 		tracer.Render()
+		output.DoneFrame()
 	}
 
 	smpl.Stop()

@@ -110,6 +110,11 @@ func (v *Vector) Copy() *Vector {
 	return &Vector{v.X, v.Y, v.Z}
 }
 
+func (v *Vector) CopyToSelf(other *Vector) *Vector {
+	v.X, v.Y, v.Z = other.X, other.Y, other.Z
+	return v
+}
+
 func (v *Vector) Equals(other *Vector) bool {
 	if math.Abs(v.X-other.X) > COMPARE_PRECISION {
 		return false

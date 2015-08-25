@@ -55,12 +55,25 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return prim, retdist, retColor
 	}
 
-	pi := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+	var (
+		piO geometry.Point
+		pi  *geometry.Point = &piO
 
-	// if ray.Debug {
-	// 	fmt.Printf("I did hit %s\n", prim.GetName())
-	// 	ray.Debug = false
-	// }
+		piDirectionO geometry.Vector
+		piDirection  *geometry.Vector = &piDirectionO
+
+		shadowRayO geometry.Ray
+		shadowRay  *geometry.Ray = &shadowRayO
+
+		LO geometry.Vector
+		L  *geometry.Vector = &LO
+
+		piOffsetO geometry.Point
+		piOffset  *geometry.Point = &piOffsetO
+	)
+
+	piDirection.CopyToSelf(ray.Direction).MultiplyScalarIP(retdist)
+	pi.CopyToSelf(ray.Origin).PlusVectorIP(piDirection)
 
 	primMat := prim.GetMaterial()
 
@@ -69,12 +82,18 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		light := e.Scene.GetLight(l)
 		shade := 1.0
 
-		L := (light.(*scene.Sphere)).Center.Minus(pi).NormalizeIP()
+		// Reusing the same object as much as possible
+		(light.(*scene.Sphere)).Center.MinusInVector(pi, L)
+		L.NormalizeIP()
 
 		if light.GetType() == scene.SPHERE {
-			piOffset := pi.PlusVector(L.MultiplyScalar(EPSION))
+			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
 
-			shadowRay := &geometry.Ray{Origin: piOffset, Direction: L}
+			// Reusing the same object as much as possible
+			shadowRay.BackToDefaults()
+			shadowRay.Origin = piOffset
+			shadowRay.Direction = L
+
 			// shadowRay.Debug = ray.Debug
 
 			intersected, _ := e.Scene.Intersect(shadowRay)
@@ -108,17 +127,28 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	// Reflection
 	if primMat.Refl > 0.0 {
-		N := prim.GetNormal(pi)
-		R := ray.Direction.Minus(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
 
-		refRay := &geometry.Ray{Origin: pi.PlusVector(R.MultiplyScalar(EPSION)),
-			Direction: R}
+		var (
+			RO geometry.Vector
+			R  *geometry.Vector = &RO
+
+			refRayO geometry.Ray
+			refRay  *geometry.Ray = &refRayO
+		)
+
+		N := prim.GetNormal(pi)
+		R.CopyToSelf(ray.Direction)
+		R.MinusIP(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
+
+		refRay.Origin = pi.PlusVectorIP(R.MultiplyScalar(EPSION))
+		refRay.Direction = R
+
 		// refRay.Debug = ray.Debug
-		refColor := &geometry.Color{}
-		e.Raytrace(refRay, depth+1, refColor)
+		var refColor geometry.Color
+		e.Raytrace(refRay, depth+1, &refColor)
 
 		retColor.PlusIP(primMat.Color.Multiply(
-			refColor).MultiplyScalarIP(primMat.Refl))
+			&refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
 	return prim, retdist, retColor
