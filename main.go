@@ -85,7 +85,7 @@ func infileRenderer() {
 	}
 
 	cam := MakePinholeCamera(output)
-	tracer := engine.NewEngine(smpl)
+	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
 	tracer.Scene.InitScene()
 
@@ -162,7 +162,7 @@ func interactiveRenderer() {
 		}
 	})
 
-	tracer := engine.NewFPSEngine(smpl)
+	tracer := engine.NewFPS(smpl)
 	tracer.SetTarget(output, cam)
 	tracer.Scene.InitScene()
 

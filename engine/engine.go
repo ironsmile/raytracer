@@ -191,9 +191,13 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 
 }
 
-func NewEngine(smpl sampler.Sampler) *Engine {
+func New(smpl sampler.Sampler) *Engine {
 	eng := new(Engine)
+	initEngine(eng, smpl)
+	return eng
+}
+
+func initEngine(eng *Engine, smpl sampler.Sampler) {
 	eng.Scene = scene.NewScene()
 	eng.Sampler = smpl
-	return eng
 }

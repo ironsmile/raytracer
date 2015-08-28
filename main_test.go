@@ -22,7 +22,7 @@ func BenchmarkImageCreation(t *testing.B) {
 	}
 
 	cam := MakePinholeCamera(output)
-	tracer := engine.NewEngine(smpl)
+	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
 	tracer.Scene.InitScene()
 

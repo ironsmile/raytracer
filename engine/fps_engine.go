@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ironsmile/raytracer/sampler"
-	"github.com/ironsmile/raytracer/scene"
 )
 
 type FPSEngine struct {
@@ -51,9 +50,8 @@ func (e *FPSEngine) StopRendering() {
 	e.Dest.Wait()
 }
 
-func NewFPSEngine(smpl sampler.Sampler) *FPSEngine {
+func NewFPS(smpl sampler.Sampler) *FPSEngine {
 	eng := new(FPSEngine)
-	eng.Scene = scene.NewScene()
-	eng.Sampler = smpl
+	initEngine(&eng.Engine, smpl)
 	return eng
 }
