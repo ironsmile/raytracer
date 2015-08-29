@@ -78,12 +78,7 @@ func infileRenderer() {
 		log.Fatal("%s\n", err)
 	}
 
-	smpl := &sampler.SimpleSampler{}
-
-	if err := smpl.Init(output); err != nil {
-		log.Fatal("%s\n", err)
-	}
-
+	smpl := sampler.NewSimple(output)
 	cam := MakePinholeCamera(output)
 	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
@@ -145,12 +140,8 @@ func interactiveRenderer() {
 		log.Fatal("%s\n", err.Error())
 	}
 
-	smpl := &sampler.SimpleSampler{}
+	smpl := sampler.NewSimple(output)
 	smpl.MakeContinuous()
-
-	if err = smpl.Init(output); err != nil {
-		log.Fatal("%s\n", err)
-	}
 
 	cam := MakePinholeCamera(output)
 

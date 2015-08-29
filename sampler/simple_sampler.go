@@ -19,15 +19,6 @@ type SimpleSampler struct {
 	width         uint64
 }
 
-func (s *SimpleSampler) Init(f film.Film) error {
-	s.output = f
-
-	s.lastSample = uint64(f.Width() * f.Height())
-	s.width = uint64(f.Width())
-
-	return nil
-}
-
 func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 
 	if s.stopped {
@@ -65,4 +56,14 @@ func (s *SimpleSampler) Stop() {
 
 func (s *SimpleSampler) MakeContinuous() {
 	s.continuous = true
+}
+
+func NewSimple(f film.Film) *SimpleSampler {
+	s := new(SimpleSampler)
+
+	s.output = f
+	s.lastSample = uint64(f.Width() * f.Height())
+	s.width = uint64(f.Width())
+
+	return s
 }
