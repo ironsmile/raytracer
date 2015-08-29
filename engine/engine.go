@@ -164,7 +164,11 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 
 	for {
 		x, y, err := e.Sampler.GetSample()
+		if err == sampler.EndOfSampling {
+			return
+		}
 		if err != nil {
+			fmt.Printf("Error while getting sample: %s\n", err)
 			return
 		}
 		weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)

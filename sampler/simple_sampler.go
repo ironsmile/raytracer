@@ -1,12 +1,14 @@
 package sampler
 
 import (
-	"fmt"
+	"errors"
 	"image/color"
 	"sync/atomic"
 
 	"github.com/ironsmile/raytracer/film"
 )
+
+var EndOfSampling error = errors.New("End of sampling")
 
 type SimpleSampler struct {
 	output film.Film
@@ -27,14 +29,14 @@ type SimpleSampler struct {
 func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 
 	if s.stopped {
-		e = fmt.Errorf("End of sampling")
+		e = EndOfSampling
 		return
 	}
 
 	sample := atomic.AddUint64(&s.currentSample, 1) - 1
 
 	if !s.continuous && sample >= s.lastSample {
-		e = fmt.Errorf("End of sampling")
+		e = EndOfSampling
 		return
 	}
 

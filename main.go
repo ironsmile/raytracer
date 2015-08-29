@@ -58,7 +58,7 @@ func main() {
 	if *filename != "" {
 		infileRenderer()
 	} else {
-		interactiveRenderer()
+		openglWindowRenderer()
 	}
 
 	if *memprofile != "" {
@@ -92,7 +92,7 @@ func infileRenderer() {
 	output.Wait()
 }
 
-func interactiveRenderer() {
+func openglWindowRenderer() {
 
 	if err := glfw.Init(); err != nil {
 		log.Fatal("Initializing glfw failed. %s", err)
@@ -113,8 +113,6 @@ func interactiveRenderer() {
 	} else {
 		window, err = glfw.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
 	}
-
-	// fmt.Printf("swap interval: %t\n", glfw.ExtensionSupported("SwapInterval"))
 
 	if err != nil {
 		log.Fatal("%s\n", err.Error())
@@ -160,18 +158,15 @@ func interactiveRenderer() {
 	tracer.SetTarget(output, cam)
 	tracer.Scene.InitScene()
 
-	// window.MakeContextCurrent()
-	// glfw.SwapInterval(1)
-
 	tracer.Render()
 
 	for !window.ShouldClose() {
-		// glfw.WaitEvents()
-		time.Sleep(25 * time.Millisecond)
-		glfw.PollEvents()
-
 		if *interactive {
+			time.Sleep(25 * time.Millisecond)
+			glfw.PollEvents()
 			handleInteractionEvents(window, cam)
+		} else {
+			glfw.WaitEvents()
 		}
 	}
 
