@@ -112,7 +112,7 @@ func (p *PinholeCamera) rotate(rotation *transform.Transform) {
 	p.computeMatrix()
 }
 
-func NewPinholeCamera(camPosition, camLookAtPoint *geometry.Point,
+func NewPinhole(camPosition, camLookAtPoint *geometry.Point,
 	camUp *geometry.Vector, dist float64, f film.Film) *PinholeCamera {
 
 	cam := &PinholeCamera{

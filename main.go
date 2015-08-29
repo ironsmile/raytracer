@@ -216,5 +216,5 @@ func MakePinholeCamera(f film.Film) camera.Camera {
 	lookAtPoint := geometry.NewPoint(0, 0, 1)
 	up := geometry.NewVector(0, 1, 0)
 
-	return camera.NewPinholeCamera(pos, lookAtPoint, up, 1, f)
+	return camera.NewPinhole(pos, lookAtPoint, up, 1, f)
 }
