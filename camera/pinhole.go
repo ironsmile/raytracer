@@ -1,6 +1,8 @@
 package camera
 
 import (
+	"sync"
+
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/transform"
@@ -17,6 +19,8 @@ type PinholeCamera struct {
 	origin *geometry.Point
 	lookAt *geometry.Point
 	up     *geometry.Vector
+
+	sync.RWMutex
 }
 
 func (p *PinholeCamera) GenerateRay(x, y float64) (*geometry.Ray, float64) {
@@ -26,6 +30,9 @@ func (p *PinholeCamera) GenerateRay(x, y float64) (*geometry.Ray, float64) {
 }
 
 func (p *PinholeCamera) GenerateRayIP(x, y float64, ray *geometry.Ray) float64 {
+	p.RLock()
+	defer p.RUnlock()
+
 	posX := p.screen[0] + (x/p.rasterW)*p.screen[1]*2
 	posY := p.screen[3] + (y/p.rasterH)*p.screen[2]*2
 
@@ -37,18 +44,27 @@ func (p *PinholeCamera) GenerateRayIP(x, y float64, ray *geometry.Ray) float64 {
 }
 
 func (p *PinholeCamera) Forward(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
 	dir := p.lookAt.Minus(p.origin).NormalizeIP().MultiplyScalarIP(speed)
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) Backward(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
 	dir := p.lookAt.Minus(p.origin).NormalizeIP().MultiplyScalarIP(speed).NegIP()
 	p.move(dir)
 	return nil
 }
 
 func (p *PinholeCamera) Left(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
 	dir := p.lookAt.Minus(p.origin).NormalizeIP()
 	dir = p.up.Cross(dir).MultiplyScalarIP(speed).NegIP()
 	p.move(dir)
@@ -56,6 +72,9 @@ func (p *PinholeCamera) Left(speed float64) error {
 }
 
 func (p *PinholeCamera) Right(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
 	dir := p.lookAt.Minus(p.origin).NormalizeIP()
 	dir = p.up.Cross(dir).MultiplyScalarIP(speed)
 	p.move(dir)
@@ -73,16 +92,22 @@ func (p *PinholeCamera) computeMatrix() {
 }
 
 func (p *PinholeCamera) Yaw(angle float64) error {
-	p.Rotate(transform.RotateY(angle))
+	p.Lock()
+	defer p.Unlock()
+
+	p.rotate(transform.RotateY(angle))
 	return nil
 }
 
 func (p *PinholeCamera) Pitch(angle float64) error {
-	p.Rotate(transform.RotateX(angle))
+	p.Lock()
+	defer p.Unlock()
+
+	p.rotate(transform.RotateX(angle))
 	return nil
 }
 
-func (p *PinholeCamera) Rotate(rotation *transform.Transform) {
+func (p *PinholeCamera) rotate(rotation *transform.Transform) {
 	p.camToWorld.PointIP(rotation.PointIP(p.camToWorld.Inverse().PointIP(p.lookAt)))
 	p.computeMatrix()
 }
