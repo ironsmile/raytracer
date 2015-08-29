@@ -3,6 +3,7 @@ package film
 import (
 	"fmt"
 	"image/color"
+	"sync"
 	"time"
 
 	"github.com/go-gl-legacy/gl"
@@ -18,8 +19,8 @@ type GlWindow struct {
 
 	window *glfw.Window
 
-	pixBuffer []float32
-	// textureBuffer []float32
+	pixBufferLock sync.RWMutex
+	pixBuffer     []float32
 }
 
 func (g *GlWindow) Init(width int, height int) error {
@@ -27,12 +28,8 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
-	// g.textureBuffer = make([]float32, g.width*g.height*3)
 	g.refreshScreenChan = make(chan bool)
 	g.renderFinishChan = make(chan bool)
-
-	g.window.MakeContextCurrent()
-	g.window.SwapBuffers()
 
 	go g.renderRoutine()
 
@@ -78,20 +75,13 @@ func (g *GlWindow) renderRoutine() {
 	fmt.Printf("gl.VERSION = %s\n", gl.GetString(gl.VERSION))
 	fmt.Printf("gl.VENDOR = %s\n", gl.GetString(gl.VENDOR))
 
-	// texture.Unbind(gl.TEXTURE_2D)
-	// gl.PopAttrib()
-	// gl.Disable(gl.TEXTURE_2D)
-
 	displayTexture := func() {
 		// textureTime := time.Now()
 
+		g.pixBufferLock.RLock()
+		defer g.pixBufferLock.RUnlock()
+
 		g.window.MakeContextCurrent()
-
-		// gl.Clear(gl.COLOR_BUFFER_BIT)
-
-		// gl.PushAttrib(gl.ENABLE_BIT)
-		// gl.Enable(gl.TEXTURE_2D)
-		// texture.Bind(gl.TEXTURE_2D)
 
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, g.width, g.height, 0, gl.RGB, gl.FLOAT,
 			g.pixBuffer)
@@ -112,10 +102,6 @@ func (g *GlWindow) renderRoutine() {
 
 		gl.End()
 
-		// texture.Unbind(gl.TEXTURE_2D)
-		// gl.PopAttrib()
-		// gl.Disable(gl.TEXTURE_2D)
-
 		g.window.SwapBuffers()
 
 		// fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
@@ -131,7 +117,6 @@ func (g *GlWindow) renderRoutine() {
 
 		select {
 		case _ = <-g.refreshScreenChan:
-			// g.textureBuffer, g.pixBuffer = g.pixBuffer, g.textureBuffer
 			g.refreshScreenChan <- true
 			displayTexture()
 
@@ -166,6 +151,8 @@ func (g *GlWindow) DoneFrame() {
 }
 
 func (g *GlWindow) Set(x int, y int, clr color.Color) error {
+	g.pixBufferLock.Lock()
+	defer g.pixBufferLock.Unlock()
 
 	ri, gi, bi, _ := clr.RGBA()
 

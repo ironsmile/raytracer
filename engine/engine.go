@@ -55,36 +55,25 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return prim, retdist, retColor
 	}
 
-	var (
-		piO geometry.Point
-		pi  *geometry.Point = &piO
+	shadowRay := &geometry.Ray{}
+	L := &geometry.Vector{}
+	piOffset := &geometry.Point{}
 
-		piDirectionO geometry.Vector
-		piDirection  *geometry.Vector = &piDirectionO
-
-		shadowRayO geometry.Ray
-		shadowRay  *geometry.Ray = &shadowRayO
-
-		LO geometry.Vector
-		L  *geometry.Vector = &LO
-
-		piOffsetO geometry.Point
-		piOffset  *geometry.Point = &piOffsetO
-	)
-
-	piDirection.CopyToSelf(ray.Direction).MultiplyScalarIP(retdist)
-	pi.CopyToSelf(ray.Origin).PlusVectorIP(piDirection)
+	piDirection := ray.Direction.MultiplyScalar(retdist)
+	pi := ray.Origin.PlusVector(piDirection)
 
 	primMat := prim.GetMaterial()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		N := prim.GetNormal(pi)
 		light := e.Scene.GetLight(l)
-		shade := 1.0
+		luminousity := 1.0
 
 		// Reusing the same object as much as possible
 		(light.(*scene.Sphere)).Center.MinusInVector(pi, L)
 		L.NormalizeIP()
+
+		dot := N.Product(L)
 
 		if light.GetType() == scene.SPHERE {
 			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
@@ -99,17 +88,18 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 			intersected, _ := e.Scene.Intersect(shadowRay)
 
 			if light != intersected {
-				shade = 0.0
+				// This was previously `luminousity = 0` which gave a really hard
+				// shadowing. In an effort to make the lightning softer I changed
+				// it to the one ti is now. I don't really know how this will
+				// affect any other parts of the tracer.
+				luminousity = 1.0 - dot
 			}
 		}
 
-		if primMat.Diff > 0 {
-			dot := N.Product(L)
-			if dot > 0 {
-				weight := dot * primMat.Diff * shade
-				retColor.PlusIP(light.GetMaterial().Color.
-					Multiply(primMat.Color).MultiplyScalarIP(weight))
-			}
+		if primMat.Diff > 0 && dot > 0 {
+			weight := dot * primMat.Diff * luminousity
+			retColor.PlusIP(light.GetMaterial().Color.
+				Multiply(primMat.Color).MultiplyScalarIP(weight))
 		}
 
 		if primMat.GetSpecular() > 0 {
@@ -117,7 +107,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 			R := L.Minus(N.MultiplyScalar(2.0 * L.Product(N)))
 			dot := V.Product(R)
 			if dot > 0 {
-				spec := math.Pow(dot, 20) * primMat.GetSpecular() * shade
+				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
 				retColor.PlusIP(light.GetMaterial().Color.
 					MultiplyScalar(spec))
 			}
@@ -128,20 +118,13 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	// Reflection
 	if primMat.Refl > 0.0 {
 
-		var (
-			RO geometry.Vector
-			R  *geometry.Vector = &RO
-
-			refRayO geometry.Ray
-			refRay  *geometry.Ray = &refRayO
-		)
-
 		N := prim.GetNormal(pi)
-		R.CopyToSelf(ray.Direction)
-		R.MinusIP(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
+		R := ray.Direction.Minus(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
 
-		refRay.Origin = pi.PlusVectorIP(R.MultiplyScalar(EPSION))
-		refRay.Direction = R
+		refRay := &geometry.Ray{
+			Origin:    pi.PlusVectorIP(R.MultiplyScalar(EPSION)),
+			Direction: R,
+		}
 
 		// refRay.Debug = ray.Debug
 		var refColor geometry.Color

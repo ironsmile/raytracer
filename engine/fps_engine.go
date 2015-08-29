@@ -38,7 +38,7 @@ func (e *FPSEngine) screenRefresher() {
 			return
 		default:
 			e.Dest.StartFrame()
-			time.Sleep(20 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			e.Dest.DoneFrame()
 		}
 	}

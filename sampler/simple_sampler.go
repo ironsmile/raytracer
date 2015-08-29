@@ -14,9 +14,14 @@ type SimpleSampler struct {
 	stopped    bool
 	continuous bool
 
+	// A counter which is used for generating samples
 	currentSample uint64
-	lastSample    uint64
-	width         uint64
+
+	// This is the number of samples needed to generate the scene once
+	lastSample uint64
+
+	// The width of the scene. This is used when currentSample exeeds lastSample
+	width uint64
 }
 
 func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {

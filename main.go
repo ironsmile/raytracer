@@ -24,10 +24,10 @@ var (
 		"write cpu profile to file")
 	memprofile = flag.String("memprofile", "",
 		"write memory profile to this file")
-	filename = flag.String("filename", "/tmp/rendered.png",
-		"output file")
+	filename = flag.String("filename", "",
+		"output the image to a PNG file instead of showing it to the screen")
 	interactive = flag.Bool("interactive", false,
-		"starts the renderer in opengl win")
+		"starts the renderer in interactive mode")
 	vsync = flag.Bool("vsync", true,
 		"control vsync for interactive renderer")
 	fullscreen = flag.Bool("fullscreen", false,
@@ -55,10 +55,10 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if *interactive {
-		interactiveRenderer()
-	} else {
+	if *filename != "" {
 		infileRenderer()
+	} else {
+		interactiveRenderer()
 	}
 
 	if *memprofile != "" {
@@ -141,7 +141,10 @@ func interactiveRenderer() {
 	}
 
 	smpl := sampler.NewSimple(output)
-	smpl.MakeContinuous()
+
+	if *interactive {
+		smpl.MakeContinuous()
+	}
 
 	cam := MakePinholeCamera(output)
 
@@ -166,14 +169,17 @@ func interactiveRenderer() {
 		// glfw.WaitEvents()
 		time.Sleep(25 * time.Millisecond)
 		glfw.PollEvents()
-		pollEvents(window, cam)
+
+		if *interactive {
+			handleInteractionEvents(window, cam)
+		}
 	}
 
 	smpl.Stop()
 	tracer.StopRendering()
 }
 
-func pollEvents(window *glfw.Window, cam camera.Camera) {
+func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
 	moveSpeed := 0.15
 	rotateSpeed := 3.0
 	if window.GetKey(glfw.KeyW) == glfw.Press {
