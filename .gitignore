@@ -6,4 +6,5 @@ cpp/*
 raytracer
 *.prof
 *.mprof
+data/*
 
