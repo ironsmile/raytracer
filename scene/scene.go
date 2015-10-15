@@ -1,8 +1,6 @@
 package scene
 
 import (
-	"fmt"
-
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -17,6 +15,7 @@ const (
 	SPHERE
 	PLANE
 	TRIANGLE
+	OBJECT
 )
 
 type Scene struct {
@@ -41,25 +40,7 @@ func (s *Scene) GetPrimitive(index int) Primitive {
 }
 
 func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64) {
-	retdist := 1000000.0
-	var prim Primitive = nil
-
-	for sInd := 0; sInd < len(s.Primitives); sInd++ {
-		pr := s.Primitives[sInd]
-
-		if pr == nil {
-			fmt.Errorf("Primitive with index %d was nil\n", sInd)
-		}
-
-		res, resDist := pr.Intersect(ray, retdist)
-
-		if res == HIT && resDist < retdist {
-			prim = pr
-			retdist = resDist
-		}
-	}
-
-	return prim, retdist
+	return IntersectPrimitives(s.Primitives, ray)
 }
 
 func (s *Scene) InitScene() {
