@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/go-gl/glfw/v3.1/glfw"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"time"
-
-	"github.com/go-gl/glfw/v3.1/glfw"
 
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
@@ -18,6 +18,12 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/sampler"
 )
+
+func init() {
+	// This is needed to arrange that main() runs on main thread.
+	// GLFW3.1 requires this.
+	runtime.LockOSThread()
+}
 
 var (
 	cpuprofile = flag.String("cpuprofile", "",
@@ -118,6 +124,8 @@ func openglWindowRenderer() {
 		log.Fatal("%s\n", err.Error())
 	}
 
+	window.MakeContextCurrent()
+
 	defer func() {
 		window.MakeContextCurrent()
 		window.Destroy()
@@ -160,15 +168,21 @@ func openglWindowRenderer() {
 
 	tracer.Render()
 
-	for !window.ShouldClose() {
-		if *interactive {
-			time.Sleep(25 * time.Millisecond)
-			glfw.PollEvents()
-			handleInteractionEvents(window, cam)
-		} else {
-			glfw.WaitEvents()
+	go func() {
+		for !window.ShouldClose() {
+			if *interactive {
+				time.Sleep(25 * time.Millisecond)
+				glfw.PollEvents()
+				handleInteractionEvents(window, cam)
+			} else {
+				glfw.WaitEvents()
+			}
 		}
-	}
+		fmt.Println("Closing window!")
+		output.Wait()
+	}()
+
+	output.RenderRoutine()
 
 	smpl.Stop()
 	tracer.StopRendering()
