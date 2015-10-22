@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"sync"
-	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -21,6 +20,14 @@ type GlWindow struct {
 
 	pixBufferLock sync.RWMutex
 	pixBuffer     []float32
+
+	glProgram uint32 // Holds the OpenGL program
+	glVao     uint32
+	glVbo     uint32
+	glEbo     uint32
+	glTexture uint32
+
+	glInited bool
 }
 
 func (g *GlWindow) Init(width int, height int) error {
@@ -31,143 +38,123 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.refreshScreenChan = make(chan bool)
 	g.renderFinishChan = make(chan bool)
 
-	// go g.RenderRoutine()
-
-	return nil
+	return g.initOpenGL()
 }
 
-func (g *GlWindow) RenderRoutine() {
-
-	renderStart := time.Now()
+func (g *GlWindow) initOpenGL() error {
+	if g.glInited {
+		panic("Calling init on already initialized OpenGL")
+	}
 
 	g.window.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
-		panic(err)
+		return err
 	}
 
-	fmt.Printf("gl.GetError: %d\n", gl.GetError())
 	fmt.Printf("gl.VERSION = %s\n", gl.GoStr(gl.GetString(gl.VERSION)))
 	fmt.Printf("gl.RENDERER = %s\n", gl.GoStr(gl.GetString(gl.RENDERER)))
 	fmt.Printf("gl.VENDOR = %s\n", gl.GoStr(gl.GetString(gl.VENDOR)))
 
-	// gl.MatrixMode(gl.PROJECTION)
-	// gl.LoadIdentity()
-	// gl.Ortho(0, float64(g.width), float64(g.height), 0, 0, 1)
+	// General configuration
+	gl.Viewport(0, 0, int32(g.width), int32(g.height))
 	gl.Disable(gl.DEPTH_TEST)
-	// gl.MatrixMode(gl.MODELVIEW)
-	// gl.LoadIdentity()
-	gl.ClearColor(0, 0, 0, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
 
-	var texture uint32
-	gl.GenTextures(1, &texture)
+	// Shaders and program compilation
+	program, err := newProgram(vertexShader, fragmentShader)
+	if err != nil {
+		return err
+	}
 
-	// gl.PushAttrib(gl.ENABLE_BIT)
-	gl.Enable(gl.TEXTURE_2D)
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
+	g.glProgram = program
 
-	gl.PixelStorei(gl.UNPACK_ALIGNMENT, 1)
+	// Texture creation
+	gl.GenTextures(1, &g.glTexture)
+	gl.BindTexture(gl.TEXTURE_2D, g.glTexture)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	// defer func() {
-	// 	g.window.MakeContextCurrent()
-	// 	// texture.Unbind(gl.TEXTURE_2D)
-	// 	// gl.PopAttrib()
-	// 	gl.Disable(gl.TEXTURE_2D)
-	// }()
+	gl.BindTexture(gl.TEXTURE_2D, 0)
 
-	displayTexture := func() {
-		// textureTime := time.Now()
+	// Vertex buffer, array
+	gl.GenVertexArrays(1, &g.glVao)
+	gl.BindVertexArray(g.glVao)
+	{
 
-		g.pixBufferLock.RLock()
-		defer g.pixBufferLock.RUnlock()
-
-		g.window.MakeContextCurrent()
-
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(g.width), int32(g.height),
-			0, gl.RGB, gl.FLOAT, gl.Ptr(g.pixBuffer))
-
-		//!TODO: Somehow render the preparte texture.
-		// gl.Begin(gl.POLYGON)
-
-		// gl.TexCoord2xOES(0, 0)
-		// gl.Vertex3xOES(0, 0)
-
-		// gl.TexCoord2xOES(1, 0)
-		// gl.Vertex3xOES(int32(g.width), 0)
-
-		// gl.TexCoord2xOES(1, 1)
-		// gl.Vertex3xOES(int32(g.width), int32(g.height))
-
-		// gl.TexCoord2xOES(0, 1)
-		// gl.Vertex3xOES(0, int32(g.height))
-
-		// gl.End()
-
-		g.window.SwapBuffers()
-
-		// fmt.Printf("GL Textured Polygon: %s\n", time.Since(textureTime))
-	}
-
-	defer func() {
-		fmt.Println("GL rendering goroutine exited.")
-	}()
-
-	fmt.Printf("GL Init time: %s\n", time.Since(renderStart))
-
-	for {
-
-		select {
-		case _ = <-g.refreshScreenChan:
-			g.refreshScreenChan <- true
-			displayTexture()
-
-		case _ = <-g.renderFinishChan:
-			g.renderFinishChan <- true
-			return
+		verices := []float32{
+			// [0, 3] - Positions, [4, 5] - Texture cords
+			-1, 1, 0, 0, 0, // top left [0]
+			1, 1, 0, 1, 0, // top right [1]
+			-1, -1, 0, 0, 1, // bottom left [2]
+			1, -1, 0, 1, 1, // bottom right [3]
 		}
 
+		indeces := []uint32{
+			0, 1, 3, // First Triangle
+			3, 0, 2, // Second Triangle
+		}
+
+		gl.GenBuffers(1, &g.glVbo)
+		gl.BindBuffer(gl.ARRAY_BUFFER, g.glVbo)
+		gl.BufferData(gl.ARRAY_BUFFER, len(verices)*4, gl.Ptr(verices), gl.STATIC_DRAW)
+
+		gl.GenBuffers(1, &g.glEbo)
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, g.glEbo)
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indeces)*4, gl.Ptr(indeces), gl.STATIC_DRAW)
+
+		// Vertex Attribute
+		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+		gl.EnableVertexAttribArray(0)
+
+		// Texture Position Attribute
+		gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+		gl.EnableVertexAttribArray(1)
 	}
+	gl.BindVertexArray(0)
+
+	g.glInited = true
+	return nil
+}
+
+func (g *GlWindow) Render() {
+	if !g.glInited {
+		panic("OpenGL not initialized!")
+	}
+
+	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.UseProgram(g.glProgram)
+	gl.BindVertexArray(g.glVao)
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, g.glTexture)
+
+	g.bufferToTexture()
+	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+
+	gl.BindVertexArray(0)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+}
+
+func (g *GlWindow) bufferToTexture() {
+	g.pixBufferLock.RLock()
+	defer g.pixBufferLock.RUnlock()
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(g.width), int32(g.height),
+		0, gl.RGB, gl.FLOAT, gl.Ptr(g.pixBuffer))
 }
 
 func (g *GlWindow) Wait() {
-
-	// This select makes Wait reentrant. After the first Wait all others will just return
-	// at once. In other words, all Waits after the first one are a noop.
-	select {
-	case <-g.renderFinishChan:
-		return
-	default:
-		fmt.Println("Sending rendering finish")
-		g.renderFinishChan <- true
-
-		fmt.Println("Receiving finished ack")
-		_ = <-g.renderFinishChan
-
-		fmt.Println("Closing renderFinishChan")
-		close(g.renderFinishChan)
-
-		fmt.Println("Closing refreshScreenChan")
-		close(g.refreshScreenChan)
-	}
+	gl.DeleteVertexArrays(1, &g.glVao)
+	gl.DeleteBuffers(1, &g.glEbo)
+	gl.DeleteBuffers(1, &g.glVbo)
 }
 
 func (g *GlWindow) StartFrame() {
 }
 
 func (g *GlWindow) DoneFrame() {
-	select {
-	case <-g.renderFinishChan:
-		return
-	default:
-		g.RefreshScreen()
-	}
 }
 
 func (g *GlWindow) Set(x int, y int, clr color.Color) error {
@@ -182,11 +169,6 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 	g.pixBuffer[ind+2] = float32(bi) / 65535.0
 
 	return nil
-}
-
-func (g *GlWindow) RefreshScreen() {
-	g.refreshScreenChan <- true
-	_ = <-g.refreshScreenChan
 }
 
 func (g *GlWindow) Width() int {

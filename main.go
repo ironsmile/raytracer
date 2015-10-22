@@ -42,6 +42,8 @@ var (
 		"image or window width in pixels")
 	HEIGHT = flag.Int("h", 768,
 		"image or window height in pixels")
+	fpsCap = flag.Uint("fps-cap", 30,
+		"maximum number of frames per second")
 )
 
 func main() {
@@ -108,6 +110,10 @@ func openglWindowRenderer() {
 	var err error
 	var window *glfw.Window
 
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+
 	if *fullscreen {
 		monitor := glfw.GetPrimaryMonitor()
 		vm := monitor.GetVideoMode()
@@ -168,21 +174,31 @@ func openglWindowRenderer() {
 
 	tracer.Render()
 
-	go func() {
-		for !window.ShouldClose() {
-			if *interactive {
-				time.Sleep(25 * time.Millisecond)
-				glfw.PollEvents()
-				handleInteractionEvents(window, cam)
-			} else {
-				glfw.WaitEvents()
-			}
-		}
-		fmt.Println("Closing window!")
-		output.Wait()
-	}()
+	minFrameTime, _ := time.ParseDuration(fmt.Sprintf("%dms", int(1000.0/float32(*fpsCap))))
 
-	output.RenderRoutine()
+	window.MakeContextCurrent()
+	for !window.ShouldClose() {
+		renderStart := time.Now()
+		output.Render()
+		renderTime := time.Since(renderStart)
+
+		glfw.PollEvents()
+		if *interactive {
+			handleInteractionEvents(window, cam)
+		}
+		window.SwapBuffers()
+
+		elapsed := time.Since(renderStart)
+		if elapsed < minFrameTime {
+			time.Sleep(minFrameTime - elapsed)
+			elapsed = minFrameTime
+		}
+		fps := 1 / elapsed.Seconds()
+		fmt.Printf("\rFPS: %.3f\tRender time: %s    ", fps, renderTime)
+	}
+
+	fmt.Println("\nClosing window, rendering stopped.")
+	output.Wait()
 
 	smpl.Stop()
 	tracer.StopRendering()
