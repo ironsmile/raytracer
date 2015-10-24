@@ -20,7 +20,7 @@ func (s *Sphere) GetType() int {
 	return SPHERE
 }
 
-func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
+func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
 	v := ray.Origin.Minus(s.Center)
 	b := -v.Product(ray.Direction)
 	det := b*b - v.Product(v) + s.SqRadius
@@ -28,7 +28,7 @@ func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 	retdist := dist
 	retval := MISS
 	if det <= 0 {
-		return retval, retdist
+		return retval, retdist, nil
 	}
 
 	det = math.Sqrt(det)
@@ -50,7 +50,9 @@ func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 		}
 	}
 
-	return retval, retdist
+	intersectionPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+
+	return retval, retdist, s.GetNormal(intersectionPoint)
 }
 
 func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {

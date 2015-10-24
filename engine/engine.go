@@ -43,7 +43,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return nil, 0, retColor
 	}
 
-	prim, retdist := e.Scene.Intersect(ray)
+	prim, retdist, InNormal := e.Scene.Intersect(ray)
 
 	if prim == nil {
 		return nil, 0, retColor
@@ -63,7 +63,10 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	pi := ray.Origin.PlusVector(piDirection)
 
 	primMat := prim.GetMaterial()
-	InNormal := prim.GetNormal(pi)
+
+	//!TODO: maybe make sure the Intersect method returns a copy of a internal Normal vector
+	// so that it can modified. InNormal, for example is modified further down this method.
+	InNormal = InNormal.Copy()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
@@ -85,7 +88,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 			// shadowRay.Debug = ray.Debug
 
-			intersected, _ := e.Scene.Intersect(shadowRay)
+			intersected, _, _ := e.Scene.Intersect(shadowRay)
 
 			if light != intersected {
 				// This was previously `luminousity = 0` which gave a really hard

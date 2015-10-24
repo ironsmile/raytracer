@@ -33,19 +33,19 @@ func (o *Object) GetType() int {
 	return OBJECT
 }
 
-func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
+func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
 	if o.boundingSphere != nil {
-		spHit, _ := o.boundingSphere.Intersect(ray, dist)
+		spHit, _, _ := o.boundingSphere.Intersect(ray, dist)
 		if spHit == MISS {
-			return MISS, dist
+			return MISS, dist, nil
 		}
 	}
 
-	prim, distance := IntersectPrimitives(o.Triangles, ray)
+	prim, distance, normal := IntersectPrimitives(o.Triangles, ray)
 	if prim == nil {
-		return MISS, distance
+		return MISS, distance, normal
 	}
-	return HIT, distance
+	return HIT, distance, normal
 }
 
 func (o *Object) GetNormal(pos *geometry.Point) *geometry.Vector {
@@ -61,6 +61,7 @@ func (o *Object) computeBoundingSphere() error {
 	//!TODO: maybe implement one of the following:
 	// https://www.inf.ethz.ch/personal/gaertner/texts/own_work/esa99_final.pdf
 	// http://www.ep.liu.se/ecp/034/009/ecp083409.pdf
+	// A the moment this is a simple and buggy (see next comment) exhaustion search.
 
 	// Bug: this method makes an implicit guess that the object is centered around the o.Center.
 	// This might not be true.
@@ -84,6 +85,8 @@ func (o *Object) computeBoundingSphere() error {
 	return nil
 }
 
+// NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
+// the object at the position, given by its second argument - `center`.
 func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 	decoder := obj.NewDecoder(obj.DefaultLimits())
 	objFile, err := os.Open(filePath)

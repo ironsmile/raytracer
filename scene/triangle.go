@@ -38,12 +38,16 @@ func (t *Triangle) String() string {
 	return fmt.Sprintf("Triangle<%s>: %+v", t.Name, t.Vertices)
 }
 
-func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
+func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+	// Implements Möller–Trumbore ray-triangle intersection algorithm:
+	// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+
 	P := ray.Direction.Cross(t.edge2)
 	det := t.edge1.Product(P)
 
+	// Not culling:
 	if det > -geometry.EPSILON && det < geometry.EPSILON {
-		return MISS, dist
+		return MISS, dist, nil
 	}
 
 	inv_det := 1.0 / det
@@ -52,7 +56,7 @@ func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 	u := T.Product(P) * inv_det
 
 	if u < 0.0 || u > 1.0 {
-		return MISS, dist
+		return MISS, dist, nil
 	}
 
 	Q := T.CrossIP(t.edge1)
@@ -60,14 +64,14 @@ func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
 	v := ray.Direction.Product(Q) * inv_det
 
 	if v < 0.0 || u+v > 1.0 {
-		return MISS, dist
+		return MISS, dist, nil
 	}
 
 	tt := t.edge2.Product(Q) * inv_det
 
 	if tt > geometry.EPSILON && tt <= dist {
-		return HIT, tt
+		return HIT, tt, t.Normal.Copy()
 	}
 
-	return MISS, dist
+	return MISS, dist, nil
 }

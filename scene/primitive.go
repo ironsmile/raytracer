@@ -6,8 +6,7 @@ import (
 
 type Primitive interface {
 	GetType() int
-	Intersect(*geometry.Ray, float64) (int, float64)
-	GetNormal(*geometry.Point) *geometry.Vector
+	Intersect(*geometry.Ray, float64) (isHit int, distance float64, normal *geometry.Vector)
 	GetColor() *geometry.Color
 	GetMaterial() *Material
 	IsLight() bool

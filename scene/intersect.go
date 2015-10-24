@@ -6,9 +6,10 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
-func IntersectPrimitives(primitives []Primitive, ray *geometry.Ray) (Primitive, float64) {
-	retdist := 1000000.0
-	var prim Primitive = nil
+func IntersectPrimitives(primitives []Primitive, ray *geometry.Ray) (
+	prim Primitive, retdist float64, normal *geometry.Vector) {
+
+	retdist = 1000000.0
 
 	for sInd, pr := range primitives {
 
@@ -16,13 +17,14 @@ func IntersectPrimitives(primitives []Primitive, ray *geometry.Ray) (Primitive, 
 			fmt.Errorf("Primitive with index %d was nil\n", sInd)
 		}
 
-		res, resDist := pr.Intersect(ray, retdist)
+		res, resDist, resNormal := pr.Intersect(ray, retdist)
 
 		if res == HIT && resDist < retdist {
 			prim = pr
 			retdist = resDist
+			normal = resNormal
 		}
 	}
 
-	return prim, retdist
+	return
 }

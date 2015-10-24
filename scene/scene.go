@@ -40,7 +40,7 @@ func (s *Scene) GetPrimitive(index int) Primitive {
 	return s.Primitives[index]
 }
 
-func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64) {
+func (s *Scene) Intersect(ray *geometry.Ray) (Primitive, float64, *geometry.Vector) {
 	return IntersectPrimitives(s.Primitives, ray)
 }
 
@@ -113,9 +113,9 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 
 	triangle := NewTriangle([3]*geometry.Point{
-		geometry.NewPoint(-10.99, 3, 0),
-		geometry.NewPoint(-10.99, 0, -3),
-		geometry.NewPoint(-10.99, 0, 3),
+		geometry.NewPoint(-10.99, 3, 0),  // a
+		geometry.NewPoint(-10.99, 0, -3), // b
+		geometry.NewPoint(-10.99, 0, 3),  // c
 	})
 	triangle.Name = "Green triangle"
 	triangle.Mat.Refl = 0.0
