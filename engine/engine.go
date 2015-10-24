@@ -63,9 +63,9 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	pi := ray.Origin.PlusVector(piDirection)
 
 	primMat := prim.GetMaterial()
+	InNormal := prim.GetNormal(pi)
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
-		N := prim.GetNormal(pi)
 		light := e.Scene.GetLight(l)
 		luminousity := 1.0
 
@@ -73,7 +73,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		(light.(*scene.Sphere)).Center.MinusInVector(pi, L)
 		L.NormalizeIP()
 
-		dot := N.Product(L)
+		dot := InNormal.Product(L)
 
 		if light.GetType() == scene.SPHERE {
 			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
@@ -104,7 +104,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 		if primMat.GetSpecular() > 0 {
 			V := ray.Direction
-			R := L.Minus(N.MultiplyScalar(2.0 * L.Product(N)))
+			R := L.Minus(InNormal.MultiplyScalar(2.0 * L.Product(InNormal)))
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
@@ -118,8 +118,8 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	// Reflection
 	if primMat.Refl > 0.0 {
 
-		N := prim.GetNormal(pi)
-		R := ray.Direction.Minus(N.MultiplyScalarIP(ray.Direction.Product(N) * 2.0))
+		// Warning! InNormal is irrevrsibly changed here.
+		R := ray.Direction.Minus(InNormal.MultiplyScalarIP(ray.Direction.Product(InNormal) * 2.0))
 
 		refRay := &geometry.Ray{
 			Origin:    pi.PlusVectorIP(R.MultiplyScalar(EPSION)),

@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"fmt"
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -138,6 +139,12 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
+
+	if teapot, err := NewObject("data/objs/teapot.obj"); err != nil {
+		fmt.Printf("Error loading obj teapot: %s\n", err)
+	} else {
+		s.Primitives = append(s.Primitives, teapot)
+	}
 }
 
 func NewScene() *Scene {

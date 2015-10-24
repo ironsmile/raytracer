@@ -35,7 +35,7 @@ func (t *Triangle) GetNormal(_ *geometry.Point) *geometry.Vector {
 }
 
 func (t *Triangle) String() string {
-	return fmt.Sprintf("Triangle<%s>", t.Name)
+	return fmt.Sprintf("Triangle<%s>: %+v", t.Name, t.Vertices)
 }
 
 func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64) {
