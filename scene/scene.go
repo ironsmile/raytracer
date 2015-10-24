@@ -140,9 +140,14 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	if teapot, err := NewObject("data/objs/teapot.obj"); err != nil {
+	teaPotCenter := geometry.NewPoint(-3, 0, 5)
+	if teapot, err := NewObject("data/objs/teapot.obj", teaPotCenter); err != nil {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
+		teapot.Name = "First teapod"
+		teapot.Mat.Refl = 0.0
+		teapot.Mat.Diff = 0.3
+		teapot.Mat.Color = geometry.NewColor(0.3, 1, 0)
 		s.Primitives = append(s.Primitives, teapot)
 	}
 }
