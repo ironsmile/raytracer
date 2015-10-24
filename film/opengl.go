@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"sync"
+	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -13,8 +14,9 @@ type GlWindow struct {
 	width  int
 	height int
 
-	refreshScreenChan chan bool
-	renderFinishChan  chan bool
+	lastFrameTime time.Duration
+	frameStart    time.Time
+	frameTimeLock sync.RWMutex
 
 	window *glfw.Window
 
@@ -35,8 +37,6 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
-	g.refreshScreenChan = make(chan bool)
-	g.renderFinishChan = make(chan bool)
 
 	return g.initOpenGL()
 }
@@ -139,8 +139,10 @@ func (g *GlWindow) Render() {
 }
 
 func (g *GlWindow) bufferToTexture() {
-	g.pixBufferLock.RLock()
-	defer g.pixBufferLock.RUnlock()
+
+	// Locking is slow, embrace the race!
+	// g.pixBufferLock.RLock()
+	// defer g.pixBufferLock.RUnlock()
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(g.width), int32(g.height),
 		0, gl.RGB, gl.FLOAT, gl.Ptr(g.pixBuffer))
 }
@@ -152,14 +154,26 @@ func (g *GlWindow) Wait() {
 }
 
 func (g *GlWindow) StartFrame() {
+	g.frameStart = time.Now()
 }
 
 func (g *GlWindow) DoneFrame() {
+	g.frameTimeLock.Lock()
+	defer g.frameTimeLock.Unlock()
+	g.lastFrameTime = time.Since(g.frameStart)
+}
+
+func (g *GlWindow) LastFrameRederTime() time.Duration {
+	g.frameTimeLock.RLock()
+	defer g.frameTimeLock.RUnlock()
+	return g.lastFrameTime
 }
 
 func (g *GlWindow) Set(x int, y int, clr color.Color) error {
-	g.pixBufferLock.Lock()
-	defer g.pixBufferLock.Unlock()
+
+	// Locking is slow, embrace the race!
+	// g.pixBufferLock.Lock()
+	// defer g.pixBufferLock.Unlock()
 
 	ri, gi, bi, _ := clr.RGBA()
 

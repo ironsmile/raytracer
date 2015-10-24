@@ -194,7 +194,9 @@ func openglWindowRenderer() {
 			elapsed = minFrameTime
 		}
 		fps := 1 / elapsed.Seconds()
-		fmt.Printf("\rFPS: %.3f\tRender time: %s    ", fps, renderTime)
+		fmt.Printf("\r                                                               ")
+		fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
+			output.LastFrameRederTime())
 	}
 
 	fmt.Println("\nClosing window, rendering stopped.")
