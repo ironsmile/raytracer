@@ -10,6 +10,8 @@ import (
 	"github.com/go-gl/glfw/v3.1/glfw"
 )
 
+// GLWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
+// The scene is renderd in a texture which is applied on a two whole screen triangles.
 type GlWindow struct {
 	width  int
 	height int
@@ -24,10 +26,10 @@ type GlWindow struct {
 	pixBuffer     []float32
 
 	glProgram uint32 // Holds the OpenGL program
-	glVao     uint32
-	glVbo     uint32
-	glEbo     uint32
-	glTexture uint32
+	glVao     uint32 // Our only vertex array object
+	glVbo     uint32 // The vertex buffer object which holds triangles and tex coords
+	glEbo     uint32 // E(?) buffer object which enumerates the vbo vertices
+	glTexture uint32 // Texture with the rendered scene
 
 	glInited bool
 }
@@ -37,6 +39,10 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
+
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 
 	return g.initOpenGL()
 }
@@ -143,6 +149,7 @@ func (g *GlWindow) bufferToTexture() {
 	// Locking is slow, embrace the race!
 	// g.pixBufferLock.RLock()
 	// defer g.pixBufferLock.RUnlock()
+
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(g.width), int32(g.height),
 		0, gl.RGB, gl.FLOAT, gl.Ptr(g.pixBuffer))
 }

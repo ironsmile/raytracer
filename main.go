@@ -110,10 +110,6 @@ func openglWindowRenderer() {
 	var err error
 	var window *glfw.Window
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-
 	if *fullscreen {
 		monitor := glfw.GetPrimaryMonitor()
 		vm := monitor.GetVideoMode()
