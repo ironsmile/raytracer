@@ -25,6 +25,8 @@ type Engine struct {
 	Width, Height int
 	Camera        camera.Camera
 	Sampler       sampler.Sampler
+
+	debugged bool
 }
 
 func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
@@ -64,8 +66,16 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	primMat := prim.GetMaterial()
 
+	/* Debugging */
+	// if !e.debugged && prim.GetName() == "First teapod" {
+	// 	fmt.Printf("clr %s: %v\n", prim.GetName(), primMat.Color)
+	// 	fmt.Printf("InNormal %s\n", InNormal)
+	// 	ray.Debug = true
+	// 	e.debugged = true
+	// }
+
 	//!TODO: maybe make sure the Intersect method returns a copy of a internal Normal vector
-	// so that it can modified. InNormal, for example is modified further down this method.
+	// so that it can be modified. InNormal, for example is modified further down this method.
 	InNormal = InNormal.Copy()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {

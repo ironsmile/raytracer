@@ -21,7 +21,7 @@ func NewTriangle(vertices [3]*geometry.Point) *Triangle {
 
 	triangle.edge1 = vertices[1].Minus(vertices[0])
 	triangle.edge2 = vertices[2].Minus(vertices[0])
-	triangle.Normal = triangle.edge1.Cross(triangle.edge2).NegIP()
+	triangle.Normal = triangle.edge1.Cross(triangle.edge2).NegIP().NormalizeIP()
 
 	return triangle
 }
@@ -42,36 +42,35 @@ func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *ge
 	// Implements Möller–Trumbore ray-triangle intersection algorithm:
 	// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 
-	P := ray.Direction.Cross(t.edge2)
-	det := t.edge1.Product(P)
+	s1 := ray.Direction.Cross(t.edge2)
+	divisor := t.edge1.Product(s1)
 
 	// Not culling:
-	if det > -geometry.EPSILON && det < geometry.EPSILON {
+	if divisor > -geometry.EPSILON && divisor < geometry.EPSILON {
 		return MISS, dist, nil
 	}
 
-	inv_det := 1.0 / det
+	invDivisor := 1.0 / divisor
 
-	T := ray.Origin.Minus(t.Vertices[0])
-	u := T.Product(P) * inv_det
+	s := ray.Origin.Minus(t.Vertices[0])
+	b1 := s.Product(s1) * invDivisor
 
-	if u < 0.0 || u > 1.0 {
+	if b1 < 0.0 || b1 > 1.0 {
 		return MISS, dist, nil
 	}
 
-	Q := T.CrossIP(t.edge1)
+	s2 := s.CrossIP(t.edge1)
+	b2 := ray.Direction.Product(s2) * invDivisor
 
-	v := ray.Direction.Product(Q) * inv_det
-
-	if v < 0.0 || u+v > 1.0 {
+	if b2 < 0.0 || b1+b2 > 1.0 {
 		return MISS, dist, nil
 	}
 
-	tt := t.edge2.Product(Q) * inv_det
+	tt := t.edge2.Product(s2) * invDivisor
 
-	if tt > geometry.EPSILON && tt <= dist {
-		return HIT, tt, t.Normal.Copy()
+	if tt < geometry.EPSILON || tt > dist {
+		return MISS, dist, nil
 	}
 
-	return MISS, dist, nil
+	return HIT, tt, t.Normal.Copy()
 }
