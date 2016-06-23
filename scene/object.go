@@ -116,7 +116,11 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 	for _, obj := range model.Objects {
 		fmt.Printf("object %s has %d meshes\n", obj.Name, len(obj.Meshes))
 		for meshIndex, mesh := range obj.Meshes {
-			fmt.Printf("mesh %d is from %s and has %d faces\n", meshIndex, mesh.MaterialName,
+			meshName := mesh.MaterialName
+			if len(meshName) < 1 {
+				meshName = "Unknown"
+			}
+			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
 			for faceIndex, face := range mesh.Faces {
 				if len(face.References) != 3 {
