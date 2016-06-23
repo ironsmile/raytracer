@@ -36,6 +36,8 @@ var (
 		"starts the renderer in interactive mode")
 	vsync = flag.Bool("vsync", true,
 		"control vsync for interactive renderer")
+	showFPS = flag.Bool("show-fps", true,
+		"continuously print the OpenGL FPS stats in the console")
 	fullscreen = flag.Bool("fullscreen", false,
 		"run fullscreen in native resolution")
 	WIDTH = flag.Int("w", 1024,
@@ -166,7 +168,11 @@ func openglWindowRenderer() {
 
 	tracer := engine.NewFPS(smpl)
 	tracer.SetTarget(output, cam)
+
+	fmt.Printf("Loading scene...\n")
+	loadingStart := time.Now()
 	tracer.Scene.InitScene()
+	fmt.Printf("Loading scene took %s\n", time.Since(loadingStart))
 
 	tracer.Render()
 
@@ -189,10 +195,13 @@ func openglWindowRenderer() {
 			time.Sleep(minFrameTime - elapsed)
 			elapsed = minFrameTime
 		}
-		fps := 1 / elapsed.Seconds()
-		fmt.Printf("\r                                                               ")
-		fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
-			output.LastFrameRederTime())
+
+		if *showFPS {
+			fps := 1 / elapsed.Seconds()
+			fmt.Printf("\r                                                               ")
+			fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
+				output.LastFrameRederTime())
+		}
 	}
 
 	fmt.Println("\nClosing window, rendering stopped.")
