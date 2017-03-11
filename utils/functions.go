@@ -43,3 +43,17 @@ func ConcentricSampleDisk(u1, u2 float64) (float64, float64) {
 
 	return r * math.Cos(theta), r * math.Sin(theta)
 }
+
+func Min(a, b float64) float64 {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
+func Max(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}

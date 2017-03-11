@@ -96,6 +96,18 @@ func (t *Transform) RayIP(ray *geometry.Ray) *geometry.Ray {
 	return ray
 }
 
+func (t *Transform) BBox(bb *bbox.BBox) *bbox.BBox {
+	ret := bbox.FromPoint(t.Point(geometry.NewPoint(bb.Min.X, bb.Min.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Min.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Max.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Max.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Max.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Max.Y, bb.Max.Z)))
+	return ret
+}
+
 func (t *Transform) Multiply(other *Transform) *Transform {
 	mat := t.mat.Multiply(other.mat)
 	invMat := other.matInv.Multiply(t.matInv)
