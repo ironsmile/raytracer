@@ -12,10 +12,6 @@ func NewPlane(normal *geometry.Vector, d float64) *Plane {
 }
 
 func (p *Plane) GetNormal(_ *geometry.Point) *geometry.Vector {
-	// Commented during shapre/primitive division
-	// if p.Mat.Refl > 0.0 {
-	// 	return p.Normal.Neg()
-	// }
 	return p.Normal
 }
 
