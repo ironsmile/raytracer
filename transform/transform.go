@@ -3,6 +3,7 @@ package transform
 import (
 	"fmt"
 
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 )
 

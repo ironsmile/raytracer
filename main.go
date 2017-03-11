@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/go-gl/glfw/v3.1/glfw"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -11,6 +10,8 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"time"
+
+	"github.com/go-gl/glfw/v3.1/glfw"
 
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
@@ -85,7 +86,7 @@ func main() {
 func infileRenderer() {
 	output := film.NewImage(*filename)
 	if err := output.Init(*WIDTH, *HEIGHT); err != nil {
-		log.Fatal("%s\n", err)
+		log.Fatalf("%s\n", err)
 	}
 
 	smpl := sampler.NewSimple(output)

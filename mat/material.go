@@ -1,4 +1,4 @@
-package scene
+package mat
 
 import (
 	"github.com/ironsmile/raytracer/geometry"

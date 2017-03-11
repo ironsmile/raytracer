@@ -1,20 +1,10 @@
-package scene
+package shape
 
-import (
-	"fmt"
-
-	"github.com/ironsmile/raytracer/geometry"
-)
+import "github.com/ironsmile/raytracer/geometry"
 
 type PlanePrim struct {
-	BasePrimitive
-
 	Normal   *geometry.Vector
 	Distance float64
-}
-
-func (p *PlanePrim) GetType() int {
-	return PLANE
 }
 
 func NewPlanePrim(normal *geometry.Vector, d float64) *PlanePrim {
@@ -22,9 +12,10 @@ func NewPlanePrim(normal *geometry.Vector, d float64) *PlanePrim {
 }
 
 func (p *PlanePrim) GetNormal(_ *geometry.Point) *geometry.Vector {
-	if p.Mat.Refl > 0.0 {
-		return p.Normal.Neg()
-	}
+	// Commented during shapre/primitive division
+	// if p.Mat.Refl > 0.0 {
+	// 	return p.Normal.Neg()
+	// }
 	return p.Normal
 }
 
@@ -46,8 +37,4 @@ func (p *PlanePrim) Intersect(ray *geometry.Ray, dist float64) (int, float64, *g
 	}
 
 	return MISS, dist, nil
-}
-
-func (p *PlanePrim) String() string {
-	return fmt.Sprintf("Plane<%s>", p.Name)
 }

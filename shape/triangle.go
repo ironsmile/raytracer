@@ -1,14 +1,8 @@
-package scene
+package shape
 
-import (
-	"fmt"
-
-	"github.com/ironsmile/raytracer/geometry"
-)
+import "github.com/ironsmile/raytracer/geometry"
 
 type Triangle struct {
-	BasePrimitive
-
 	edge1 *geometry.Vector
 	edge2 *geometry.Vector
 
@@ -26,16 +20,8 @@ func NewTriangle(vertices [3]*geometry.Point) *Triangle {
 	return triangle
 }
 
-func (t *Triangle) GetType() int {
-	return TRIANGLE
-}
-
 func (t *Triangle) GetNormal(_ *geometry.Point) *geometry.Vector {
 	return t.Normal
-}
-
-func (t *Triangle) String() string {
-	return fmt.Sprintf("Triangle<%s>: %+v", t.Name, t.Vertices)
 }
 
 func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {

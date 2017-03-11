@@ -1,23 +1,16 @@
-package scene
+package shape
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/ironsmile/raytracer/geometry"
 )
 
 type Sphere struct {
-	BasePrimitive
-
 	Center   *geometry.Point
 	SqRadius float64
 	Radius   float64
 	RRadius  float64
-}
-
-func (s *Sphere) GetType() int {
-	return SPHERE
 }
 
 func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
@@ -59,16 +52,11 @@ func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
 	return pos.Minus(s.Center).MultiplyScalarIP(s.RRadius)
 }
 
-func (s *Sphere) String() string {
-	return fmt.Sprintf("Sphere<center=%s, radius=%f>", s.Center, s.Radius)
-}
-
 func NewSphere(center geometry.Point, radius float64) *Sphere {
 	s := new(Sphere)
 	s.Center = &center
 	s.SqRadius = radius * radius
 	s.Radius = radius
 	s.RRadius = 1.0 / radius
-	s.Mat = *NewMaterial()
 	return s
 }

@@ -10,8 +10,10 @@ import (
 	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
+	"github.com/ironsmile/raytracer/shape"
 )
 
 const (
@@ -37,7 +39,7 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 }
 
 func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Color) (
-	scene.Primitive, float64, *geometry.Color) {
+	primitive.Primitive, float64, *geometry.Color) {
 
 	retColor.Set(0, 0, 0)
 
@@ -83,12 +85,12 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		luminousity := 1.0
 
 		// Reusing the same object as much as possible
-		(light.(*scene.Sphere)).Center.MinusInVector(pi, L)
+		(light.Shape().(*shape.Sphere)).Center.MinusInVector(pi, L)
 		L.NormalizeIP()
 
 		dot := InNormal.Product(L)
 
-		if light.GetType() == scene.SPHERE {
+		if light.GetType() == primitive.SPHERE {
 			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
 
 			// Reusing the same object as much as possible

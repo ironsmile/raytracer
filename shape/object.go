@@ -1,4 +1,4 @@
-package scene
+package shape
 
 import (
 	"fmt"
@@ -10,11 +10,6 @@ import (
 )
 
 type Object struct {
-	BasePrimitive
-
-	// Identification string for thins object
-	id string
-
 	// A model wich contains the parsed .obj information such as objects, meshes, faces and raw
 	// vertices.
 	model *obj.Model
@@ -23,14 +18,10 @@ type Object struct {
 	Center *geometry.Point
 
 	// All the triangles which compose this object
-	Triangles []Primitive
+	Triangles []Shape
 
 	// A sphere which contains all the points of the object triangles
 	boundingSphere *Sphere
-}
-
-func (o *Object) GetType() int {
-	return OBJECT
 }
 
 func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
@@ -41,7 +32,7 @@ func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geom
 		}
 	}
 
-	prim, distance, normal := IntersectPrimitives(o.Triangles, ray)
+	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
 	if prim == nil {
 		return MISS, distance, normal
 	}
@@ -51,10 +42,6 @@ func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geom
 func (o *Object) GetNormal(pos *geometry.Point) *geometry.Vector {
 	//!TODO: implement
 	return &geometry.Vector{0, 0, -1}
-}
-
-func (o *Object) String() string {
-	return fmt.Sprintf("Object <%s>", o.id)
 }
 
 func (o *Object) computeBoundingSphere() error {
@@ -68,10 +55,11 @@ func (o *Object) computeBoundingSphere() error {
 
 	maxRadius := 0.0
 
-	for _, triangle := range o.Triangles {
+	for ind, triangle := range o.Triangles {
 		triangle, ok := triangle.(*Triangle)
 		if !ok {
-			return fmt.Errorf("A triangle was not actually a triangle? Strange!")
+			fmt.Printf("A shape in object.Triangles is not a triangle? Index %d", ind)
+			continue
 		}
 		for _, vertice := range triangle.Vertices {
 			distance := geometry.Distance(o.Center, vertice)
@@ -106,8 +94,7 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 
 	o := new(Object)
 	o.Center = center
-	o.Triangles = make([]Primitive, 0, len(model.Vertices)/3+1)
-	o.id = filePath
+	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
 
 	//!TODO: maybe remove this scale factor?
@@ -144,7 +131,7 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 		}
 	}
 
-	fmt.Printf("%s has %d triangles\n", o, len(o.Triangles))
+	fmt.Printf("%s has %d triangles\n", filePath, len(o.Triangles))
 
 	if err := o.computeBoundingSphere(); err != nil {
 		return nil, err

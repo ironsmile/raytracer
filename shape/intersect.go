@@ -1,4 +1,4 @@
-package scene
+package shape
 
 import (
 	"fmt"
@@ -6,15 +6,16 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
-func IntersectPrimitives(primitives []Primitive, ray *geometry.Ray) (
-	prim Primitive, retdist float64, normal *geometry.Vector) {
+func IntersectMultiple(objects []Shape, ray *geometry.Ray) (
+	prim Shape, retdist float64, normal *geometry.Vector) {
 
 	retdist = 1000000.0
 
-	for sInd, pr := range primitives {
+	for sInd, pr := range objects {
 
 		if pr == nil {
-			fmt.Errorf("Primitive with index %d was nil\n", sInd)
+			fmt.Printf("Shape with index %d was nil\n", sInd)
+			continue
 		}
 
 		res, resDist, resNormal := pr.Intersect(ray, retdist)
