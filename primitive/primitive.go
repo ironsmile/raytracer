@@ -12,6 +12,7 @@ const (
 	PLANE
 	TRIANGLE
 	OBJECT
+	RECTANGLE
 )
 
 type Primitive interface {
