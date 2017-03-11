@@ -7,25 +7,24 @@ import (
 	"github.com/ironsmile/raytracer/shape"
 )
 
-type PlanePrim struct {
+type Plane struct {
 	BasePrimitive
 }
 
-func (p *PlanePrim) GetType() int {
+func (p *Plane) GetType() int {
 	return PLANE
 }
 
-func NewPlanePrim(normal *geometry.Vector, d float64) *PlanePrim {
-	planeShape := &shape.PlanePrim{Normal: normal.NormalizeIP(), Distance: d}
-	planePrim := &PlanePrim{}
-	planePrim.shape = planeShape
+func NewPlane(normal *geometry.Vector, d float64) *Plane {
+	planePrim := &Plane{}
+	planePrim.shape = shape.NewPlane(normal, d)
 	return planePrim
 }
 
-func (p *PlanePrim) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+func (p *Plane) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
 	return p.shape.Intersect(ray, dist)
 }
 
-func (p *PlanePrim) String() string {
+func (p *Plane) String() string {
 	return fmt.Sprintf("Plane<%s>", p.Name)
 }

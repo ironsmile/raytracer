@@ -55,7 +55,7 @@ func (s *Scene) InitScene() {
 	s.Primitives = make([]primitive.Primitive, 0)
 	s.Lights = make([]primitive.Primitive, 0)
 
-	plane := primitive.NewPlanePrim(geometry.NewVector(0, 1, 0), 4)
+	plane := primitive.NewPlane(geometry.NewVector(0, 1, 0), 4)
 	plane.Name = "plane-floor"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
@@ -63,7 +63,7 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = primitive.NewPlanePrim(geometry.NewVector(0, -1, 0), 11)
+	plane = primitive.NewPlane(geometry.NewVector(0, -1, 0), 11)
 	plane.Name = "plane-ceiling"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
@@ -71,7 +71,7 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = primitive.NewPlanePrim(geometry.NewVector(1, 0, 0), 33)
+	plane = primitive.NewPlane(geometry.NewVector(1, 0, 0), 33)
 	plane.Name = "plane-left"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
@@ -79,7 +79,7 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = primitive.NewPlanePrim(geometry.NewVector(-1, 0, 0), 11)
+	plane = primitive.NewPlane(geometry.NewVector(-1, 0, 0), 11)
 	plane.Name = "plane-right-mirror"
 	plane.Mat.Refl = 1.0
 	plane.Mat.Diff = 0.4
@@ -87,7 +87,7 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, plane)
 
-	plane = primitive.NewPlanePrim(geometry.NewVector(0, 0, -1), 30)
+	plane = primitive.NewPlane(geometry.NewVector(0, 0, -1), 30)
 	plane.Name = "plane-front"
 	plane.Mat.Refl = 0
 	plane.Mat.Diff = 1.0
