@@ -5,6 +5,7 @@ import (
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 type Object struct {
@@ -16,10 +17,6 @@ type Object struct {
 
 func (o *Object) GetType() int {
 	return OBJECT
-}
-
-func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	return o.shape.Intersect(ray, dist)
 }
 
 func (o *Object) String() string {
@@ -35,5 +32,6 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 	}
 	obj := &Object{id: filePath}
 	obj.shape = oShape
+	obj.SetTransform(transform.Identity())
 	return obj, nil
 }

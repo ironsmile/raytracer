@@ -133,7 +133,7 @@ func (t *Transform) Equals(other *Transform) bool {
 }
 
 func (t *Transform) String() string {
-	return fmt.Sprintf("Transformation with %s", t.mat)
+	return fmt.Sprintf("Transformation with %+v", t.mat)
 }
 
 func (t *Transform) SwapsHandedness() bool {

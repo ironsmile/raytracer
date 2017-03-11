@@ -6,6 +6,7 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 type Sphere struct {
@@ -24,13 +25,10 @@ func (s *Sphere) GetType() int {
 	return SPHERE
 }
 
-func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	return s.shape.Intersect(ray, dist)
-}
-
 func NewSphere(center geometry.Point, radius float64) *Sphere {
 	s := &Sphere{}
 	s.shape = shape.NewSphere(center, radius)
 	s.Mat = *mat.NewMaterial()
+	s.SetTransform(transform.Identity())
 	return s
 }

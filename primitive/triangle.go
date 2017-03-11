@@ -5,6 +5,7 @@ import (
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 type Triangle struct {
@@ -14,6 +15,7 @@ type Triangle struct {
 func NewTriangle(vertices [3]*geometry.Point) *Triangle {
 	triangle := &Triangle{}
 	triangle.shape = shape.NewTriangle(vertices)
+	triangle.SetTransform(transform.Identity())
 	return triangle
 }
 

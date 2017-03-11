@@ -5,6 +5,7 @@ import (
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 type Plane struct {
@@ -18,11 +19,8 @@ func (p *Plane) GetType() int {
 func NewPlane(normal *geometry.Vector, d float64) *Plane {
 	planePrim := &Plane{}
 	planePrim.shape = shape.NewPlane(normal, d)
+	planePrim.SetTransform(transform.Identity())
 	return planePrim
-}
-
-func (p *Plane) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	return p.shape.Intersect(ray, dist)
 }
 
 func (p *Plane) String() string {

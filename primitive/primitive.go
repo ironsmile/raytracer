@@ -4,6 +4,7 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 const (
@@ -30,6 +31,9 @@ type BasePrimitive struct {
 	Light bool
 	Name  string
 	shape shape.Shape
+
+	objToWorld transform.Transform
+	worldToObj transform.Transform
 }
 
 func (b *BasePrimitive) GetName() string {
@@ -48,10 +52,27 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 	return &b.Mat
 }
 
-func (b *BasePrimitive) Intersect(r *geometry.Ray, d float64) (int, float64, *geometry.Vector) {
+func (b *BasePrimitive) Intersect2(r *geometry.Ray, d float64) (int, float64, *geometry.Vector) {
 	return b.shape.Intersect(r, d)
+}
+
+func (b *BasePrimitive) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+	objRay := b.worldToObj.RayIP(ray)
+
+	res, hitDist, normal := b.shape.Intersect(objRay, dist)
+
+	if res != shape.HIT {
+		return res, hitDist, normal
+	}
+
+	return res, hitDist, b.objToWorld.NormalIP(normal)
 }
 
 func (b *BasePrimitive) Shape() shape.Shape {
 	return b.shape
+}
+
+func (b *BasePrimitive) SetTransform(t *transform.Transform) {
+	b.objToWorld = *t
+	b.worldToObj = *t.Inverse()
 }
