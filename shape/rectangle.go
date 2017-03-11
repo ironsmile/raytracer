@@ -26,7 +26,7 @@ func (r *Rectangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *g
 
 	hitPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(d))
 
-	if hitPoint.X >= 0 && hitPoint.X <= r.width && hitPoint.Y >= 0 && hitPoint.Y <= r.height {
+	if hitPoint.X >= -0.5 && hitPoint.X <= r.width/2 && hitPoint.Y >= -0.5 && hitPoint.Y <= r.height/2 {
 		return HIT, d, normal.Copy()
 	}
 
