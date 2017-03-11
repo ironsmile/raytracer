@@ -96,6 +96,20 @@ func (t *Transform) RayIP(ray *geometry.Ray) *geometry.Ray {
 	return ray
 }
 
+func (t *Transform) Normal(vec *geometry.Vector) *geometry.Vector {
+	return t.NormalIP(vec.Copy())
+}
+
+func (t *Transform) NormalIP(vec *geometry.Vector) *geometry.Vector {
+	var x, y, z = vec.X, vec.Y, vec.Z
+
+	vec.X = float64(t.matInv.els[0][0])*x + float64(t.matInv.els[1][0])*y + float64(t.matInv.els[2][0])*z
+	vec.Y = float64(t.matInv.els[0][1])*x + float64(t.matInv.els[1][1])*y + float64(t.matInv.els[2][1])*z
+	vec.Z = float64(t.matInv.els[0][2])*x + float64(t.matInv.els[1][2])*y + float64(t.matInv.els[2][2])*z
+
+	return vec.NormalizeIP()
+}
+
 func (t *Transform) BBox(bb *bbox.BBox) *bbox.BBox {
 	ret := bbox.FromPoint(t.Point(geometry.NewPoint(bb.Min.X, bb.Min.Y, bb.Min.Z)))
 	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Min.Y, bb.Min.Z)))

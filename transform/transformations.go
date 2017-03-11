@@ -158,3 +158,12 @@ func Perspective(fov, n, f float64) *Transform {
 
 	return Scale(invTanAng, invTanAng, 1).Multiply(NewTransformation(persp))
 }
+
+func Identity() *Transform {
+	ident := NewMatrix(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1)
+	return NewTransformation(ident)
+}
