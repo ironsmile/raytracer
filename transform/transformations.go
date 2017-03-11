@@ -10,13 +10,13 @@ func Translate(delta *geometry.Vector) *Transform {
 	m := NewMatrix(
 		1, 0, 0, float32(delta.X),
 		0, 1, 0, float32(delta.Y),
-		0, 0, 0, float32(delta.Z),
+		0, 0, 1, float32(delta.Z),
 		0, 0, 0, 1)
 
 	mInv := NewMatrix(
 		1, 0, 0, -float32(delta.X),
 		0, 1, 0, -float32(delta.Y),
-		0, 0, 0, -float32(delta.Z),
+		0, 0, 1, -float32(delta.Z),
 		0, 0, 0, 1)
 
 	return NewTransformationWihtInverse(m, mInv)
