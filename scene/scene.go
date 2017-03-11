@@ -6,6 +6,7 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 type Scene struct {
@@ -55,45 +56,93 @@ func (s *Scene) InitScene() {
 	s.Primitives = make([]primitive.Primitive, 0)
 	s.Lights = make([]primitive.Primitive, 0)
 
-	plane := primitive.NewPlane(geometry.NewVector(0, 1, 0), 4)
-	plane.Name = "plane-floor"
-	plane.Mat.Refl = 0
-	plane.Mat.Diff = 1.0
-	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect := primitive.NewRectangle(0.5, 1)
+	rect.Name = "rect-floor"
+	rect.Mat.Refl = 0
+	rect.Mat.Diff = 0.95
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.RotateX(90).Multiply(
+			transform.Scale(68, 68, 1),
+		).Multiply(
+			transform.Translate(geometry.NewVector(0, 0, 5)),
+		),
+	)
 
-	s.Primitives = append(s.Primitives, plane)
+	s.Primitives = append(s.Primitives, rect)
 
-	plane = primitive.NewPlane(geometry.NewVector(0, -1, 0), 11)
-	plane.Name = "plane-ceiling"
-	plane.Mat.Refl = 0
-	plane.Mat.Diff = 1.0
-	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect = primitive.NewRectangle(0.5, 1)
+	rect.Name = "rect-ceiling"
+	rect.Mat.Refl = 0
+	rect.Mat.Diff = 0.95
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.RotateX(270).Multiply(
+			transform.Scale(68, 68, 1),
+		).Multiply(
+			transform.Translate(geometry.NewVector(0, 0, 16)),
+		),
+	)
 
-	s.Primitives = append(s.Primitives, plane)
+	s.Primitives = append(s.Primitives, rect)
 
-	plane = primitive.NewPlane(geometry.NewVector(1, 0, 0), 33)
-	plane.Name = "plane-left"
-	plane.Mat.Refl = 0
-	plane.Mat.Diff = 1.0
-	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect = primitive.NewRectangle(1, 0.5)
+	rect.Name = "rect-left"
+	rect.Mat.Refl = 0
+	rect.Mat.Diff = 0.95
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.RotateY(270).Multiply(
+			transform.Scale(68, 68, 1).Multiply(
+				transform.Translate(geometry.NewVector(0, 0, 25)),
+			),
+		),
+	)
 
-	s.Primitives = append(s.Primitives, plane)
+	s.Primitives = append(s.Primitives, rect)
 
-	plane = primitive.NewPlane(geometry.NewVector(-1, 0, 0), 11)
-	plane.Name = "plane-right-mirror"
-	plane.Mat.Refl = 1.0
-	plane.Mat.Diff = 0.4
-	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect = primitive.NewRectangle(1, 0.5)
+	rect.Name = "rect-right-mirror"
+	rect.Mat.Refl = 1.0
+	rect.Mat.Diff = 0.4
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.RotateY(90).Multiply(
+			transform.Scale(68, 68, 1).Multiply(
+				transform.Translate(geometry.NewVector(0, 0, 10)),
+			),
+		),
+	)
 
-	s.Primitives = append(s.Primitives, plane)
+	s.Primitives = append(s.Primitives, rect)
 
-	plane = primitive.NewPlane(geometry.NewVector(0, 0, -1), 30)
-	plane.Name = "plane-front"
-	plane.Mat.Refl = 0
-	plane.Mat.Diff = 1.0
-	plane.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect = primitive.NewRectangle(1, 0.5)
+	rect.Name = "rect-front"
+	rect.Mat.Refl = 0
+	rect.Mat.Diff = 0.95
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.Scale(68, 68, 1).Multiply(
+			transform.Translate(geometry.NewVector(0, 0, 30)),
+		),
+	)
 
-	s.Primitives = append(s.Primitives, plane)
+	s.Primitives = append(s.Primitives, rect)
+
+	rect = primitive.NewRectangle(1, 0.5)
+	rect.Name = "rect-back"
+	rect.Mat.Refl = 0
+	rect.Mat.Diff = 0.95
+	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	rect.SetTransform(
+		transform.RotateY(180).Multiply(
+			transform.Scale(68, 68, 1).Multiply(
+				transform.Translate(geometry.NewVector(0, 0, 25)),
+			),
+		),
+	)
+
+	s.Primitives = append(s.Primitives, rect)
 
 	sphere := primitive.NewSphere(*geometry.NewPoint(1, -0.8, 3), 2.5)
 	sphere.Name = "big sphere"

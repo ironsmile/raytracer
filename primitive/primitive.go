@@ -57,9 +57,9 @@ func (b *BasePrimitive) Intersect2(r *geometry.Ray, d float64) (int, float64, *g
 }
 
 func (b *BasePrimitive) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	objRay := b.worldToObj.RayIP(ray)
+	var objRay = *b.worldToObj.Ray(ray)
 
-	res, hitDist, normal := b.shape.Intersect(objRay, dist)
+	res, hitDist, normal := b.shape.Intersect(&objRay, dist)
 
 	if res != shape.HIT {
 		return res, hitDist, normal
