@@ -136,3 +136,28 @@ func BenchmarkTransformationMultiplication(t *testing.B) {
 		t1.Multiply(t2)
 	}
 }
+
+func BenchmarkRayTransformation(t *testing.B) {
+	ray := geometry.Ray{
+		Origin:    geometry.Point{X: 2.5, Y: 3.1, Z: 5555.3},
+		Direction: geometry.Vector{X: -23.55, Y: 33.77, Z: 0.032},
+	}
+
+	t1 := NewTransformation(NewMatrix(
+		0, 1.50, 2.3, 0.22,
+		1, 33.2, 1.2, 1.56,
+		2, 3.01, 0.1, 0.01,
+		0, 0.23, 3.2, 2.12))
+
+	t.Run("new ray", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.Ray(&ray)
+		}
+	})
+
+	t.Run("in place", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.RayIP(&ray)
+		}
+	})
+}
