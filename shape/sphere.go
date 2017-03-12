@@ -15,7 +15,7 @@ type Sphere struct {
 
 func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
 	v := ray.Origin.Minus(s.Center)
-	b := -v.Product(ray.Direction)
+	b := -v.Product(&ray.Direction)
 	det := b*b - v.Product(v) + s.SqRadius
 
 	retdist := dist

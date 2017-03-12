@@ -20,13 +20,13 @@ func (p *Plane) GetDistance() float64 {
 }
 
 func (p *Plane) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	cos := p.Normal.Product(ray.Direction)
+	cos := p.Normal.Product(&ray.Direction)
 
 	if cos >= 0 {
 		return MISS, dist, nil
 	}
 
-	dst := -(p.Normal.ProductPoint(ray.Origin) + p.Distance) / cos
+	dst := -(p.Normal.ProductPoint(&ray.Origin) + p.Distance) / cos
 
 	if dst > 0 && dst < dist {
 		return HIT, dst, p.GetNormal(nil)

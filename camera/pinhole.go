@@ -36,8 +36,8 @@ func (p *PinholeCamera) GenerateRayIP(x, y float64, ray *geometry.Ray) float64 {
 	posX := p.screen[0] + (x/p.rasterW)*p.screen[1]*2
 	posY := p.screen[3] + (y/p.rasterH)*p.screen[2]*2
 
-	ray.Origin = geometry.NewPoint(0, 0, 0)
-	ray.Direction = geometry.NewVector(posX, posY, p.distance).NormalizeIP()
+	ray.Origin = *geometry.NewPoint(0, 0, 0)
+	ray.Direction = *geometry.NewVector(posX, posY, p.distance).NormalizeIP()
 	p.camToWorld.RayIP(ray)
 
 	return 1.0

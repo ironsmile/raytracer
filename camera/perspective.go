@@ -44,8 +44,8 @@ func (p *PerspectiveCamera) GenerateRay(screenX, screenY float64) (*geometry.Ray
 		ft := p.focalDistance / ray.Direction.Z
 		Pfocus := ray.AtTime(ft)
 
-		ray.Origin = geometry.NewPoint(lensU, lensV, 0.0)
-		ray.Direction = geometry.Normalize(Pfocus.Minus(ray.Origin))
+		ray.Origin = *geometry.NewPoint(lensU, lensV, 0.0)
+		ray.Direction = *geometry.Normalize(Pfocus.Minus(&ray.Origin))
 	}
 
 	ray.Time = utils.Lerp(0, p.ShutterOpen, p.ShutterClose)

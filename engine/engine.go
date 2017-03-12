@@ -78,7 +78,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 	//!TODO: maybe make sure the Intersect method returns a copy of a internal Normal vector
 	// so that it can be modified. InNormal, for example is modified further down this method.
-	InNormal = InNormal.Copy()
+	// InNormal = InNormal.Copy()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
@@ -95,8 +95,8 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 			// Reusing the same object as much as possible
 			shadowRay.BackToDefaults()
-			shadowRay.Origin = piOffset
-			shadowRay.Direction = L
+			shadowRay.Origin = *piOffset
+			shadowRay.Direction = *L
 
 			// shadowRay.Debug = ray.Debug
 
@@ -119,7 +119,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 
 		if primMat.GetSpecular() > 0 {
 			V := ray.Direction
-			R := L.Minus(InNormal.MultiplyScalar(2.0 * L.Product(InNormal)))
+			R := L.Minus((&InNormal).MultiplyScalar(2.0 * L.Product(&InNormal)))
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
@@ -134,11 +134,11 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 	if primMat.Refl > 0.0 {
 
 		// Warning! InNormal is irrevrsibly changed here.
-		R := ray.Direction.Minus(InNormal.MultiplyScalarIP(ray.Direction.Product(InNormal) * 2.0))
+		R := ray.Direction.Minus((&InNormal).MultiplyScalarIP(ray.Direction.Product(&InNormal) * 2.0))
 
 		refRay := &geometry.Ray{
-			Origin:    pi.PlusVectorIP(R.MultiplyScalar(EPSION)),
-			Direction: R,
+			Origin:    *pi.PlusVectorIP(R.MultiplyScalar(EPSION)),
+			Direction: *R,
 		}
 
 		// refRay.Debug = ray.Debug

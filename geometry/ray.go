@@ -1,8 +1,8 @@
 package geometry
 
 type Ray struct {
-	Origin    *Point
-	Direction *Vector
+	Origin    Point
+	Direction Vector
 
 	Mint float64
 	Maxt float64
@@ -27,9 +27,9 @@ func (r *Ray) BackToDefaults() {
 }
 
 func NewRay(origin *Point, dir *Vector) *Ray {
-	return &Ray{Origin: origin, Direction: dir.NormalizeIP(), Debug: false}
+	return &Ray{Origin: *origin, Direction: *dir.NormalizeIP(), Debug: false}
 }
 
 func NewRayFull(origin *Point, dir *Vector, start, end float64) *Ray {
-	return &Ray{Origin: origin, Direction: dir, Mint: start, Maxt: end}
+	return &Ray{Origin: *origin, Direction: *dir, Mint: start, Maxt: end}
 }

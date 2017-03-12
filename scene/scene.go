@@ -30,7 +30,7 @@ func (s *Scene) GetPrimitive(index int) primitive.Primitive {
 	return s.Primitives[index]
 }
 
-func (s *Scene) Intersect(ray *geometry.Ray) (prim primitive.Primitive, retdist float64, normal *geometry.Vector) {
+func (s *Scene) Intersect(ray *geometry.Ray) (prim primitive.Primitive, retdist float64, normal geometry.Vector) {
 	retdist = 1000000.0
 
 	for sInd, pr := range s.Primitives {
@@ -40,7 +40,7 @@ func (s *Scene) Intersect(ray *geometry.Ray) (prim primitive.Primitive, retdist 
 			continue
 		}
 
-		res, resDist, resNormal := pr.Intersect(ray, retdist)
+		res, resDist, resNormal := pr.Intersect(*ray, retdist)
 
 		if res == shape.HIT && resDist < retdist {
 			prim = pr
