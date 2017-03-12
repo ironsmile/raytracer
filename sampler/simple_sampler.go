@@ -47,6 +47,11 @@ func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 	y = float64(sample / s.width)
 	x = float64(sample % s.width)
 
+	if x == 0 && y == 0 {
+		s.output.DoneFrame()
+		s.output.StartFrame()
+	}
+
 	return
 }
 

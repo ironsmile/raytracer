@@ -37,9 +37,7 @@ func (e *FPSEngine) screenRefresher() {
 		case _ = <-e.stopChan:
 			return
 		default:
-			e.Dest.StartFrame()
 			time.Sleep(100 * time.Millisecond)
-			e.Dest.DoneFrame()
 		}
 	}
 }
