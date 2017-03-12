@@ -26,18 +26,18 @@ func (t *Transform) IsIdentity() bool {
 
 func (t *Transform) Point(point *geometry.Point) *geometry.Point {
 	p := geometry.NewPoint(
-		float64(t.mat.els[0][0])*point.X+float64(t.mat.els[0][1])*point.Y+
-			float64(t.mat.els[0][2])*point.Z+float64(t.mat.els[0][3]),
+		(t.mat.els[0][0])*point.X+(t.mat.els[0][1])*point.Y+
+			(t.mat.els[0][2])*point.Z+(t.mat.els[0][3]),
 
-		float64(t.mat.els[1][0])*point.X+float64(t.mat.els[1][1])*point.Y+
-			float64(t.mat.els[1][2])*point.Z+float64(t.mat.els[1][3]),
+		(t.mat.els[1][0])*point.X+(t.mat.els[1][1])*point.Y+
+			(t.mat.els[1][2])*point.Z+(t.mat.els[1][3]),
 
-		float64(t.mat.els[2][0])*point.X+float64(t.mat.els[2][1])*point.Y+
-			float64(t.mat.els[2][2])*point.Z+float64(t.mat.els[2][3]),
+		(t.mat.els[2][0])*point.X+(t.mat.els[2][1])*point.Y+
+			(t.mat.els[2][2])*point.Z+(t.mat.els[2][3]),
 	)
 
-	wp := float64(t.mat.els[3][0])*point.X + float64(t.mat.els[3][1])*point.Y +
-		float64(t.mat.els[3][2])*point.Z + float64(t.mat.els[3][3])
+	wp := (t.mat.els[3][0])*point.X + (t.mat.els[3][1])*point.Y +
+		(t.mat.els[3][2])*point.Z + (t.mat.els[3][3])
 
 	if wp != 1.0 {
 		p.MultiplyScalarIP(1.0 / wp)
@@ -46,17 +46,17 @@ func (t *Transform) Point(point *geometry.Point) *geometry.Point {
 }
 
 func (t *Transform) PointIP(point *geometry.Point) *geometry.Point {
-	xp := float64(t.mat.els[0][0])*point.X + float64(t.mat.els[0][1])*point.Y +
-		float64(t.mat.els[0][2])*point.Z + float64(t.mat.els[0][3])
+	xp := (t.mat.els[0][0])*point.X + (t.mat.els[0][1])*point.Y +
+		(t.mat.els[0][2])*point.Z + (t.mat.els[0][3])
 
-	yp := float64(t.mat.els[1][0])*point.X + float64(t.mat.els[1][1])*point.Y +
-		float64(t.mat.els[1][2])*point.Z + float64(t.mat.els[1][3])
+	yp := (t.mat.els[1][0])*point.X + (t.mat.els[1][1])*point.Y +
+		(t.mat.els[1][2])*point.Z + (t.mat.els[1][3])
 
-	zp := float64(t.mat.els[2][0])*point.X + float64(t.mat.els[2][1])*point.Y +
-		float64(t.mat.els[2][2])*point.Z + float64(t.mat.els[2][3])
+	zp := (t.mat.els[2][0])*point.X + (t.mat.els[2][1])*point.Y +
+		(t.mat.els[2][2])*point.Z + (t.mat.els[2][3])
 
-	wp := float64(t.mat.els[3][0])*point.X + float64(t.mat.els[3][1])*point.Y +
-		float64(t.mat.els[3][2])*point.Z + float64(t.mat.els[3][3])
+	wp := (t.mat.els[3][0])*point.X + (t.mat.els[3][1])*point.Y +
+		(t.mat.els[3][2])*point.Z + (t.mat.els[3][3])
 
 	point.X, point.Y, point.Z = xp, yp, zp
 
@@ -67,27 +67,27 @@ func (t *Transform) PointIP(point *geometry.Point) *geometry.Point {
 }
 
 func (t *Transform) Vector(vec *geometry.Vector) *geometry.Vector {
-	xp := float64(t.mat.els[0][0])*vec.X + float64(t.mat.els[0][1])*vec.Y +
-		float64(t.mat.els[0][2])*vec.Z
+	xp := (t.mat.els[0][0])*vec.X + (t.mat.els[0][1])*vec.Y +
+		(t.mat.els[0][2])*vec.Z
 
-	yp := float64(t.mat.els[1][0])*vec.X + float64(t.mat.els[1][1])*vec.Y +
-		float64(t.mat.els[1][2])*vec.Z
+	yp := (t.mat.els[1][0])*vec.X + (t.mat.els[1][1])*vec.Y +
+		(t.mat.els[1][2])*vec.Z
 
-	zp := float64(t.mat.els[2][0])*vec.X + float64(t.mat.els[2][1])*vec.Y +
-		float64(t.mat.els[2][2])*vec.Z
+	zp := (t.mat.els[2][0])*vec.X + (t.mat.els[2][1])*vec.Y +
+		(t.mat.els[2][2])*vec.Z
 
 	return geometry.NewVector(xp, yp, zp)
 }
 
 func (t *Transform) VectorIP(vec *geometry.Vector) *geometry.Vector {
-	xp := float64(t.mat.els[0][0])*vec.X + float64(t.mat.els[0][1])*vec.Y +
-		float64(t.mat.els[0][2])*vec.Z
+	xp := (t.mat.els[0][0])*vec.X + (t.mat.els[0][1])*vec.Y +
+		(t.mat.els[0][2])*vec.Z
 
-	yp := float64(t.mat.els[1][0])*vec.X + float64(t.mat.els[1][1])*vec.Y +
-		float64(t.mat.els[1][2])*vec.Z
+	yp := (t.mat.els[1][0])*vec.X + (t.mat.els[1][1])*vec.Y +
+		(t.mat.els[1][2])*vec.Z
 
-	zp := float64(t.mat.els[2][0])*vec.X + float64(t.mat.els[2][1])*vec.Y +
-		float64(t.mat.els[2][2])*vec.Z
+	zp := (t.mat.els[2][0])*vec.X + (t.mat.els[2][1])*vec.Y +
+		(t.mat.els[2][2])*vec.Z
 
 	vec.X, vec.Y, vec.Z = xp, yp, zp
 	return vec
@@ -117,9 +117,9 @@ func (t *Transform) Normal(vec *geometry.Vector) *geometry.Vector {
 func (t *Transform) NormalIP(vec *geometry.Vector) *geometry.Vector {
 	var x, y, z = vec.X, vec.Y, vec.Z
 
-	vec.X = float64(t.matInv.els[0][0])*x + float64(t.matInv.els[1][0])*y + float64(t.matInv.els[2][0])*z
-	vec.Y = float64(t.matInv.els[0][1])*x + float64(t.matInv.els[1][1])*y + float64(t.matInv.els[2][1])*z
-	vec.Z = float64(t.matInv.els[0][2])*x + float64(t.matInv.els[1][2])*y + float64(t.matInv.els[2][2])*z
+	vec.X = (t.matInv.els[0][0])*x + (t.matInv.els[1][0])*y + (t.matInv.els[2][0])*z
+	vec.Y = (t.matInv.els[0][1])*x + (t.matInv.els[1][1])*y + (t.matInv.els[2][1])*z
+	vec.Z = (t.matInv.els[0][2])*x + (t.matInv.els[1][2])*y + (t.matInv.els[2][2])*z
 
 	return vec.NormalizeIP()
 }

@@ -8,10 +8,10 @@ import (
 var COMPARE_PRECISION = 1e-6
 
 type Matrix4x4 struct {
-	els [4][4]float32
+	els [4][4]float64
 }
 
-func (m *Matrix4x4) Get(i, j int) float32 {
+func (m *Matrix4x4) Get(i, j int) float64 {
 	return m.els[i][j]
 }
 
@@ -31,8 +31,8 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 
 	// faster:
 	return &Matrix4x4{
-		[4][4]float32{
-			[4]float32{
+		[4][4]float64{
+			[4]float64{
 				m.els[0][0]*other.els[0][0] +
 					m.els[0][1]*other.els[1][0] +
 					m.els[0][2]*other.els[2][0] +
@@ -53,7 +53,7 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 					m.els[0][2]*other.els[2][3] +
 					m.els[0][3]*other.els[3][3],
 			},
-			[4]float32{
+			[4]float64{
 				m.els[1][0]*other.els[0][0] +
 					m.els[1][1]*other.els[1][0] +
 					m.els[1][2]*other.els[2][0] +
@@ -74,7 +74,7 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 					m.els[1][2]*other.els[2][3] +
 					m.els[1][3]*other.els[3][3],
 			},
-			[4]float32{
+			[4]float64{
 				m.els[2][0]*other.els[0][0] +
 					m.els[2][1]*other.els[1][0] +
 					m.els[2][2]*other.els[2][0] +
@@ -95,7 +95,7 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 					m.els[2][2]*other.els[2][3] +
 					m.els[2][3]*other.els[3][3],
 			},
-			[4]float32{
+			[4]float64{
 				m.els[3][0]*other.els[0][0] +
 					m.els[3][1]*other.els[1][0] +
 					m.els[3][2]*other.els[2][0] +
@@ -134,16 +134,16 @@ func (m *Matrix4x4) Transpose() *Matrix4x4 {
 
 	// faster:
 	return &Matrix4x4{
-		[4][4]float32{
-			[4]float32{m.els[0][0], m.els[1][0], m.els[2][0], m.els[3][0]},
-			[4]float32{m.els[0][1], m.els[1][1], m.els[2][1], m.els[3][1]},
-			[4]float32{m.els[0][2], m.els[1][2], m.els[2][2], m.els[3][2]},
-			[4]float32{m.els[0][3], m.els[1][3], m.els[2][3], m.els[3][3]},
+		[4][4]float64{
+			[4]float64{m.els[0][0], m.els[1][0], m.els[2][0], m.els[3][0]},
+			[4]float64{m.els[0][1], m.els[1][1], m.els[2][1], m.els[3][1]},
+			[4]float64{m.els[0][2], m.els[1][2], m.els[2][2], m.els[3][2]},
+			[4]float64{m.els[0][3], m.els[1][3], m.els[2][3], m.els[3][3]},
 		}}
 }
 
-func (m *Matrix4x4) GetColumn(index int) [4]float32 {
-	return [4]float32{m.els[0][index], m.els[1][index], m.els[2][index],
+func (m *Matrix4x4) GetColumn(index int) [4]float64 {
+	return [4]float64{m.els[0][index], m.els[1][index], m.els[2][index],
 		m.els[3][index]}
 }
 
@@ -253,13 +253,13 @@ func NewMatrix(
 	a00, a10, a20, a30,
 	a01, a11, a21, a31,
 	a02, a12, a22, a32,
-	a03, a13, a23, a33 float32) *Matrix4x4 {
+	a03, a13, a23, a33 float64) *Matrix4x4 {
 
 	return &Matrix4x4{
-		[4][4]float32{
-			[4]float32{a00, a10, a20, a30},
-			[4]float32{a01, a11, a21, a31},
-			[4]float32{a02, a12, a22, a32},
-			[4]float32{a03, a13, a23, a33},
+		[4][4]float64{
+			[4]float64{a00, a10, a20, a30},
+			[4]float64{a01, a11, a21, a31},
+			[4]float64{a02, a12, a22, a32},
+			[4]float64{a03, a13, a23, a33},
 		}}
 }

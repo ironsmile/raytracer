@@ -26,7 +26,7 @@ func TestMatrixIndexing(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		expected := float32(test[2])
+		expected := float64(test[2])
 		i, j := test[0], test[1]
 
 		found := m.Get(i, j)
@@ -85,7 +85,7 @@ func TestMatrixTransposition(t *testing.T) {
 		0, 0, 3, 2)
 
 	foundColumn := one.GetColumn(3)
-	expectedColumn := [4]float32{0, 1, 0, 2}
+	expectedColumn := [4]float64{0, 1, 0, 2}
 
 	if foundColumn != expectedColumn {
 		t.Errorf("Get column operation failed! Expected %v but got %v",

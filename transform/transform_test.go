@@ -161,3 +161,47 @@ func BenchmarkRayTransformation(t *testing.B) {
 		}
 	})
 }
+
+func BenchmarkVectorTransformation(t *testing.B) {
+	vec := geometry.Vector{X: -23.55, Y: 33.77, Z: 0.032}
+
+	t1 := NewTransformation(NewMatrix(
+		0, 1.50, 2.3, 0.22,
+		1, 33.2, 1.2, 1.56,
+		2, 3.01, 0.1, 0.01,
+		0, 0.23, 3.2, 2.12))
+
+	t.Run("new vector", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.Vector(&vec)
+		}
+	})
+
+	t.Run("in place", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.VectorIP(&vec)
+		}
+	})
+}
+
+func BenchmarkPointTransformation(t *testing.B) {
+	point := geometry.Point{X: 2.5, Y: 3.1, Z: 5555.3}
+
+	t1 := NewTransformation(NewMatrix(
+		0, 1.50, 2.3, 0.22,
+		1, 33.2, 1.2, 1.56,
+		2, 3.01, 0.1, 0.01,
+		0, 0.23, 3.2, 2.12))
+
+	t.Run("new point", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.Point(&point)
+		}
+	})
+
+	t.Run("in place", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			t1.PointIP(&point)
+		}
+	})
+}
