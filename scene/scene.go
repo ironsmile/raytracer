@@ -45,7 +45,7 @@ func (s *Scene) Intersect(ray *geometry.Ray) (prim primitive.Primitive, retdist 
 		if res == shape.HIT && resDist < retdist {
 			prim = pr
 			retdist = resDist
-			normal = resNormal
+			normal = *resNormal
 		}
 	}
 

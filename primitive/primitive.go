@@ -18,7 +18,7 @@ const (
 
 type Primitive interface {
 	GetType() int
-	Intersect(geometry.Ray, float64) (isHit int, distance float64, normal geometry.Vector)
+	Intersect(geometry.Ray, float64) (isHit int, distance float64, normal *geometry.Vector)
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
@@ -52,16 +52,16 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 	return &b.Mat
 }
 
-func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
+func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
 	b.worldToObj.RayIP(&ray)
 
 	res, hitDist, normal := b.shape.Intersect(&ray, dist)
 
 	if res != shape.HIT {
-		return res, hitDist, geometry.Vector{}
+		return res, hitDist, normal
 	}
 
-	return res, hitDist, *b.objToWorld.NormalIP(normal)
+	return res, hitDist, b.objToWorld.NormalIP(normal)
 }
 
 func (b *BasePrimitive) Shape() shape.Shape {
