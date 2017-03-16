@@ -38,7 +38,7 @@ func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 	if prim == nil {
 		return MISS, distance, outNormal
 	}
-	return HIT, distance, *normal
+	return HIT, distance, normal
 }
 
 func (o *Object) GetNormal(pos *geometry.Point) *geometry.Vector {

@@ -7,7 +7,7 @@ import (
 )
 
 func IntersectMultiple(objects []Shape, ray geometry.Ray) (
-	prim Shape, retdist float64, normal *geometry.Vector) {
+	prim Shape, retdist float64, normal geometry.Vector) {
 
 	retdist = 1000000.0
 
@@ -23,7 +23,7 @@ func IntersectMultiple(objects []Shape, ray geometry.Ray) (
 		if res == HIT && resDist < retdist {
 			prim = pr
 			retdist = resDist
-			normal = &resNormal
+			normal = resNormal
 		}
 	}
 
