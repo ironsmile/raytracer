@@ -38,7 +38,7 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Camera = cam
 }
 
-func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Color) (
+func (e *Engine) Raytrace(ray geometry.Ray, depth int64, retColor *geometry.Color) (
 	primitive.Primitive, float64, *geometry.Color) {
 
 	retColor.Set(0, 0, 0)
@@ -59,7 +59,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		return prim, retdist, retColor
 	}
 
-	shadowRay := &geometry.Ray{}
+	shadowRay := geometry.Ray{}
 	L := &geometry.Vector{}
 	piOffset := &geometry.Point{}
 
@@ -136,7 +136,7 @@ func (e *Engine) Raytrace(ray *geometry.Ray, depth int64, retColor *geometry.Col
 		// Warning! InNormal is irrevrsibly changed here.
 		R := ray.Direction.Minus((&InNormal).MultiplyScalarIP(ray.Direction.Product(&InNormal) * 2.0))
 
-		refRay := &geometry.Ray{
+		refRay := geometry.Ray{
 			Origin:    *pi.PlusVectorIP(R.MultiplyScalar(EPSION)),
 			Direction: *R,
 		}
@@ -174,7 +174,7 @@ func (e *Engine) Render() {
 
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
-	ray := &geometry.Ray{}
+	ray := geometry.Ray{}
 	accColor := geometry.NewColor(0, 0, 0)
 
 	for {
@@ -186,7 +186,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			fmt.Printf("Error while getting sample: %s\n", err)
 			return
 		}
-		weight := e.Camera.GenerateRayIP(float64(x), float64(y), ray)
+		weight := e.Camera.GenerateRayIP(float64(x), float64(y), &ray)
 		e.Raytrace(ray, 1, accColor)
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}

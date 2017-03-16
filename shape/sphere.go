@@ -13,7 +13,7 @@ type Sphere struct {
 	RRadius  float64
 }
 
-func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
 	v := ray.Origin.Minus(s.Center)
 	b := -v.Product(&ray.Direction)
 	det := b*b - v.Product(v) + s.SqRadius
@@ -21,7 +21,7 @@ func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geom
 	retdist := dist
 	retval := MISS
 	if det <= 0 {
-		return retval, retdist, nil
+		return retval, retdist, geometry.Vector{}
 	}
 
 	det = math.Sqrt(det)
@@ -45,7 +45,7 @@ func (s *Sphere) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geom
 
 	intersectionPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
-	return retval, retdist, s.GetNormal(intersectionPoint)
+	return retval, retdist, *s.GetNormal(intersectionPoint)
 }
 
 func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {

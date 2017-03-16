@@ -14,21 +14,21 @@ func NewRectangle(w, h float64) *Rectangle {
 	return &Rectangle{w, h}
 }
 
-func (r *Rectangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
-	normal := geometry.NewVector(0, 0, -1)
+func (r *Rectangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
+	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
 
-	d := geometry.NewPoint(0, 0, 0).MinusVectorIP(ray.Origin.Vector()).Vector().Product(normal)
-	d /= ray.Direction.Product(normal)
+	d := geometry.NewPoint(0, 0, 0).MinusVectorIP(ray.Origin.Vector()).Vector().Product(&normal)
+	d /= ray.Direction.Product(&normal)
 
 	if d <= 0 {
-		return MISS, dist, nil
+		return MISS, dist, normal
 	}
 
 	hitPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(d))
 
 	if hitPoint.X >= -0.5 && hitPoint.X <= r.width/2 && hitPoint.Y >= -0.5 && hitPoint.Y <= r.height/2 {
-		return HIT, d, normal.Copy()
+		return HIT, d, normal
 	}
 
-	return MISS, dist, nil
+	return MISS, dist, normal
 }

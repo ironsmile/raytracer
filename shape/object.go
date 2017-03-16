@@ -24,19 +24,21 @@ type Object struct {
 	boundingSphere *Sphere
 }
 
-func (o *Object) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
+	var outNormal geometry.Vector
+
 	if o.boundingSphere != nil {
 		spHit, _, _ := o.boundingSphere.Intersect(ray, dist)
 		if spHit == MISS {
-			return MISS, dist, nil
+			return MISS, dist, outNormal
 		}
 	}
 
 	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
 	if prim == nil {
-		return MISS, distance, normal
+		return MISS, distance, outNormal
 	}
-	return HIT, distance, normal
+	return HIT, distance, *normal
 }
 
 func (o *Object) GetNormal(pos *geometry.Point) *geometry.Vector {

@@ -24,16 +24,17 @@ func (t *Triangle) GetNormal(_ *geometry.Point) *geometry.Vector {
 	return t.Normal
 }
 
-func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *geometry.Vector) {
+func (t *Triangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
 	// Implements Möller–Trumbore ray-triangle intersection algorithm:
 	// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+	var outNormal geometry.Vector
 
 	s1 := ray.Direction.Cross(t.edge2)
 	divisor := t.edge1.Product(s1)
 
 	// Not culling:
 	if divisor > -geometry.EPSILON && divisor < geometry.EPSILON {
-		return MISS, dist, nil
+		return MISS, dist, outNormal
 	}
 
 	invDivisor := 1.0 / divisor
@@ -42,21 +43,21 @@ func (t *Triangle) Intersect(ray *geometry.Ray, dist float64) (int, float64, *ge
 	b1 := s.Product(s1) * invDivisor
 
 	if b1 < 0.0 || b1 > 1.0 {
-		return MISS, dist, nil
+		return MISS, dist, outNormal
 	}
 
 	s2 := s.CrossIP(t.edge1)
 	b2 := ray.Direction.Product(s2) * invDivisor
 
 	if b2 < 0.0 || b1+b2 > 1.0 {
-		return MISS, dist, nil
+		return MISS, dist, outNormal
 	}
 
 	tt := t.edge2.Product(s2) * invDivisor
 
 	if tt < geometry.EPSILON || tt > dist {
-		return MISS, dist, nil
+		return MISS, dist, outNormal
 	}
 
-	return HIT, tt, t.Normal.Copy()
+	return HIT, tt, *t.Normal
 }
