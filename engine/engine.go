@@ -38,8 +38,9 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Camera = cam
 }
 
-func (e *Engine) Raytrace(ray geometry.Ray, depth int64, retColor *geometry.Color) (
-	primitive.Primitive, float64, *geometry.Color) {
+func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
+	primitive.Primitive, float64, geometry.Color) {
+	var retColor geometry.Color
 
 	retColor.Set(0, 0, 0)
 
@@ -142,8 +143,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, retColor *geometry.Colo
 		}
 
 		// refRay.Debug = ray.Debug
-		var refColor geometry.Color
-		e.Raytrace(refRay, depth+1, &refColor)
+		_, _, refColor := e.Raytrace(refRay, depth+1)
 
 		retColor.PlusIP(primMat.Color.Multiply(
 			&refColor).MultiplyScalarIP(primMat.Refl))
@@ -175,7 +175,7 @@ func (e *Engine) Render() {
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
 	ray := geometry.Ray{}
-	accColor := geometry.NewColor(0, 0, 0)
+	var accColor geometry.Color
 
 	for {
 		x, y, err := e.Sampler.GetSample()
@@ -187,7 +187,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			return
 		}
 		weight := e.Camera.GenerateRayIP(float64(x), float64(y), &ray)
-		e.Raytrace(ray, 1, accColor)
+		_, _, accColor = e.Raytrace(ray, 1)
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
 
