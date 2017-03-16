@@ -64,7 +64,7 @@ func (o *Object) computeBoundingSphere() error {
 			continue
 		}
 		for _, vertice := range triangle.Vertices {
-			distance := geometry.Distance(o.Center, vertice)
+			distance := geometry.Distance(o.Center, &vertice)
 			if distance > maxRadius {
 				maxRadius = distance
 			}
@@ -122,10 +122,10 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 				b := model.Vertices[face.References[1].VertexIndex]
 				c := model.Vertices[face.References[2].VertexIndex]
 
-				triangleVertices := [3]*geometry.Point{
-					geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(center),
-					geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(center),
-					geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(center),
+				triangleVertices := [3]geometry.Point{
+					*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(center),
+					*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(center),
+					*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(center),
 				}
 
 				o.Triangles = append(o.Triangles, NewTriangle(triangleVertices))

@@ -168,10 +168,10 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	triangle := primitive.NewTriangle([3]*geometry.Point{
-		geometry.NewPoint(-10.99, 3, 0),  // a
-		geometry.NewPoint(-10.99, 0, -3), // b
-		geometry.NewPoint(-10.99, 0, 3),  // c
+	triangle := primitive.NewTriangle([3]geometry.Point{
+		*geometry.NewPoint(-10.99, 3, 0),  // a
+		*geometry.NewPoint(-10.99, 0, -3), // b
+		*geometry.NewPoint(-10.99, 0, 3),  // c
 	})
 	triangle.Name = "Green triangle"
 	triangle.Mat.Refl = 0.0
