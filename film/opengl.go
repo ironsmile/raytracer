@@ -40,10 +40,6 @@ func (g *GlWindow) Init(width int, height int) error {
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-
 	return g.initOpenGL()
 }
 

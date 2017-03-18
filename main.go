@@ -110,6 +110,11 @@ func openglWindowRenderer() {
 	}
 	defer glfw.Terminate()
 
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+
 	var err error
 	var window *glfw.Window
 
