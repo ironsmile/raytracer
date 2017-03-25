@@ -135,8 +135,24 @@ func NewObject(filePath string) (*Object, error) {
 	return o, nil
 }
 
-func (o *Object) objectBound() *bbox.BBox {
+func (o *Object) objectBound() (*bbox.BBox, error) {
 	//!todo:
 	// create a empty box
-	// bbox.UnionPoint with every point in the o.Triangles
+	var retBox *bbox.BBox
+	for ind, obj := range o.Triangles {
+		obj, ok := obj.(*Triangle)
+		if !ok {
+			return nil, fmt.Errorf("a shape in object.Triangles is not a triangle? Index %d", ind)
+		}
+		if retBox == nil {
+			retBox = retBox.UnionPoint(&obj.Vertices[0])
+		}
+		for i := 0; i < 3; i++ {
+			retBox = retBox.UnionPoint(&obj.Vertices[i])
+		}
+	}
+	if retBox == nil {
+		return nil, fmt.Errorf("obj does not have any faces")
+	}
+	return retBox, nil
 }

@@ -2,7 +2,6 @@ package bbox
 
 import (
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/utils"
 )
 
@@ -56,11 +55,6 @@ func (b *BBox) Lerp(tx, ty, tz float64) geometry.Point {
 // has offset (1, 1, 1)
 func (b *BBox) Offset(p *geometry.Point) *geometry.Vector {
 	panic("BBox.Offset is not implemented yet")
-}
-
-// BoundingSphere returns a spehre that bounds the bounding box.
-func (b *BBox) BoundingSphere() *shape.Sphere {
-	panic("BBox.BoundingSphere is not implemted yet")
 }
 
 // Union returns a bounding box which ecompases the the two input boxes
