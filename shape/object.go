@@ -17,10 +17,10 @@ type Object struct {
 	// The center of the object
 	Center *geometry.Point
 
-	// All the triangles which compose this object
-	Triangles []Shape
+	// All the faces which compose this object
+	Faces []Shape
 
-	// A sphere which contains all the points of the object triangles
+	// A sphere which contains all the points of the object faces
 	boundingSphere *Sphere
 }
 
@@ -34,7 +34,7 @@ func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		}
 	}
 
-	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
+	prim, distance, normal := IntersectMultiple(o.Faces, ray)
 	if prim == nil {
 		return MISS, distance, outNormal
 	}
@@ -57,7 +57,7 @@ func (o *Object) computeBoundingSphere() error {
 
 	maxRadius := 0.0
 
-	for ind, triangle := range o.Triangles {
+	for ind, triangle := range o.Faces {
 		triangle, ok := triangle.(*Triangle)
 		if !ok {
 			fmt.Printf("A shape in object.Triangles is not a triangle? Index %d", ind)
@@ -78,7 +78,9 @@ func (o *Object) computeBoundingSphere() error {
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
 // the object at the position, given by its second argument - `center`.
 func NewObject(filePath string, center *geometry.Point) (*Object, error) {
-	decoder := obj.NewDecoder(obj.DefaultLimits())
+	decoderLimits := obj.DefaultLimits()
+	decoderLimits.MaxVertexCount = 4294967296
+	decoder := obj.NewDecoder(decoderLimits)
 	objFile, err := os.Open(filePath)
 
 	if err != nil {
@@ -96,11 +98,8 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 
 	o := new(Object)
 	o.Center = center
-	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
+	o.Faces = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
-
-	//!TODO: maybe remove this scale factor?
-	scaleFactor := 100.0
 
 	for _, obj := range model.Objects {
 		fmt.Printf("object %s has %d meshes\n", obj.Name, len(obj.Meshes))
@@ -112,32 +111,84 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
 			for faceIndex, face := range mesh.Faces {
-				if len(face.References) != 3 {
+
+				faceShapes, err := o.faceToShapes(model, face)
+				if err != nil {
 					return nil, fmt.Errorf(
-						"face %d [mesh: %d, obj: %s] has %d points, don't know how to load it",
-						faceIndex, meshIndex, obj.Name, len(face.References))
+						"face %d [mesh: %d, obj: %s]: %s",
+						faceIndex,
+						meshIndex,
+						obj.Name,
+						err,
+					)
 				}
-
-				a := model.Vertices[face.References[0].VertexIndex]
-				b := model.Vertices[face.References[1].VertexIndex]
-				c := model.Vertices[face.References[2].VertexIndex]
-
-				triangleVertices := [3]geometry.Point{
-					*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(center),
-					*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(center),
-					*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(center),
+				for _, faceShape := range faceShapes {
+					o.Faces = append(o.Faces, faceShape)
 				}
-
-				o.Triangles = append(o.Triangles, NewTriangle(triangleVertices))
 			}
 		}
 	}
 
-	fmt.Printf("%s has %d triangles\n", filePath, len(o.Triangles))
+	fmt.Printf("%s has %d triangles\n", filePath, len(o.Faces))
 
 	if err := o.computeBoundingSphere(); err != nil {
 		return nil, err
 	}
 
 	return o, nil
+}
+
+func (o *Object) faceToShapes(model *obj.Model, face *obj.Face) ([]Shape, error) {
+
+	//!TODO: maybe remove this scale factor?
+	scaleFactor := 100.0
+
+	switch len(face.References) {
+	case 3:
+		a := model.Vertices[face.References[0].VertexIndex]
+		b := model.Vertices[face.References[1].VertexIndex]
+		c := model.Vertices[face.References[2].VertexIndex]
+
+		triangleVertices := [3]geometry.Point{
+			*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(o.Center),
+		}
+
+		return []Shape{NewTriangle(triangleVertices)}, nil
+	case 4:
+		//!TODO: Load an actual rectangle which would hopefully be faster. Stop
+		// loading two triangles.
+		// 0, 1, 3
+		// 1, 2, 3
+		a := model.Vertices[face.References[0].VertexIndex]
+		b := model.Vertices[face.References[1].VertexIndex]
+		c := model.Vertices[face.References[3].VertexIndex]
+
+		triangleOne := [3]geometry.Point{
+			*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(o.Center),
+		}
+
+		a = model.Vertices[face.References[1].VertexIndex]
+		b = model.Vertices[face.References[2].VertexIndex]
+		c = model.Vertices[face.References[3].VertexIndex]
+
+		triangleTwo := [3]geometry.Point{
+			*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(o.Center),
+			*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(o.Center),
+		}
+
+		return []Shape{
+			NewTriangle(triangleOne),
+			NewTriangle(triangleTwo),
+		}, nil
+	}
+
+	return nil, fmt.Errorf(
+		"don't know how to load %d vertices in a shape",
+		len(face.References),
+	)
 }

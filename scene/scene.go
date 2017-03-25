@@ -197,22 +197,23 @@ func (s *Scene) InitScene() {
 	s.Lights = append(s.Lights, sphere)
 
 	sphere = primitive.NewSphere(*geometry.NewPoint(2, 5, -10), 0.1)
-	sphere.Name = "Behid the shoulder lightsource"
+	sphere.Name = "Behind the shoulder lightsource"
 	sphere.Light = true
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	teaPotCenter := geometry.NewPoint(-3, 0, 5)
-	if teapot, err := primitive.NewObject("data/objs/teapot.obj", teaPotCenter); err != nil {
-		fmt.Printf("Error loading obj teapot: %s\n", err)
+	objCenter := geometry.NewPoint(-3, 0, 5)
+	objFile := "data/objs/violin_case.obj"
+	if obj, err := primitive.NewObject(objFile, objCenter); err != nil {
+		fmt.Printf("Error loading obj violin_case.obj: %s\n", err)
 	} else {
-		teapot.Name = "First teapod"
-		teapot.Mat.Refl = 0.0
-		teapot.Mat.Diff = 0.3
-		teapot.Mat.Color = geometry.NewColor(0.3, 1, 0)
-		s.Primitives = append(s.Primitives, teapot)
+		obj.Name = "First object"
+		obj.Mat.Refl = 0.0
+		obj.Mat.Diff = 0.3
+		obj.Mat.Color = geometry.NewColor(0.3, 1, 0)
+		s.Primitives = append(s.Primitives, obj)
 	}
 
 	blueRect := primitive.NewRectangle(1, 0.5)
