@@ -6,6 +6,7 @@ import (
 
 	"github.com/momchil-atanasov/go-data-front/decoder/obj"
 
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -41,11 +42,6 @@ func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 	return HIT, distance, normal
 }
 
-func (o *Object) GetNormal(pos *geometry.Point) *geometry.Vector {
-	//!TODO: implement
-	return &geometry.Vector{0, 0, -1}
-}
-
 func (o *Object) computeBoundingSphere() error {
 	//!TODO: maybe implement one of the following:
 	// https://www.inf.ethz.ch/personal/gaertner/texts/own_work/esa99_final.pdf
@@ -77,7 +73,7 @@ func (o *Object) computeBoundingSphere() error {
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
 // the object at the position, given by its second argument - `center`.
-func NewObject(filePath string, center *geometry.Point) (*Object, error) {
+func NewObject(filePath string) (*Object, error) {
 	decoder := obj.NewDecoder(obj.DefaultLimits())
 	objFile, err := os.Open(filePath)
 
@@ -94,13 +90,10 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 
 	fmt.Printf("model %s has %d models\n", filePath, len(model.Objects))
 
-	o := new(Object)
-	o.Center = center
+	o := &Object{}
+	o.Center = geometry.NewPoint(0, 0, 0)
 	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
-
-	//!TODO: maybe remove this scale factor?
-	scaleFactor := 100.0
 
 	for _, obj := range model.Objects {
 		fmt.Printf("object %s has %d meshes\n", obj.Name, len(obj.Meshes))
@@ -123,9 +116,9 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 				c := model.Vertices[face.References[2].VertexIndex]
 
 				triangleVertices := [3]geometry.Point{
-					*geometry.NewPoint(a.X/scaleFactor, a.Y/scaleFactor, a.Z/scaleFactor).Plus(center),
-					*geometry.NewPoint(b.X/scaleFactor, b.Y/scaleFactor, b.Z/scaleFactor).Plus(center),
-					*geometry.NewPoint(c.X/scaleFactor, c.Y/scaleFactor, c.Z/scaleFactor).Plus(center),
+					*geometry.NewPoint(a.X, a.Y, a.Z),
+					*geometry.NewPoint(b.X, b.Y, b.Z),
+					*geometry.NewPoint(c.X, c.Y, c.Z),
 				}
 
 				o.Triangles = append(o.Triangles, NewTriangle(triangleVertices))
@@ -140,4 +133,10 @@ func NewObject(filePath string, center *geometry.Point) (*Object, error) {
 	}
 
 	return o, nil
+}
+
+func (o *Object) objectBound() *bbox.BBox {
+	//!todo:
+	// create a empty box
+	// bbox.UnionPoint with every point in the o.Triangles
 }

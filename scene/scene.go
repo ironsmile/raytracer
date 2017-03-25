@@ -204,22 +204,26 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	teaPotCenter := geometry.NewPoint(-3, 0, 5)
-	if teapot, err := primitive.NewObject("data/objs/teapot.obj", teaPotCenter); err != nil {
+	teaPotCenter := geometry.NewVector(-3, 0, 5)
+	if teapot, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
 		teapot.Name = "First teapod"
 		teapot.Mat.Refl = 0.0
 		teapot.Mat.Diff = 0.3
 		teapot.Mat.Color = geometry.NewColor(0.3, 1, 0)
+		teapot.SetTransform(
+			transform.Translate(teaPotCenter).Multiply(transform.Scale(0.01, 0.01, 0.01)),
+		)
+
 		s.Primitives = append(s.Primitives, teapot)
 	}
 
 	blueRect := primitive.NewRectangle(1, 0.5)
 	blueRect.Name = "Blue Rectangle"
 	blueRect.Mat.Color = geometry.NewColor(0, 0, 1)
-	blueRect.Mat.Diff = 0.8
 	blueRect.Mat.Refl = 0.5
+	blueRect.Mat.Diff = 0.8
 	s.Primitives = append(s.Primitives, blueRect)
 }
 

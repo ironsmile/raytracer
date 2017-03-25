@@ -3,7 +3,6 @@ package primitive
 import (
 	"fmt"
 
-	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
@@ -25,8 +24,8 @@ func (o *Object) String() string {
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
 // the object at the position, given by its second argument - `center`.
-func NewObject(filePath string, center *geometry.Point) (*Object, error) {
-	oShape, err := shape.NewObject(filePath, center)
+func NewObject(filePath string) (*Object, error) {
+	oShape, err := shape.NewObject(filePath)
 	if err != nil {
 		return nil, err
 	}

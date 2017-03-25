@@ -145,6 +145,19 @@ func (v *Vector) Point() *Point {
 	return &Point{v.X, v.Y, v.Z}
 }
 
+func (v *Vector) ByIndex(index int) float64 {
+	switch index {
+	case 0:
+		return v.X
+	case 1:
+		return v.Y
+	case 2:
+		return v.Z
+	default:
+		panic("Index out of range for vector")
+	}
+}
+
 func NewVector(X, Y, Z float64) *Vector {
 	return &Vector{X, Y, Z}
 }

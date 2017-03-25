@@ -86,6 +86,19 @@ func (p *Point) CopyToSelf(o *Point) *Point {
 	return p
 }
 
+func (p *Point) ByIndex(index int) float64 {
+	switch index {
+	case 0:
+		return p.X
+	case 1:
+		return p.Y
+	case 2:
+		return p.Z
+	default:
+		panic("Index out of range for point")
+	}
+}
+
 func NewPoint(x, y, z float64) *Point {
 	return &Point{x, y, z}
 }
