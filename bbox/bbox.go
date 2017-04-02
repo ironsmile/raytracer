@@ -1,6 +1,8 @@
 package bbox
 
 import (
+	"math"
+
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/utils"
 )
@@ -76,14 +78,15 @@ func UnionPoint(bb *BBox, p *geometry.Point) *BBox {
 	union.Min.X = utils.Min(bb.Min.X, p.X)
 	union.Min.Y = utils.Min(bb.Min.Y, p.Y)
 	union.Min.Z = utils.Min(bb.Min.Z, p.Z)
-	union.Max.X = utils.Min(bb.Max.X, p.X)
-	union.Max.Y = utils.Min(bb.Max.Y, p.Y)
-	union.Max.Z = utils.Min(bb.Max.Z, p.Z)
+	union.Max.X = utils.Max(bb.Max.X, p.X)
+	union.Max.Y = utils.Max(bb.Max.Y, p.Y)
+	union.Max.Z = utils.Max(bb.Max.Z, p.Z)
 	return union
 }
 
 func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	var t0, t1, invRayDir, tNear, tFar float64
+	t1 = math.MaxFloat64
 	for i := 0; i < 3; i++ {
 		invRayDir = 1.0 / ray.Direction.ByIndex(i)
 		tNear = (b.Min.ByIndex(i) - ray.Origin.ByIndex(i)) * invRayDir

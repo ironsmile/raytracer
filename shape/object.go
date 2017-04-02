@@ -11,6 +11,8 @@ import (
 )
 
 type Object struct {
+	BasicShape
+
 	// A model wich contains the parsed .obj information such as objects, meshes, faces and raw
 	// vertices.
 	model *obj.Model
@@ -20,17 +22,14 @@ type Object struct {
 
 	// All the triangles which compose this object
 	Triangles []Shape
-
-	// A sphere which contains all the points of the object triangles
-	boundingSphere *Sphere
 }
 
 func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
 	var outNormal geometry.Vector
 
-	if o.boundingSphere != nil {
-		spHit, _, _ := o.boundingSphere.Intersect(ray, dist)
-		if spHit == MISS {
+	if o.bbox != nil {
+		intersected, _, _ := o.bbox.IntersectP(ray)
+		if !intersected {
 			return MISS, dist, outNormal
 		}
 	}
@@ -40,35 +39,6 @@ func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		return MISS, distance, outNormal
 	}
 	return HIT, distance, normal
-}
-
-func (o *Object) computeBoundingSphere() error {
-	//!TODO: maybe implement one of the following:
-	// https://www.inf.ethz.ch/personal/gaertner/texts/own_work/esa99_final.pdf
-	// http://www.ep.liu.se/ecp/034/009/ecp083409.pdf
-	// A the moment this is a simple and buggy (see next comment) exhaustion search.
-
-	// Bug: this method makes an implicit guess that the object is centered around the o.Center.
-	// This might not be true.
-
-	maxRadius := 0.0
-
-	for ind, triangle := range o.Triangles {
-		triangle, ok := triangle.(*Triangle)
-		if !ok {
-			fmt.Printf("A shape in object.Triangles is not a triangle? Index %d", ind)
-			continue
-		}
-		for _, vertice := range triangle.Vertices {
-			distance := geometry.Distance(o.Center, &vertice)
-			if distance > maxRadius {
-				maxRadius = distance
-			}
-		}
-	}
-
-	o.boundingSphere = NewSphere(*o.Center, maxRadius)
-	return nil
 }
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
@@ -128,9 +98,12 @@ func NewObject(filePath string) (*Object, error) {
 
 	fmt.Printf("%s has %d triangles\n", filePath, len(o.Triangles))
 
-	if err := o.computeBoundingSphere(); err != nil {
+	computedBBox, err := o.objectBound()
+	if err != nil {
 		return nil, err
 	}
+
+	o.bbox = computedBBox
 
 	return o, nil
 }
@@ -145,10 +118,10 @@ func (o *Object) objectBound() (*bbox.BBox, error) {
 			return nil, fmt.Errorf("a shape in object.Triangles is not a triangle? Index %d", ind)
 		}
 		if retBox == nil {
-			retBox = retBox.UnionPoint(&obj.Vertices[0])
+			retBox = bbox.FromPoint(&obj.Vertices[0])
 		}
 		for i := 0; i < 3; i++ {
-			retBox = retBox.UnionPoint(&obj.Vertices[i])
+			retBox = bbox.UnionPoint(retBox, &obj.Vertices[i])
 		}
 	}
 	if retBox == nil {

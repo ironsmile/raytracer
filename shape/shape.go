@@ -1,6 +1,7 @@
 package shape
 
 import (
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 )
 
@@ -13,4 +14,8 @@ const (
 // Shape is a interfece which defines a 3D shape which can be tested for intersection and stuff
 type Shape interface {
 	Intersect(geometry.Ray, float64) (isHit int, distance float64, normal geometry.Vector)
+}
+
+type BasicShape struct {
+	bbox *bbox.BBox
 }
