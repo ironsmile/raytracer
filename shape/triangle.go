@@ -3,6 +3,8 @@ package shape
 import "github.com/ironsmile/raytracer/geometry"
 
 type Triangle struct {
+	BasicShape
+
 	edge1 geometry.Vector
 	edge2 geometry.Vector
 

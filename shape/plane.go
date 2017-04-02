@@ -3,6 +3,8 @@ package shape
 import "github.com/ironsmile/raytracer/geometry"
 
 type Plane struct {
+	BasicShape
+
 	Normal   *geometry.Vector
 	Distance float64
 }

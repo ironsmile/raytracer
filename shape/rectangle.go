@@ -3,6 +3,8 @@ package shape
 import "github.com/ironsmile/raytracer/geometry"
 
 type Rectangle struct {
+	BasicShape
+
 	width  float64
 	height float64
 }
@@ -11,7 +13,7 @@ func NewRectangle(w, h float64) *Rectangle {
 	if w < 0 || w > 1 || h < 0 || h > 1 {
 		panic("Recatangle width and height must be in the [0-1] region")
 	}
-	return &Rectangle{w, h}
+	return &Rectangle{width: w, height: h}
 }
 
 func (r *Rectangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {

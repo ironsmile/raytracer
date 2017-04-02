@@ -13,7 +13,6 @@ import (
 	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
-	"github.com/ironsmile/raytracer/shape"
 )
 
 const (
@@ -86,7 +85,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		luminousity := 1.0
 
 		// Reusing the same object as much as possible
-		(light.Shape().(*shape.Sphere)).Center.MinusInVector(pi, L)
+		light.GetLightSource().MinusInVector(pi, L)
 		L.NormalizeIP()
 
 		dot := InNormal.Product(L)

@@ -1,62 +1,51 @@
 package shape
 
 import (
-	"math"
-
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/utils"
 )
 
+// Sphere is centered on 0,0,0 and has a radious of 1. Use transformations to move it around
+// and change its radius.
 type Sphere struct {
-	Center   *geometry.Point
-	SqRadius float64
-	Radius   float64
-	RRadius  float64
+	BasicShape
+
+	Radius float64
 }
 
+// Intersect implemnts the primitive interface
 func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
-	v := ray.Origin.Minus(s.Center)
-	b := -v.Product(&ray.Direction)
-	det := b*b - v.Product(v) + s.SqRadius
 
-	retdist := dist
-	retval := MISS
-	if det <= 0 {
-		return retval, retdist, geometry.Vector{}
+	var d = ray.Direction
+	var o = ray.Origin
+
+	var a = d.X*d.X + d.Y*d.Y + d.Z*d.Z
+	var b = 2 * (d.X*o.X + d.Y*o.Y + d.Z*o.Z)
+	var c = o.X*o.X + o.Y*o.Y + o.Z*o.Z - s.Radius*s.Radius
+
+	tNear, tFar, ok := utils.Quadratic(a, b, c)
+
+	if !ok || tNear < 0 {
+		return MISS, dist, ray.Direction
 	}
 
-	det = math.Sqrt(det)
+	var retdist = tNear
 
-	i1 := b - det
-	i2 := b + det
-
-	if i2 > 0 {
-		if i1 < 0 {
-			if i2 < dist {
-				retdist = i2
-				retval = INPRIM
-			}
-		} else {
-			if i1 < dist {
-				retdist = i1
-				retval = HIT
-			}
-		}
+	if tNear < 0 {
+		retdist = tFar
 	}
 
 	intersectionPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
-	return retval, retdist, *s.GetNormal(intersectionPoint)
+	return HIT, retdist, *s.GetNormal(intersectionPoint)
 }
 
+// GetNormal implements the primitive interface
 func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
-	return pos.Minus(s.Center).MultiplyScalarIP(s.RRadius)
+	return pos.Vector()
 }
 
-func NewSphere(center geometry.Point, radius float64) *Sphere {
-	s := new(Sphere)
-	s.Center = &center
-	s.SqRadius = radius * radius
-	s.Radius = radius
-	s.RRadius = 1.0 / radius
-	return s
+// NewSphere returns a sphere
+func NewSphere(radius float64) *Sphere {
+	return &Sphere{Radius: radius}
 }

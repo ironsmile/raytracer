@@ -16,7 +16,10 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 	}
 
 	t.Run("Sphere", func(t *testing.B) {
-		shpere := NewSphere(geometry.Point{X: 0, Y: 0, Z: 0}, 2)
+		shpere := NewSphere()
+		shpere.SetTransform(
+			transform.Scale(2, 2, 2),
+		)
 		for i := 0; i < t.N; i++ {
 			shpere.Intersect(ray, 1000000.0)
 		}
@@ -66,5 +69,30 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 	if math.Abs(distance-30) > 0.001 {
 		t.Errorf("Wrong distance returned by rectangle.Intersect. Exlected %f but got %f",
 			30.0, distance)
+	}
+}
+
+func TestSphereIntersection(t *testing.T) {
+	shpere := NewSphere()
+	shpere.SetTransform(
+		transform.Scale(2, 2, 2),
+	)
+
+	intersectRay := geometry.Ray{
+		Origin:    geometry.Point{X: 0, Y: 0, Z: -5},
+		Direction: geometry.Vector{X: 0, Y: 0, Z: 1},
+	}
+
+	if hit, _, _ := shpere.Intersect(intersectRay, 1000000.0); hit != shape.HIT {
+		t.Errorf("The ray did not hit the sphere but it was expected to: %d", hit)
+	}
+
+	missRay := geometry.Ray{
+		Origin:    geometry.Point{X: 0, Y: 0, Z: -5},
+		Direction: geometry.Vector{X: 0, Y: 1, Z: 0},
+	}
+
+	if hit, _, _ := shpere.Intersect(missRay, 1000000.0); hit != shape.MISS {
+		t.Errorf("The ray intersected the sphere but it was expected not to: %d", hit)
 	}
 }

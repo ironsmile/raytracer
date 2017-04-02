@@ -144,27 +144,30 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
-	sphere := primitive.NewSphere(*geometry.NewPoint(1, -0.8, 3), 2.5)
+	sphere := primitive.NewSphere(2.5)
 	sphere.Name = "big sphere"
 	sphere.Mat.Refl = 0.8
 	sphere.Mat.Diff = 0.9
 	sphere.Mat.Color = geometry.NewColor(1, 0, 0)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	sphere = primitive.NewSphere(*geometry.NewPoint(-5.5, -0.5, 7), 2)
+	sphere = primitive.NewSphere(2)
 	sphere.Name = "small sphere"
 	sphere.Mat.Refl = 0.9
 	sphere.Mat.Diff = 0.4
 	sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	sphere = primitive.NewSphere(*geometry.NewPoint(-6.5, -2.5, 25), 1.5)
+	sphere = primitive.NewSphere(1.5)
 	sphere.Name = "small sphere far away"
 	sphere.Mat.Refl = 0.9
 	sphere.Mat.Diff = 0.4
 	sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
 
 	s.Primitives = append(s.Primitives, sphere)
 
@@ -180,26 +183,32 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, triangle)
 
-	sphere = primitive.NewSphere(*geometry.NewPoint(0, 5, 5), 0.1)
+	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Visible light source"
 	sphere.Light = true
+	sphere.LightSource = *geometry.NewPoint(0, 5, 5)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
+	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	sphere = primitive.NewSphere(*geometry.NewPoint(2, 5, 1), 0.1)
+	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Invisible lightsource"
 	sphere.Light = true
+	sphere.LightSource = *geometry.NewPoint(2, 5, 1)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
+	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	sphere = primitive.NewSphere(*geometry.NewPoint(2, 5, -10), 0.1)
+	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Behid the shoulder lightsource"
 	sphere.Light = true
+	sphere.LightSource = *geometry.NewPoint(2, 5, -10)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
+	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
@@ -224,6 +233,9 @@ func (s *Scene) InitScene() {
 	blueRect.Mat.Color = geometry.NewColor(0, 0, 1)
 	blueRect.Mat.Refl = 0.5
 	blueRect.Mat.Diff = 0.8
+	blueRect.SetTransform(
+		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(transform.RotateY(-90)),
+	)
 	s.Primitives = append(s.Primitives, blueRect)
 }
 

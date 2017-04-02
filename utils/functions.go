@@ -4,6 +4,7 @@ import (
 	"math"
 )
 
+// Lerp does a linear interpolation between two points
 func Lerp(t, v1, v2 float64) float64 {
 	return (1.0-t)*v1 + t*v2
 }
@@ -44,6 +45,7 @@ func ConcentricSampleDisk(u1, u2 float64) (float64, float64) {
 	return r * math.Cos(theta), r * math.Sin(theta)
 }
 
+// Min returns the minimal value betwee two float64s
 func Min(a, b float64) float64 {
 	if a <= b {
 		return a
@@ -51,9 +53,35 @@ func Min(a, b float64) float64 {
 	return b
 }
 
+// Max returns the maximal value betwee two float64s
 func Max(a, b float64) float64 {
 	if a > b {
 		return a
 	}
 	return b
+}
+
+// Quadratic solves a quadratic equation and returns the two solutions of there are any.
+// Its last return value is a boolean and true when there is a solution. The first two
+// values are the solutions.
+func Quadratic(a, b, c float64) (float64, float64, bool) {
+	discrim := b*b - 4*a*c
+	if discrim <= 0 {
+		return 0, 0, false
+	}
+	rootDiscrim := math.Sqrt(discrim)
+	var q float64
+	if b < 0 {
+		q = -0.5 * (b - rootDiscrim)
+	} else {
+		q = -0.5 * (b + rootDiscrim)
+	}
+
+	t0, t1 := q/a, c/q
+
+	if t0 > t1 {
+		t0, t1 = t1, t0
+	}
+
+	return t0, t1, true
 }

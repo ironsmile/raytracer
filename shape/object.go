@@ -27,13 +27,6 @@ type Object struct {
 func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
 	var outNormal geometry.Vector
 
-	if o.bbox != nil {
-		intersected, _, _ := o.bbox.IntersectP(ray)
-		if !intersected {
-			return MISS, dist, outNormal
-		}
-	}
-
 	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
 	if prim == nil {
 		return MISS, distance, outNormal
@@ -108,9 +101,8 @@ func NewObject(filePath string) (*Object, error) {
 	return o, nil
 }
 
+// objectBound calculates a bounding box which encapsulates the shape
 func (o *Object) objectBound() (*bbox.BBox, error) {
-	//!todo:
-	// create a empty box
 	var retBox *bbox.BBox
 	for ind, obj := range o.Triangles {
 		obj, ok := obj.(*Triangle)

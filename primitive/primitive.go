@@ -22,18 +22,24 @@ type Primitive interface {
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
+	GetLightSource() *geometry.Point
 	GetName() string
 	Shape() shape.Shape
 }
 
 type BasePrimitive struct {
-	Mat   mat.Material
-	Light bool
-	Name  string
-	shape shape.Shape
+	Mat         mat.Material
+	Light       bool
+	LightSource geometry.Point
+	Name        string
+	shape       shape.Shape
 
 	objToWorld transform.Transform
 	worldToObj transform.Transform
+}
+
+func (b *BasePrimitive) GetLightSource() *geometry.Point {
+	return &(b.LightSource)
 }
 
 func (b *BasePrimitive) GetName() string {
@@ -54,6 +60,14 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 
 func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
 	b.worldToObj.RayIP(&ray)
+
+	objectBound := b.shape.GetObjectBBox()
+	if objectBound != nil {
+		intersected, _, _ := objectBound.IntersectP(ray)
+		if !intersected {
+			return shape.MISS, dist, ray.Direction
+		}
+	}
 
 	res, hitDist, normal := b.shape.Intersect(ray, dist)
 
