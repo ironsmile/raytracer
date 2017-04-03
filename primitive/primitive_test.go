@@ -16,10 +16,7 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 	}
 
 	t.Run("Sphere", func(t *testing.B) {
-		shpere := NewSphere()
-		shpere.SetTransform(
-			transform.Scale(2, 2, 2),
-		)
+		shpere := NewSphere(2)
 		for i := 0; i < t.N; i++ {
 			shpere.Intersect(ray, 1000000.0)
 		}
@@ -73,10 +70,7 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 }
 
 func TestSphereIntersection(t *testing.T) {
-	shpere := NewSphere()
-	shpere.SetTransform(
-		transform.Scale(2, 2, 2),
-	)
+	shpere := NewSphere(2)
 
 	intersectRay := geometry.Ray{
 		Origin:    geometry.Point{X: 0, Y: 0, Z: -5},
