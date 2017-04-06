@@ -9,6 +9,19 @@ func Lerp(t, v1, v2 float64) float64 {
 	return (1.0-t)*v1 + t*v2
 }
 
+// Clamp clamps the given value val to be between the values low and high
+func Clamp(val, low, high float64) float64 {
+	if val < low {
+		return low
+	}
+
+	if val > high {
+		return high
+	}
+
+	return val
+}
+
 func ConcentricSampleDisk(u1, u2 float64) (float64, float64) {
 	var r, theta float64
 

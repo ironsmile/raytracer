@@ -1,6 +1,7 @@
 package shape
 
 import (
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/utils"
 )
@@ -10,7 +11,7 @@ import (
 type Sphere struct {
 	BasicShape
 
-	Radius float64
+	radius float64
 }
 
 // Intersect implemnts the primitive interface
@@ -21,7 +22,7 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 
 	var a = d.X*d.X + d.Y*d.Y + d.Z*d.Z
 	var b = 2 * (d.X*o.X + d.Y*o.Y + d.Z*o.Z)
-	var c = o.X*o.X + o.Y*o.Y + o.Z*o.Z - s.Radius*s.Radius
+	var c = o.X*o.X + o.Y*o.Y + o.Z*o.Z - s.radius*s.radius
 
 	tNear, tFar, ok := utils.Quadratic(a, b, c)
 
@@ -35,9 +36,9 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		retdist = tFar
 	}
 
-	intersectionPoint := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+	pHit := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
-	return HIT, retdist, *s.GetNormal(intersectionPoint)
+	return HIT, retdist, *s.GetNormal(pHit)
 }
 
 // GetNormal implements the primitive interface
@@ -45,7 +46,12 @@ func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
 	return pos.Vector()
 }
 
-// NewSphere returns a sphere
-func NewSphere(radius float64) *Sphere {
-	return &Sphere{Radius: radius}
+// NewSphere returns a full sphere with a given radius
+func NewSphere(rad float64) *Sphere {
+	s := Sphere{radius: rad}
+
+	s.bbox = bbox.FromPoint(geometry.NewPoint(-rad, -rad, -rad))
+	s.bbox = bbox.UnionPoint(s.bbox, geometry.NewPoint(rad, rad, rad))
+
+	return &s
 }
