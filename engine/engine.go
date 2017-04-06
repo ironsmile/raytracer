@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"runtime"
@@ -14,6 +15,12 @@ import (
 	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
 )
+
+var showBBoxes bool
+
+func init() {
+	flag.BoolVar(&showBBoxes, "show-bboxes", false, "show bounding boxes around objects")
+}
 
 const (
 	EPSION     = 0.00001
@@ -146,6 +153,10 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 		retColor.PlusIP(primMat.Color.Multiply(
 			&refColor).MultiplyScalarIP(primMat.Refl))
+	}
+
+	if showBBoxes && depth == 1 && e.Scene.IntersectBBoxEdge(ray, retdist) {
+		retColor = *geometry.NewColor(0, 0, 1)
 	}
 
 	return prim, retdist, retColor

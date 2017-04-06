@@ -98,3 +98,8 @@ func Quadratic(a, b, c float64) (float64, float64, bool) {
 
 	return t0, t1, true
 }
+
+// EqualFloat64 returns true if the two float values are equal to some degree of precision
+func EqualFloat64(a, b, precision float64) bool {
+	return math.Abs(a-b) < precision
+}

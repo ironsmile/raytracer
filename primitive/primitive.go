@@ -19,6 +19,7 @@ const (
 type Primitive interface {
 	GetType() int
 	Intersect(geometry.Ray, float64) (isHit int, distance float64, normal geometry.Vector)
+	IntersectBBoxEdge(geometry.Ray, float64) bool
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
@@ -78,6 +79,24 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64,
 	b.objToWorld.NormalIP(&normal)
 
 	return res, hitDist, normal
+}
+
+func (b *BasePrimitive) IntersectBBoxEdge(ray geometry.Ray, maxDist float64) bool {
+	objectBound := b.shape.GetObjectBBox()
+
+	if objectBound == nil {
+		return false
+	}
+
+	b.worldToObj.RayIP(&ray)
+
+	intersected, dist := objectBound.IntersectEdge(ray)
+
+	if !intersected {
+		return false
+	}
+
+	return dist <= maxDist
 }
 
 func (b *BasePrimitive) Shape() shape.Shape {

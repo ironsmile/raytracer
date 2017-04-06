@@ -107,6 +107,52 @@ func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	return true, t0, t1
 }
 
+func (b *BBox) IntersectEdge(ray geometry.Ray) (bool, float64) {
+	intersected, t0, t1 := b.IntersectP(ray)
+
+	if !intersected {
+		return false, 0
+	}
+
+	// Edge size
+	bs := 0.03
+	pNear := ray.Origin.PlusVector(ray.Direction.Normalize().MultiplyScalar(t0))
+
+	if (utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.X, b.Min.X, bs)) ||
+		(utils.EqualFloat64(pNear.X, b.Min.X, bs) && utils.EqualFloat64(pNear.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.X, b.Max.X, bs)) ||
+		(utils.EqualFloat64(pNear.X, b.Min.X, bs) && utils.EqualFloat64(pNear.Z, b.Max.Z, bs)) ||
+		(utils.EqualFloat64(pNear.X, b.Max.X, bs) && utils.EqualFloat64(pNear.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pNear.Z, b.Min.Z, bs) && utils.EqualFloat64(pNear.Y, b.Max.Y, bs)) ||
+		(utils.EqualFloat64(pNear.Z, b.Max.Z, bs) && utils.EqualFloat64(pNear.Y, b.Min.Y, bs)) ||
+		(utils.EqualFloat64(pNear.Y, b.Max.Y, bs) && utils.EqualFloat64(pNear.Z, b.Max.Z, bs)) ||
+		(utils.EqualFloat64(pNear.Y, b.Max.Y, bs) && utils.EqualFloat64(pNear.X, b.Max.X, bs)) ||
+		(utils.EqualFloat64(pNear.X, b.Min.X, bs) && utils.EqualFloat64(pNear.Y, b.Max.Y, bs)) ||
+		(utils.EqualFloat64(pNear.X, b.Max.X, bs) && utils.EqualFloat64(pNear.Z, b.Max.Z, bs)) {
+		return true, t0
+	}
+
+	pFar := ray.Origin.PlusVector(ray.Direction.Normalize().MultiplyScalar(t1))
+
+	if (utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.X, b.Min.X, bs)) ||
+		(utils.EqualFloat64(pFar.X, b.Min.X, bs) && utils.EqualFloat64(pFar.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.X, b.Max.X, bs)) ||
+		(utils.EqualFloat64(pFar.X, b.Min.X, bs) && utils.EqualFloat64(pFar.Z, b.Max.Z, bs)) ||
+		(utils.EqualFloat64(pFar.X, b.Max.X, bs) && utils.EqualFloat64(pFar.Z, b.Min.Z, bs)) ||
+		(utils.EqualFloat64(pFar.Z, b.Min.Z, bs) && utils.EqualFloat64(pFar.Y, b.Max.Y, bs)) ||
+		(utils.EqualFloat64(pFar.Z, b.Max.Z, bs) && utils.EqualFloat64(pFar.Y, b.Min.Y, bs)) ||
+		(utils.EqualFloat64(pFar.Y, b.Max.Y, bs) && utils.EqualFloat64(pFar.Z, b.Max.Z, bs)) ||
+		(utils.EqualFloat64(pFar.Y, b.Max.Y, bs) && utils.EqualFloat64(pFar.X, b.Max.X, bs)) ||
+		(utils.EqualFloat64(pFar.X, b.Min.X, bs) && utils.EqualFloat64(pFar.Y, b.Max.Y, bs)) ||
+		(utils.EqualFloat64(pFar.X, b.Max.X, bs) && utils.EqualFloat64(pFar.Z, b.Max.Z, bs)) {
+		return true, t1
+	}
+
+	return false, 0
+}
+
 // FromPoint returns a new bounding box which bounds around a single post
 func FromPoint(p *geometry.Point) *BBox {
 	return &BBox{Min: *p, Max: *p}
