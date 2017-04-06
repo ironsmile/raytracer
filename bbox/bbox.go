@@ -107,10 +107,14 @@ func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	return true, t0, t1
 }
 
-func (b *BBox) IntersectEdge(ray geometry.Ray) (bool, float64) {
+func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) {
 	intersected, t0, t1 := b.IntersectP(ray)
 
 	if !intersected {
+		return false, 0
+	}
+
+	if t0 > maxDist {
 		return false, 0
 	}
 
@@ -131,6 +135,10 @@ func (b *BBox) IntersectEdge(ray geometry.Ray) (bool, float64) {
 		(utils.EqualFloat64(pNear.X, b.Min.X, bs) && utils.EqualFloat64(pNear.Y, b.Max.Y, bs)) ||
 		(utils.EqualFloat64(pNear.X, b.Max.X, bs) && utils.EqualFloat64(pNear.Z, b.Max.Z, bs)) {
 		return true, t0
+	}
+
+	if t1 > maxDist {
+		return false, 0
 	}
 
 	pFar := ray.Origin.PlusVector(ray.Direction.Normalize().MultiplyScalar(t1))

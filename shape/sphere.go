@@ -36,6 +36,10 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		retdist = tFar
 	}
 
+	if retdist > dist {
+		return MISS, dist, ray.Direction
+	}
+
 	pHit := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
 
 	return HIT, retdist, *s.GetNormal(pHit)

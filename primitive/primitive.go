@@ -90,13 +90,13 @@ func (b *BasePrimitive) IntersectBBoxEdge(ray geometry.Ray, maxDist float64) boo
 
 	b.worldToObj.RayIP(&ray)
 
-	intersected, dist := objectBound.IntersectEdge(ray)
+	intersected, _ := objectBound.IntersectEdge(ray, maxDist)
 
 	if !intersected {
 		return false
 	}
 
-	return dist <= maxDist
+	return true
 }
 
 func (b *BasePrimitive) Shape() shape.Shape {

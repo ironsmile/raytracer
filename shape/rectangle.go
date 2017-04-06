@@ -22,7 +22,7 @@ func (r *Rectangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geo
 	d := geometry.NewPoint(0, 0, 0).MinusVectorIP(ray.Origin.Vector()).Vector().Product(&normal)
 	d /= ray.Direction.Product(&normal)
 
-	if d <= 0 {
+	if d <= 0 || d > dist {
 		return MISS, dist, normal
 	}
 

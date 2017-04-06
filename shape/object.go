@@ -28,9 +28,15 @@ func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 	var outNormal geometry.Vector
 
 	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
+
 	if prim == nil {
-		return MISS, distance, outNormal
+		return MISS, dist, outNormal
 	}
+
+	if dist < distance {
+		return MISS, dist, outNormal
+	}
+
 	return HIT, distance, normal
 }
 
