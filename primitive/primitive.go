@@ -64,8 +64,8 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64,
 
 	objectBound := b.shape.GetObjectBBox()
 	if objectBound != nil {
-		intersected, _, _ := objectBound.IntersectP(ray)
-		if !intersected {
+		intersected, tNear, _ := objectBound.IntersectP(ray)
+		if !intersected || tNear > dist {
 			return shape.MISS, dist, ray.Direction
 		}
 	}
