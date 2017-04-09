@@ -232,7 +232,7 @@ func (s *Scene) InitScene() {
 		teapot.Mat.Diff = 0.3
 		teapot.Mat.Color = geometry.NewColor(0.3, 1, 0)
 		teapot.SetTransform(
-			transform.Translate(teaPotCenter).Multiply(transform.Scale(0.01, 0.01, 0.01)),
+			transform.Translate(teaPotCenter).Multiply(transform.UniformScale(0.01)),
 		)
 
 		s.Primitives = append(s.Primitives, teapot)
