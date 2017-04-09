@@ -87,23 +87,55 @@ func UnionPoint(bb *BBox, p *geometry.Point) *BBox {
 func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	var t0, t1, invRayDir, tNear, tFar float64
 	t1 = math.MaxFloat64
-	for i := 0; i < 3; i++ {
-		invRayDir = 1.0 / ray.Direction.ByIndex(i)
-		tNear = (b.Min.ByIndex(i) - ray.Origin.ByIndex(i)) * invRayDir
-		tFar = (b.Max.ByIndex(i) - ray.Origin.ByIndex(i)) * invRayDir
-		if tNear > tFar {
-			tNear, tFar = tFar, tNear
-		}
-		if tNear > t0 {
-			t0 = tNear
-		}
-		if tFar < t1 {
-			t1 = tFar
-		}
-		if t0 > t1 {
-			return false, t0, t1
-		}
+
+	invRayDir = 1.0 / ray.Direction.X
+	tNear = (b.Min.X - ray.Origin.X) * invRayDir
+	tFar = (b.Max.X - ray.Origin.X) * invRayDir
+	if tNear > tFar {
+		tNear, tFar = tFar, tNear
 	}
+	if tNear > t0 {
+		t0 = tNear
+	}
+	if tFar < t1 {
+		t1 = tFar
+	}
+	if t0 > t1 {
+		return false, t0, t1
+	}
+
+	invRayDir = 1.0 / ray.Direction.Y
+	tNear = (b.Min.Y - ray.Origin.Y) * invRayDir
+	tFar = (b.Max.Y - ray.Origin.Y) * invRayDir
+	if tNear > tFar {
+		tNear, tFar = tFar, tNear
+	}
+	if tNear > t0 {
+		t0 = tNear
+	}
+	if tFar < t1 {
+		t1 = tFar
+	}
+	if t0 > t1 {
+		return false, t0, t1
+	}
+
+	invRayDir = 1.0 / ray.Direction.Z
+	tNear = (b.Min.Z - ray.Origin.Z) * invRayDir
+	tFar = (b.Max.Z - ray.Origin.Z) * invRayDir
+	if tNear > tFar {
+		tNear, tFar = tFar, tNear
+	}
+	if tNear > t0 {
+		t0 = tNear
+	}
+	if tFar < t1 {
+		t1 = tFar
+	}
+	if t0 > t1 {
+		return false, t0, t1
+	}
+
 	return true, t0, t1
 }
 
