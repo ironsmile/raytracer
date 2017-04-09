@@ -38,6 +38,10 @@ func Scale(x, y, z float64) *Transform {
 	return NewTransformationWihtInverse(m, mInv)
 }
 
+func UniformScale(s float64) *Transform {
+	return Scale(s, s, s)
+}
+
 func RotateX(angle float64) *Transform {
 	rad := geometry.Radians(angle)
 
