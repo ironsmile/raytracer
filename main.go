@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"runtime/trace"
 	"time"
 
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -190,6 +191,7 @@ func openglWindowRenderer() {
 
 	window.MakeContextCurrent()
 
+	var traceStarted bool
 	var bPressed bool
 
 	for !window.ShouldClose() {
@@ -208,6 +210,14 @@ func openglWindowRenderer() {
 
 			if bPressed && window.GetKey(glfw.KeyB) == glfw.Release {
 				bPressed = false
+			}
+
+			if !traceStarted && window.GetKey(glfw.KeyT) == glfw.Press {
+				traceStarted = true
+				go func() {
+					collectTrace()
+					traceStarted = false
+				}()
 			}
 		}
 		window.SwapBuffers()
@@ -268,4 +278,27 @@ func MakePinholeCamera(f film.Film) camera.Camera {
 	up := geometry.NewVector(0, 1, 0)
 
 	return camera.NewPinhole(pos, lookAtPoint, up, 1, f)
+}
+
+func collectTrace() {
+	traceFile := "trace.out"
+
+	fh, err := os.Create(traceFile)
+
+	if err != nil {
+		fmt.Printf("Error creating trace file: %s\n", err)
+		return
+	}
+
+	defer fh.Close()
+
+	if err := trace.Start(fh); err != nil {
+		fmt.Printf("Error staring trace: %s\n", err)
+		return
+	}
+
+	defer trace.Stop()
+
+	time.Sleep(2 * time.Second)
+	fmt.Printf("Creating trace in %s\n", traceFile)
 }
