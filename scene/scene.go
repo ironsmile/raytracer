@@ -156,7 +156,7 @@ func (s *Scene) InitScene() {
 
 	sphere := primitive.NewSphere(2.5)
 	sphere.Name = "big sphere"
-	sphere.Mat.Refl = 0.8
+	sphere.Mat.Refl = 0.0
 	sphere.Mat.Diff = 0.9
 	sphere.Mat.Color = geometry.NewColor(1, 0, 0)
 	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
@@ -165,7 +165,7 @@ func (s *Scene) InitScene() {
 
 	sphere = primitive.NewSphere(2)
 	sphere.Name = "small sphere"
-	sphere.Mat.Refl = 0.9
+	sphere.Mat.Refl = 0.0
 	sphere.Mat.Diff = 0.4
 	sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
