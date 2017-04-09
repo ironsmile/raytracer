@@ -20,7 +20,7 @@ func TestVectorPlusFunctions(t *testing.T) {
 	other := NewVector(0.97849211, 0.19569842, 0.06523281)
 
 	expected := one.Plus(other)
-	one.PlusIP(other)
+	one = one.Plus(other)
 
 	if !one.Equals(expected) {
 		t.Errorf("Expected %s but got %s", expected, one)
@@ -46,7 +46,7 @@ func BenchmarkVectorPlusInPlace(t *testing.B) {
 	other := NewVector(5, 3, 5)
 
 	for i := 0; i < t.N; i++ {
-		one.PlusIP(other)
+		one.Plus(other)
 	}
 }
 
@@ -63,13 +63,5 @@ func BenchmarkVectorNormalization(t *testing.B) {
 
 	for i := 0; i < t.N; i++ {
 		one.Normalize()
-	}
-}
-
-func BenchmarkVectorNormalizationInPlace(t *testing.B) {
-	one := NewVector(77.345, 15.23, 2)
-
-	for i := 0; i < t.N; i++ {
-		one.NormalizeIP()
 	}
 }

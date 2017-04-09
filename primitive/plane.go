@@ -16,7 +16,7 @@ func (p *Plane) GetType() int {
 	return PLANE
 }
 
-func NewPlane(normal *geometry.Vector, d float64) *Plane {
+func NewPlane(normal geometry.Vector, d float64) *Plane {
 	planePrim := &Plane{}
 	planePrim.shape = shape.NewPlane(normal, d)
 	planePrim.SetTransform(transform.Identity())

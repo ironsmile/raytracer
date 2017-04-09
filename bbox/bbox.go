@@ -9,8 +9,8 @@ import (
 
 // BBox is a structure which defines a box around a object in 3D space
 type BBox struct {
-	Min geometry.Point
-	Max geometry.Point
+	Min geometry.Vector
+	Max geometry.Vector
 }
 
 // Overlaps returns true if the two bounding boxes overlap
@@ -19,14 +19,14 @@ func (b *BBox) Overlaps(other *BBox) bool {
 }
 
 // Inside thells whether a point is inside the bounding box nor not
-func (b *BBox) Inside(point *geometry.Point) bool {
+func (b *BBox) Inside(point *geometry.Vector) bool {
 	panic("BBox.Inside is not implemented yet")
 }
 
 // Expand modifies the bound box by scaling it with a certain scalar
 func (b *BBox) Expand(delta float64) {
-	b.Min.MinusVectorIP(geometry.NewVector(delta, delta, delta))
-	b.Max.PlusVectorIP(geometry.NewVector(delta, delta, delta))
+	b.Min.Minus(geometry.NewVector(delta, delta, delta))
+	b.Max.Plus(geometry.NewVector(delta, delta, delta))
 }
 
 // SurfaceArea computes the surface area of the six faces of the box
@@ -48,14 +48,14 @@ func (b *BBox) MaximumExtend() int8 {
 }
 
 // Lerp lineary interpolates between the corners of the box by the given amount
-func (b *BBox) Lerp(tx, ty, tz float64) geometry.Point {
+func (b *BBox) Lerp(tx, ty, tz float64) geometry.Vector {
 	panic("BBox.Lerp is not implemented yet")
 }
 
 // Offset returns the position of a point relative to the corners of the box, where
 // a position at the minimum corner has offset (0, 0, 0), a point a the maximum corner
 // has offset (1, 1, 1)
-func (b *BBox) Offset(p *geometry.Point) *geometry.Vector {
+func (b *BBox) Offset(p *geometry.Vector) *geometry.Vector {
 	panic("BBox.Offset is not implemented yet")
 }
 
@@ -73,7 +73,7 @@ func Union(one, other *BBox) *BBox {
 
 // UnionPoint return a new bounding box which includes the original bounding box and a
 // point.
-func UnionPoint(bb *BBox, p *geometry.Point) *BBox {
+func UnionPoint(bb *BBox, p geometry.Vector) *BBox {
 	union := &BBox{}
 	union.Min.X = utils.Min(bb.Min.X, p.X)
 	union.Min.Y = utils.Min(bb.Min.Y, p.Y)
@@ -152,7 +152,7 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 
 	// Edge size
 	bs := .04
-	pNear := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(t0))
+	pNear := ray.Origin.Plus(ray.Direction.MultiplyScalar(t0))
 
 	if (utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.Z, b.Min.Z, bs)) ||
 		(utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.X, b.Min.X, bs)) ||
@@ -173,7 +173,7 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 		return false, 0
 	}
 
-	pFar := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(t1))
+	pFar := ray.Origin.Plus(ray.Direction.MultiplyScalar(t1))
 
 	if (utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.Z, b.Min.Z, bs)) ||
 		(utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.X, b.Min.X, bs)) ||
@@ -194,14 +194,14 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 }
 
 // FromPoint returns a new bounding box which bounds around a single post
-func FromPoint(p *geometry.Point) *BBox {
-	return &BBox{Min: *p, Max: *p}
+func FromPoint(p geometry.Vector) *BBox {
+	return &BBox{Min: p, Max: p}
 }
 
 // New returns a bounding box defined by two points
-func New(p1, p2 *geometry.Point) *BBox {
+func New(p1, p2 geometry.Vector) *BBox {
 	return &BBox{
-		Min: *geometry.NewPoint(utils.Min(p1.X, p2.X), utils.Min(p1.Y, p2.Y), utils.Min(p1.Z, p2.Y)),
-		Max: *geometry.NewPoint(utils.Max(p1.X, p2.X), utils.Max(p1.Y, p2.Y), utils.Max(p1.Z, p2.Y)),
+		Min: geometry.NewVector(utils.Min(p1.X, p2.X), utils.Min(p1.Y, p2.Y), utils.Min(p1.Z, p2.Y)),
+		Max: geometry.NewVector(utils.Max(p1.X, p2.X), utils.Max(p1.Y, p2.Y), utils.Max(p1.Z, p2.Y)),
 	}
 }

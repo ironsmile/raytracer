@@ -12,7 +12,7 @@ type Triangle struct {
 	BasePrimitive
 }
 
-func NewTriangle(vertices [3]geometry.Point) *Triangle {
+func NewTriangle(vertices [3]geometry.Vector) *Triangle {
 	triangle := &Triangle{}
 	triangle.shape = shape.NewTriangle(vertices)
 	triangle.SetTransform(transform.Identity())

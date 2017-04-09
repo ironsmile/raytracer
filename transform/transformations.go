@@ -6,7 +6,7 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
-func Translate(delta *geometry.Vector) *Transform {
+func Translate(delta geometry.Vector) *Transform {
 	m := NewMatrix(
 		1, 0, 0, (delta.X),
 		0, 1, 0, (delta.Y),
@@ -87,8 +87,7 @@ func RotateZ(angle float64) *Transform {
 	return NewTransformationWihtInverse(m, m.Transpose())
 }
 
-func Rotate(angle float64, axis *geometry.Vector) *Transform {
-	a := axis.Copy()
+func Rotate(angle float64, a geometry.Vector) *Transform {
 	a.Normalize()
 
 	s := math.Sin(geometry.Radians(angle))
@@ -119,7 +118,7 @@ func Rotate(angle float64, axis *geometry.Vector) *Transform {
 	return NewTransformationWihtInverse(m, m.Transpose())
 }
 
-func LookAt(pos, look *geometry.Point, up *geometry.Vector) *Transform {
+func LookAt(pos, look geometry.Vector, up geometry.Vector) *Transform {
 	m := &Matrix4x4{}
 
 	m.els[0][3] = pos.X
@@ -127,8 +126,8 @@ func LookAt(pos, look *geometry.Point, up *geometry.Vector) *Transform {
 	m.els[2][3] = pos.Z
 	m.els[3][3] = 1
 
-	dir := look.Minus(pos).NormalizeIP()
-	left := up.Normalize().CrossIP(dir).NormalizeIP()
+	dir := look.Minus(pos).Normalize()
+	left := up.Normalize().Cross(dir).Normalize()
 	newUp := dir.Cross(left)
 
 	m.els[0][0] = left.X

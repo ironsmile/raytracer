@@ -24,8 +24,8 @@ func (t *Transform) IsIdentity() bool {
 		0, 0, 0, 1))
 }
 
-func (t *Transform) Point(point *geometry.Point) *geometry.Point {
-	p := geometry.NewPoint(
+func (t *Transform) Point(point geometry.Vector) geometry.Vector {
+	p := geometry.NewVector(
 		(t.mat.els[0][0])*point.X+(t.mat.els[0][1])*point.Y+
 			(t.mat.els[0][2])*point.Z+(t.mat.els[0][3]),
 
@@ -40,33 +40,12 @@ func (t *Transform) Point(point *geometry.Point) *geometry.Point {
 		(t.mat.els[3][2])*point.Z + (t.mat.els[3][3])
 
 	if wp != 1.0 {
-		p.MultiplyScalarIP(1.0 / wp)
+		p = p.MultiplyScalar(1.0 / wp)
 	}
 	return p
 }
 
-func (t *Transform) PointIP(point *geometry.Point) *geometry.Point {
-	xp := (t.mat.els[0][0])*point.X + (t.mat.els[0][1])*point.Y +
-		(t.mat.els[0][2])*point.Z + (t.mat.els[0][3])
-
-	yp := (t.mat.els[1][0])*point.X + (t.mat.els[1][1])*point.Y +
-		(t.mat.els[1][2])*point.Z + (t.mat.els[1][3])
-
-	zp := (t.mat.els[2][0])*point.X + (t.mat.els[2][1])*point.Y +
-		(t.mat.els[2][2])*point.Z + (t.mat.els[2][3])
-
-	wp := (t.mat.els[3][0])*point.X + (t.mat.els[3][1])*point.Y +
-		(t.mat.els[3][2])*point.Z + (t.mat.els[3][3])
-
-	point.X, point.Y, point.Z = xp, yp, zp
-
-	if wp != 1.0 {
-		point.MultiplyScalarIP(1.0 / wp)
-	}
-	return point
-}
-
-func (t *Transform) Vector(vec *geometry.Vector) *geometry.Vector {
+func (t *Transform) Vector(vec geometry.Vector) geometry.Vector {
 	xp := (t.mat.els[0][0])*vec.X + (t.mat.els[0][1])*vec.Y +
 		(t.mat.els[0][2])*vec.Z
 
@@ -79,60 +58,31 @@ func (t *Transform) Vector(vec *geometry.Vector) *geometry.Vector {
 	return geometry.NewVector(xp, yp, zp)
 }
 
-func (t *Transform) VectorIP(vec *geometry.Vector) *geometry.Vector {
-	xp := (t.mat.els[0][0])*vec.X + (t.mat.els[0][1])*vec.Y +
-		(t.mat.els[0][2])*vec.Z
-
-	yp := (t.mat.els[1][0])*vec.X + (t.mat.els[1][1])*vec.Y +
-		(t.mat.els[1][2])*vec.Z
-
-	zp := (t.mat.els[2][0])*vec.X + (t.mat.els[2][1])*vec.Y +
-		(t.mat.els[2][2])*vec.Z
-
-	vec.X, vec.Y, vec.Z = xp, yp, zp
-	return vec
-}
-
-func (t *Transform) Ray(ray *geometry.Ray) *geometry.Ray {
-	ret := *ray
-
-	ret.Origin = *t.Point(&ray.Origin)
-	ret.Direction = *t.Vector(&ray.Direction)
-
-	return &ret
-}
-
-func (t *Transform) RayIP(ray *geometry.Ray) *geometry.Ray {
-
-	t.PointIP(&ray.Origin)
-	t.VectorIP(&ray.Direction)
-
+func (t *Transform) Ray(ray geometry.Ray) geometry.Ray {
+	ray.Origin = t.Point(ray.Origin)
+	ray.Direction = t.Vector(ray.Direction)
 	return ray
 }
 
-func (t *Transform) Normal(vec *geometry.Vector) *geometry.Vector {
-	return t.NormalIP(vec.Copy())
-}
-
-func (t *Transform) NormalIP(vec *geometry.Vector) *geometry.Vector {
+func (t *Transform) Normal(vec geometry.Vector) geometry.Vector {
 	var x, y, z = vec.X, vec.Y, vec.Z
 
 	vec.X = (t.matInv.els[0][0])*x + (t.matInv.els[1][0])*y + (t.matInv.els[2][0])*z
 	vec.Y = (t.matInv.els[0][1])*x + (t.matInv.els[1][1])*y + (t.matInv.els[2][1])*z
 	vec.Z = (t.matInv.els[0][2])*x + (t.matInv.els[1][2])*y + (t.matInv.els[2][2])*z
 
-	return vec.NormalizeIP()
+	return vec.Normalize()
 }
 
 func (t *Transform) BBox(bb *bbox.BBox) *bbox.BBox {
-	ret := bbox.FromPoint(t.Point(geometry.NewPoint(bb.Min.X, bb.Min.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Min.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Max.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Min.Y, bb.Max.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Min.X, bb.Max.Y, bb.Max.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Max.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Min.Y, bb.Max.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewPoint(bb.Max.X, bb.Max.Y, bb.Max.Z)))
+	ret := bbox.FromPoint(t.Point(geometry.NewVector(bb.Min.X, bb.Min.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Min.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Max.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Max.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Max.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Max.Y, bb.Max.Z)))
 	return ret
 }
 

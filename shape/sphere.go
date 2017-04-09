@@ -40,22 +40,22 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		return MISS, dist, ray.Direction
 	}
 
-	pHit := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(retdist))
+	pHit := ray.Origin.Plus(ray.Direction.MultiplyScalar(retdist))
 
-	return HIT, retdist, *s.GetNormal(pHit)
+	return HIT, retdist, s.GetNormal(pHit)
 }
 
 // GetNormal implements the primitive interface
-func (s *Sphere) GetNormal(pos *geometry.Point) *geometry.Vector {
-	return pos.Vector()
+func (s *Sphere) GetNormal(pos geometry.Vector) geometry.Vector {
+	return pos
 }
 
 // NewSphere returns a full sphere with a given radius
 func NewSphere(rad float64) *Sphere {
 	s := Sphere{radius: rad}
 
-	s.bbox = bbox.FromPoint(geometry.NewPoint(-rad, -rad, -rad))
-	s.bbox = bbox.UnionPoint(s.bbox, geometry.NewPoint(rad, rad, rad))
+	s.bbox = bbox.FromPoint(geometry.NewVector(-rad, -rad, -rad))
+	s.bbox = bbox.UnionPoint(s.bbox, geometry.NewVector(rad, rad, rad))
 
 	return &s
 }

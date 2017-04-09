@@ -181,10 +181,10 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, sphere)
 
-	triangle := primitive.NewTriangle([3]geometry.Point{
-		*geometry.NewPoint(-10.99, 3, 0),  // a
-		*geometry.NewPoint(-10.99, 0, -3), // b
-		*geometry.NewPoint(-10.99, 0, 3),  // c
+	triangle := primitive.NewTriangle([3]geometry.Vector{
+		geometry.NewVector(-10.99, 3, 0),  // a
+		geometry.NewVector(-10.99, 0, -3), // b
+		geometry.NewVector(-10.99, 0, 3),  // c
 	})
 	triangle.Name = "Green triangle"
 	triangle.Mat.Refl = 0.0
@@ -196,9 +196,9 @@ func (s *Scene) InitScene() {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Visible light source"
 	sphere.Light = true
-	sphere.LightSource = *geometry.NewPoint(0, 5, 5)
+	sphere.LightSource = geometry.NewVector(0, 5, 5)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
-	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
+	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
@@ -206,9 +206,9 @@ func (s *Scene) InitScene() {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Invisible lightsource"
 	sphere.Light = true
-	sphere.LightSource = *geometry.NewPoint(2, 5, 1)
+	sphere.LightSource = geometry.NewVector(2, 5, 1)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
-	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
+	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
@@ -216,9 +216,9 @@ func (s *Scene) InitScene() {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Behid the shoulder lightsource"
 	sphere.Light = true
-	sphere.LightSource = *geometry.NewPoint(2, 5, -10)
+	sphere.LightSource = geometry.NewVector(2, 5, -10)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
-	sphere.SetTransform(transform.Translate(sphere.LightSource.Vector()))
+	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)

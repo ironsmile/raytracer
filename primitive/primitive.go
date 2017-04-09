@@ -24,7 +24,7 @@ type Primitive interface {
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
-	GetLightSource() *geometry.Point
+	GetLightSource() geometry.Vector
 	GetName() string
 	Shape() shape.Shape
 }
@@ -32,7 +32,7 @@ type Primitive interface {
 type BasePrimitive struct {
 	Mat         mat.Material
 	Light       bool
-	LightSource geometry.Point
+	LightSource geometry.Vector
 	Name        string
 	shape       shape.Shape
 
@@ -42,8 +42,8 @@ type BasePrimitive struct {
 	worldBBox *bbox.BBox
 }
 
-func (b *BasePrimitive) GetLightSource() *geometry.Point {
-	return &(b.LightSource)
+func (b *BasePrimitive) GetLightSource() geometry.Vector {
+	return b.LightSource
 }
 
 func (b *BasePrimitive) GetName() string {
@@ -72,14 +72,14 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64,
 		}
 	}
 
-	b.worldToObj.RayIP(&ray)
+	ray = b.worldToObj.Ray(ray)
 	res, hitDist, normal := b.shape.Intersect(ray, dist)
 
 	if res != shape.HIT {
-		return res, hitDist, ray.Direction
+		return res, hitDist, normal
 	}
 
-	b.objToWorld.NormalIP(&normal)
+	normal = b.objToWorld.Normal(normal)
 
 	return res, hitDist, normal
 }
@@ -123,6 +123,6 @@ func (b *BasePrimitive) refreshWorldBBox() {
 	if objBBox == nil {
 		return
 	}
-	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(&objBBox.Min))
-	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(&objBBox.Max))
+	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
+	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(objBBox.Max))
 }

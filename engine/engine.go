@@ -61,11 +61,9 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	}
 
 	shadowRay := geometry.Ray{}
-	L := &geometry.Vector{}
-	piOffset := &geometry.Point{}
 
 	piDirection := ray.Direction.MultiplyScalar(retdist)
-	pi := ray.Origin.PlusVector(piDirection)
+	pi := ray.Origin.Plus(piDirection)
 
 	primMat := prim.GetMaterial()
 
@@ -86,18 +84,17 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		luminousity := 0.0
 
 		// Reusing the same object as much as possible
-		light.GetLightSource().MinusInVector(pi, L)
-		L.NormalizeIP()
+		L := light.GetLightSource().Minus(pi).Normalize()
 
 		dot := InNormal.Product(L)
 
 		if light.GetType() == primitive.SPHERE {
-			piOffset.CopyToSelf(pi).PlusVectorIP(L.MultiplyScalar(EPSION))
+			piOffset := pi.Plus(L.MultiplyScalar(EPSION))
 
 			// Reusing the same object as much as possible
 			shadowRay.BackToDefaults()
-			shadowRay.Origin = *piOffset
-			shadowRay.Direction = *L
+			shadowRay.Origin = piOffset
+			shadowRay.Direction = L
 
 			// shadowRay.Debug = ray.Debug
 
@@ -116,7 +113,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 		if luminousity > 0 && primMat.GetSpecular() > 0 {
 			V := ray.Direction
-			R := L.Minus((&InNormal).MultiplyScalar(2.0 * L.Product(&InNormal)))
+			R := L.Minus(InNormal.MultiplyScalar(2.0 * L.Product(InNormal)))
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
@@ -130,11 +127,11 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	if primMat.Refl > 0.0 {
 
 		// Warning! InNormal is irrevrsibly changed here.
-		R := ray.Direction.Minus((&InNormal).MultiplyScalarIP(ray.Direction.Product(&InNormal) * 2.0))
+		R := ray.Direction.Minus(InNormal.MultiplyScalar(ray.Direction.Product(InNormal) * 2.0))
 
 		refRay := geometry.Ray{
-			Origin:    *pi.PlusVectorIP(R.MultiplyScalar(EPSION)),
-			Direction: *R,
+			Origin:    pi.Plus(R.MultiplyScalar(EPSION)),
+			Direction: R,
 		}
 
 		// refRay.Debug = ray.Debug
@@ -173,7 +170,7 @@ func (e *Engine) Render() {
 
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
-	ray := geometry.Ray{}
+
 	var accColor geometry.Color
 
 	for {
@@ -185,7 +182,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			fmt.Printf("Error while getting sample: %s\n", err)
 			return
 		}
-		weight := e.Camera.GenerateRayIP(float64(x), float64(y), &ray)
+		ray, weight := e.Camera.GenerateRay(float64(x), float64(y))
 		_, _, accColor = e.Raytrace(ray, 1)
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}

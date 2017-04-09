@@ -18,7 +18,7 @@ type Object struct {
 	model *obj.Model
 
 	// The center of the object
-	Center *geometry.Point
+	Center geometry.Vector
 
 	// All the triangles which compose this object
 	Triangles []Shape
@@ -60,7 +60,7 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("model %s has %d models\n", filePath, len(model.Objects))
 
 	o := &Object{}
-	o.Center = geometry.NewPoint(0, 0, 0)
+	o.Center = geometry.NewVector(0, 0, 0)
 	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
 
@@ -84,10 +84,10 @@ func NewObject(filePath string) (*Object, error) {
 				b := model.Vertices[face.References[1].VertexIndex]
 				c := model.Vertices[face.References[2].VertexIndex]
 
-				triangleVertices := [3]geometry.Point{
-					*geometry.NewPoint(a.X, a.Y, a.Z),
-					*geometry.NewPoint(b.X, b.Y, b.Z),
-					*geometry.NewPoint(c.X, c.Y, c.Z),
+				triangleVertices := [3]geometry.Vector{
+					geometry.NewVector(a.X, a.Y, a.Z),
+					geometry.NewVector(b.X, b.Y, b.Z),
+					geometry.NewVector(c.X, c.Y, c.Z),
 				}
 
 				o.Triangles = append(o.Triangles, NewTriangle(triangleVertices))
@@ -116,10 +116,10 @@ func (o *Object) objectBound() (*bbox.BBox, error) {
 			return nil, fmt.Errorf("a shape in object.Triangles is not a triangle? Index %d", ind)
 		}
 		if retBox == nil {
-			retBox = bbox.FromPoint(&obj.Vertices[0])
+			retBox = bbox.FromPoint(obj.Vertices[0])
 		}
 		for i := 0; i < 3; i++ {
-			retBox = bbox.UnionPoint(retBox, &obj.Vertices[i])
+			retBox = bbox.UnionPoint(retBox, obj.Vertices[i])
 		}
 	}
 	if retBox == nil {

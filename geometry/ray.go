@@ -1,7 +1,7 @@
 package geometry
 
 type Ray struct {
-	Origin    Point
+	Origin    Vector
 	Direction Vector
 
 	Debug bool

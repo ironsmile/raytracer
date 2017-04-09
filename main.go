@@ -263,8 +263,8 @@ func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
 }
 
 func MakePinholeCamera(f film.Film) camera.Camera {
-	pos := geometry.NewPoint(0, 0, -5)
-	lookAtPoint := geometry.NewPoint(0, 0, 1)
+	pos := geometry.NewVector(0, 0, -5)
+	lookAtPoint := geometry.NewVector(0, 0, 1)
 	up := geometry.NewVector(0, 1, 0)
 
 	return camera.NewPinhole(pos, lookAtPoint, up, 1, f)

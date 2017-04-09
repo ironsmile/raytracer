@@ -7,7 +7,7 @@ import (
 )
 
 func TestPointTransoformWihtIdentity(t *testing.T) {
-	point := geometry.NewPoint(13.0, 14.3, 2.0)
+	point := geometry.NewVector(13.0, 14.3, 2.0)
 
 	transform := NewTransformation(NewMatrix(
 		1, 0, 0, 0,
@@ -29,11 +29,11 @@ func TestPointTransform(t *testing.T) {
 		2, 0, 0, 3,
 		0, 1, 0, 2))
 
-	point := geometry.NewPoint(1, 2, 4)
+	point := geometry.NewVector(1, 2, 4)
 
 	found := transform.Point(point)
 
-	expected := geometry.NewPoint(2.5, 4.75, 1.25)
+	expected := geometry.NewVector(2.5, 4.75, 1.25)
 
 	if !found.Equals(expected) {
 		t.Errorf("Expected %s but got %s", expected, found)
@@ -139,7 +139,7 @@ func BenchmarkTransformationMultiplication(t *testing.B) {
 
 func BenchmarkRayTransformation(t *testing.B) {
 	ray := geometry.Ray{
-		Origin:    geometry.Point{X: 2.5, Y: 3.1, Z: 5555.3},
+		Origin:    geometry.Vector{X: 2.5, Y: 3.1, Z: 5555.3},
 		Direction: geometry.Vector{X: -23.55, Y: 33.77, Z: 0.032},
 	}
 
@@ -151,13 +151,7 @@ func BenchmarkRayTransformation(t *testing.B) {
 
 	t.Run("new ray", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
-			t1.Ray(&ray)
-		}
-	})
-
-	t.Run("in place", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			t1.RayIP(&ray)
+			t1.Ray(ray)
 		}
 	})
 }
@@ -173,35 +167,7 @@ func BenchmarkVectorTransformation(t *testing.B) {
 
 	t.Run("new vector", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
-			t1.Vector(&vec)
-		}
-	})
-
-	t.Run("in place", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			t1.VectorIP(&vec)
-		}
-	})
-}
-
-func BenchmarkPointTransformation(t *testing.B) {
-	point := geometry.Point{X: 2.5, Y: 3.1, Z: 5555.3}
-
-	t1 := NewTransformation(NewMatrix(
-		0, 1.50, 2.3, 0.22,
-		1, 33.2, 1.2, 1.56,
-		2, 3.01, 0.1, 0.01,
-		0, 0.23, 3.2, 2.12))
-
-	t.Run("new point", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			t1.Point(&point)
-		}
-	})
-
-	t.Run("in place", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			t1.PointIP(&point)
+			t1.Vector(vec)
 		}
 	})
 }

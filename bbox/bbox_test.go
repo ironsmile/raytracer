@@ -8,13 +8,13 @@ import (
 
 func TestBBoxIntersections(t *testing.T) {
 	box := New(
-		geometry.NewPoint(-1, -1, 0),
-		geometry.NewPoint(1, 1, 2),
+		geometry.NewVector(-1, -1, 0),
+		geometry.NewVector(1, 1, 2),
 	)
 
 	throughMiddleRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 0, 1),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 0, 1),
 	}
 
 	if intersected, _, _ := box.IntersectP(throughMiddleRay); !intersected {
@@ -22,8 +22,8 @@ func TestBBoxIntersections(t *testing.T) {
 	}
 
 	opposideDirectionRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 0, -1),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 0, -1),
 	}
 
 	if intersected, _, _ := box.IntersectP(opposideDirectionRay); intersected {
@@ -31,8 +31,8 @@ func TestBBoxIntersections(t *testing.T) {
 	}
 
 	sideWaysRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 1, 0),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 1, 0),
 	}
 
 	if intersected, _, _ := box.IntersectP(sideWaysRay); intersected {
@@ -42,13 +42,13 @@ func TestBBoxIntersections(t *testing.T) {
 
 func BenchmarkBBoxIntersections(t *testing.B) {
 	box := New(
-		geometry.NewPoint(-1, -1, 0),
-		geometry.NewPoint(1, 1, 2),
+		geometry.NewVector(-1, -1, 0),
+		geometry.NewVector(1, 1, 2),
 	)
 
 	throughMiddleRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 0, 1),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 0, 1),
 	}
 
 	t.Run("intersected", func(t *testing.B) {
@@ -58,8 +58,8 @@ func BenchmarkBBoxIntersections(t *testing.B) {
 	})
 
 	opposideDirectionRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 0, -1),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 0, -1),
 	}
 
 	t.Run("oppositeDirection", func(t *testing.B) {
@@ -69,8 +69,8 @@ func BenchmarkBBoxIntersections(t *testing.B) {
 	})
 
 	sideWaysRay := geometry.Ray{
-		Origin:    *geometry.NewPoint(0, 0, -2),
-		Direction: *geometry.NewVector(0, 1, 0),
+		Origin:    geometry.NewVector(0, 0, -2),
+		Direction: geometry.NewVector(0, 1, 0),
 	}
 
 	t.Run("sideWays", func(t *testing.B) {
