@@ -47,6 +47,8 @@ var (
 		"image or window height in pixels")
 	fpsCap = flag.Uint("fps-cap", 30,
 		"maximum number of frames per second")
+	showBBoxes = flag.Bool("show-bboxes", false,
+		"show bounding boxes around objects")
 )
 
 func main() {
@@ -94,6 +96,7 @@ func infileRenderer() {
 	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
 	tracer.Scene.InitScene()
+	tracer.ShowBBoxes = *showBBoxes
 
 	renderTimer := time.Now()
 	tracer.Render()
@@ -164,6 +167,10 @@ func openglWindowRenderer() {
 
 	cam := MakePinholeCamera(output)
 
+	tracer := engine.NewFPS(smpl)
+	tracer.SetTarget(output, cam)
+	tracer.ShowBBoxes = *showBBoxes
+
 	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
 		action glfw.Action, mods glfw.ModifierKey) {
 		if key == glfw.KeyEscape {
@@ -171,9 +178,6 @@ func openglWindowRenderer() {
 			return
 		}
 	})
-
-	tracer := engine.NewFPS(smpl)
-	tracer.SetTarget(output, cam)
 
 	fmt.Printf("Loading scene...\n")
 	loadingStart := time.Now()
@@ -185,6 +189,9 @@ func openglWindowRenderer() {
 	minFrameTime, _ := time.ParseDuration(fmt.Sprintf("%dms", int(1000.0/float32(*fpsCap))))
 
 	window.MakeContextCurrent()
+
+	var bPressed bool
+
 	for !window.ShouldClose() {
 		renderStart := time.Now()
 		output.Render()
@@ -193,6 +200,15 @@ func openglWindowRenderer() {
 		glfw.PollEvents()
 		if *interactive {
 			handleInteractionEvents(window, cam)
+
+			if !bPressed && window.GetKey(glfw.KeyB) == glfw.Press {
+				tracer.ShowBBoxes = !tracer.ShowBBoxes
+				bPressed = true
+			}
+
+			if bPressed && window.GetKey(glfw.KeyB) == glfw.Release {
+				bPressed = false
+			}
 		}
 		window.SwapBuffers()
 
