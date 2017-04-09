@@ -109,7 +109,7 @@ func infileRenderer() {
 func openglWindowRenderer() {
 
 	if err := glfw.Init(); err != nil {
-		log.Fatal("Initializing glfw failed. %s", err)
+		log.Fatalf("Initializing glfw failed. %s", err)
 	}
 	defer glfw.Terminate()
 
@@ -156,7 +156,7 @@ func openglWindowRenderer() {
 	output := film.NewGlWIndow(window)
 	winW, winH := window.GetFramebufferSize()
 	if err := output.Init(winW, winH); err != nil {
-		log.Fatal("%s\n", err.Error())
+		log.Fatalf("%s\n", err.Error())
 	}
 
 	smpl := sampler.NewSimple(output)
