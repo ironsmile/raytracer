@@ -1,6 +1,9 @@
 package shape
 
-import "github.com/ironsmile/raytracer/geometry"
+import (
+	"github.com/ironsmile/raytracer/bbox"
+	"github.com/ironsmile/raytracer/geometry"
+)
 
 type Rectangle struct {
 	BasicShape
@@ -13,7 +16,13 @@ func NewRectangle(w, h float64) *Rectangle {
 	if w < 0 || w > 1 || h < 0 || h > 1 {
 		panic("Recatangle width and height must be in the [0-1] region")
 	}
-	return &Rectangle{width: w, height: h}
+
+	r := &Rectangle{width: w, height: h}
+
+	r.bbox = bbox.FromPoint(geometry.NewVector(-0.5*w, -0.5*h, 0))
+	r.bbox = bbox.UnionPoint(r.bbox, geometry.NewVector(0.5*w, 0.5*h, 0))
+
+	return r
 }
 
 func (r *Rectangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
@@ -28,7 +37,7 @@ func (r *Rectangle) Intersect(ray geometry.Ray, dist float64) (int, float64, geo
 
 	hitPoint := ray.Origin.Plus(ray.Direction.MultiplyScalar(d))
 
-	if hitPoint.X >= -0.5 && hitPoint.X <= r.width/2 && hitPoint.Y >= -0.5 && hitPoint.Y <= r.height/2 {
+	if hitPoint.X >= -0.5*r.width && hitPoint.X <= 0.5*r.width && hitPoint.Y >= -0.5*r.height && hitPoint.Y <= 0.5*r.height {
 		return HIT, d, normal
 	}
 

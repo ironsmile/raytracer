@@ -2,6 +2,7 @@ package shape
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/ironsmile/raytracer/geometry"
 )
@@ -9,19 +10,28 @@ import (
 func IntersectMultiple(objects []Shape, ray geometry.Ray) (
 	prim Shape, retdist float64, normal geometry.Vector) {
 
-	retdist = 1000000.0
+	retdist = math.MaxFloat64
 
-	for sInd, pr := range objects {
+	for sInd, shape := range objects {
 
-		if pr == nil {
+		bbox := shape.GetObjectBBox()
+
+		if bbox != nil {
+			intersected, tNear, _ := bbox.IntersectP(ray)
+			if !intersected || tNear > retdist {
+				continue
+			}
+		}
+
+		if shape == nil {
 			fmt.Printf("Shape with index %d was nil\n", sInd)
 			continue
 		}
 
-		res, resDist, resNormal := pr.Intersect(ray, retdist)
+		res, resDist, resNormal := shape.Intersect(ray, retdist)
 
 		if res == HIT && resDist < retdist {
-			prim = pr
+			prim = shape
 			retdist = resDist
 			normal = resNormal
 		}

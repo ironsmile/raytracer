@@ -1,6 +1,9 @@
 package shape
 
-import "github.com/ironsmile/raytracer/geometry"
+import (
+	"github.com/ironsmile/raytracer/bbox"
+	"github.com/ironsmile/raytracer/geometry"
+)
 
 type Triangle struct {
 	BasicShape
@@ -18,6 +21,10 @@ func NewTriangle(vertices [3]geometry.Vector) *Triangle {
 	triangle.edge1 = vertices[1].Minus(vertices[0])
 	triangle.edge2 = vertices[2].Minus(vertices[0])
 	triangle.Normal = triangle.edge1.Cross(triangle.edge2).Neg().Normalize()
+
+	triangle.bbox = bbox.FromPoint(vertices[0])
+	triangle.bbox = bbox.UnionPoint(triangle.bbox, vertices[1])
+	triangle.bbox = bbox.UnionPoint(triangle.bbox, vertices[2])
 
 	return triangle
 }

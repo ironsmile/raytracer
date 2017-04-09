@@ -72,10 +72,10 @@ func (s *Scene) InitScene() {
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
 	rect.SetTransform(
-		transform.RotateX(90).Multiply(
-			transform.Scale(68, 68, 1),
-		).Multiply(
-			transform.Translate(geometry.NewVector(0, 0, 5)),
+		transform.Translate(geometry.NewVector(-10, -5, 0)).Multiply(
+			transform.RotateX(90).Multiply(
+				transform.Scale(90, 68, 1),
+			),
 		),
 	)
 
@@ -87,10 +87,10 @@ func (s *Scene) InitScene() {
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
 	rect.SetTransform(
-		transform.RotateX(270).Multiply(
-			transform.Scale(68, 68, 1),
-		).Multiply(
-			transform.Translate(geometry.NewVector(0, 0, 16)),
+		transform.Translate(geometry.NewVector(-10, 16, 0)).Multiply(
+			transform.RotateX(270).Multiply(
+				transform.Scale(90, 68, 1),
+			),
 		),
 	)
 
