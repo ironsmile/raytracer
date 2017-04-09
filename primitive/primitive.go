@@ -1,6 +1,7 @@
 package primitive
 
 import (
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
@@ -37,6 +38,8 @@ type BasePrimitive struct {
 
 	objToWorld transform.Transform
 	worldToObj transform.Transform
+
+	worldBBox *bbox.BBox
 }
 
 func (b *BasePrimitive) GetLightSource() *geometry.Point {
@@ -60,16 +63,16 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 }
 
 func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
-	b.worldToObj.RayIP(&ray)
 
-	objectBound := b.shape.GetObjectBBox()
-	if objectBound != nil {
-		intersected, tNear, _ := objectBound.IntersectP(ray)
+	worldBound := b.getWorldBBox()
+	if worldBound != nil {
+		intersected, tNear, _ := worldBound.IntersectP(ray)
 		if !intersected || tNear > dist {
 			return shape.MISS, dist, ray.Direction
 		}
 	}
 
+	b.worldToObj.RayIP(&ray)
 	res, hitDist, normal := b.shape.Intersect(ray, dist)
 
 	if res != shape.HIT {
@@ -82,15 +85,13 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, dist float64) (int, float64,
 }
 
 func (b *BasePrimitive) IntersectBBoxEdge(ray geometry.Ray, maxDist float64) bool {
-	objectBound := b.shape.GetObjectBBox()
+	worldBound := b.getWorldBBox()
 
-	if objectBound == nil {
+	if worldBound == nil {
 		return false
 	}
 
-	b.worldToObj.RayIP(&ray)
-
-	intersected, _ := objectBound.IntersectEdge(ray, maxDist)
+	intersected, _ := worldBound.IntersectEdge(ray, maxDist)
 
 	if !intersected {
 		return false
@@ -106,4 +107,22 @@ func (b *BasePrimitive) Shape() shape.Shape {
 func (b *BasePrimitive) SetTransform(t *transform.Transform) {
 	b.objToWorld = *t
 	b.worldToObj = *t.Inverse()
+	b.refreshWorldBBox()
+}
+
+func (b *BasePrimitive) getWorldBBox() *bbox.BBox {
+	if b.worldBBox != nil {
+		return b.worldBBox
+	}
+	b.refreshWorldBBox()
+	return b.worldBBox
+}
+
+func (b *BasePrimitive) refreshWorldBBox() {
+	objBBox := b.shape.GetObjectBBox()
+	if objBBox == nil {
+		return
+	}
+	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(&objBBox.Min))
+	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(&objBBox.Max))
 }

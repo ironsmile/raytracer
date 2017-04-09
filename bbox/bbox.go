@@ -119,8 +119,8 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 	}
 
 	// Edge size
-	bs := 0.03
-	pNear := ray.Origin.PlusVector(ray.Direction.Normalize().MultiplyScalar(t0))
+	bs := .04
+	pNear := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(t0))
 
 	if (utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.Z, b.Min.Z, bs)) ||
 		(utils.EqualFloat64(pNear.Y, b.Min.Y, bs) && utils.EqualFloat64(pNear.X, b.Min.X, bs)) ||
@@ -141,7 +141,7 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 		return false, 0
 	}
 
-	pFar := ray.Origin.PlusVector(ray.Direction.Normalize().MultiplyScalar(t1))
+	pFar := ray.Origin.PlusVector(ray.Direction.MultiplyScalar(t1))
 
 	if (utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.Z, b.Min.Z, bs)) ||
 		(utils.EqualFloat64(pFar.Y, b.Min.Y, bs) && utils.EqualFloat64(pFar.X, b.Min.X, bs)) ||
