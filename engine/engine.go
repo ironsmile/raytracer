@@ -83,7 +83,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
-		luminousity := 1.0
+		luminousity := 0.0
 
 		// Reusing the same object as much as possible
 		light.GetLightSource().MinusInVector(pi, L)
@@ -103,22 +103,18 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 			intersected, _, _ := e.Scene.Intersect(shadowRay)
 
-			if light != intersected {
-				// This was previously `luminousity = 0` which gave a really hard
-				// shadowing. In an effort to make the lightning softer I changed
-				// it to the one ti is now. I don't really know how this will
-				// affect any other parts of the tracer.
-				luminousity = 1.0 - dot
+			if light == intersected {
+				luminousity = 0.8
 			}
 		}
 
-		if primMat.Diff > 0 && dot > 0 {
+		if luminousity > 0 && primMat.Diff > 0 && dot > 0 {
 			weight := dot * primMat.Diff * luminousity
 			retColor.PlusIP(light.GetMaterial().Color.
 				Multiply(primMat.Color).MultiplyScalarIP(weight))
 		}
 
-		if primMat.GetSpecular() > 0 {
+		if luminousity > 0 && primMat.GetSpecular() > 0 {
 			V := ray.Direction
 			R := L.Minus((&InNormal).MultiplyScalar(2.0 * L.Product(&InNormal)))
 			dot := V.Product(R)
@@ -128,7 +124,6 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 					MultiplyScalar(spec))
 			}
 		}
-
 	}
 
 	// Reflection
