@@ -52,14 +52,6 @@ func (v Vector) Cross(other Vector) Vector {
 		v.X*other.Y - v.Y*other.X}
 }
 
-func (v Vector) CrossIP(other Vector) Vector {
-
-	v.X, v.Y, v.Z = v.Y*other.Z-v.Z*other.Y,
-		v.Z*other.X-v.X*other.Z,
-		v.X*other.Y-v.Y*other.X
-	return v
-}
-
 func (v Vector) Neg() Vector {
 	return Vector{-v.X, -v.Y, -v.Z}
 }
