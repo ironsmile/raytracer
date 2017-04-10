@@ -41,15 +41,6 @@ func BenchmarkVectorPlus(t *testing.B) {
 	}
 }
 
-func BenchmarkVectorPlusInPlace(t *testing.B) {
-	one := NewVector(77.345, 15.23, 2)
-	other := NewVector(5, 3, 5)
-
-	for i := 0; i < t.N; i++ {
-		one.Plus(other)
-	}
-}
-
 func BenchmarkVectorNormalizationFunction(t *testing.B) {
 	one := NewVector(77.345, 15.23, 2)
 
