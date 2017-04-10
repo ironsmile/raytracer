@@ -24,17 +24,17 @@ type Object struct {
 	Triangles []Shape
 }
 
-func (o *Object) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
+func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 	var outNormal geometry.Vector
 
 	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
 
 	if prim == nil {
-		return MISS, dist, outNormal
+		return MISS, distance, outNormal
 	}
 
-	if dist < distance {
-		return MISS, dist, outNormal
+	if distance > ray.Maxt || distance < ray.Mint {
+		return MISS, distance, outNormal
 	}
 
 	return HIT, distance, normal

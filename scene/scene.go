@@ -2,7 +2,6 @@ package scene
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
@@ -32,7 +31,7 @@ func (s *Scene) GetPrimitive(index int) primitive.Primitive {
 }
 
 func (s *Scene) Intersect(ray geometry.Ray) (prim primitive.Primitive, retdist float64, normal geometry.Vector) {
-	retdist = math.MaxFloat64
+	retdist = ray.Maxt
 
 	for sInd, pr := range s.Primitives {
 
@@ -41,21 +40,24 @@ func (s *Scene) Intersect(ray geometry.Ray) (prim primitive.Primitive, retdist f
 			continue
 		}
 
-		res, resDist, resNormal := pr.Intersect(ray, retdist)
+		res, resDist, resNormal := pr.Intersect(ray)
 
-		if res == shape.HIT && resDist < retdist {
-			prim = pr
-			retdist = resDist
-			normal = resNormal
+		if res != shape.HIT || resDist > ray.Maxt || resDist < ray.Mint {
+			continue
 		}
+
+		prim = pr
+		retdist = resDist
+		ray.Maxt = resDist
+		normal = resNormal
 	}
 
 	return
 }
 
-func (s *Scene) IntersectBBoxEdge(ray geometry.Ray, maxDist float64) bool {
+func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
 	for _, pr := range s.Primitives {
-		if pr.IntersectBBoxEdge(ray, maxDist) {
+		if pr.IntersectBBoxEdge(ray) {
 			return true
 		}
 	}

@@ -15,7 +15,7 @@ type Sphere struct {
 }
 
 // Intersect implemnts the primitive interface
-func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geometry.Vector) {
+func (s *Sphere) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 
 	var d = ray.Direction
 	var o = ray.Origin
@@ -27,7 +27,7 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 	tNear, tFar, ok := utils.Quadratic(a, b, c)
 
 	if !ok || tNear < 0 {
-		return MISS, dist, ray.Direction
+		return MISS, ray.Maxt, ray.Direction
 	}
 
 	var retdist = tNear
@@ -36,8 +36,8 @@ func (s *Sphere) Intersect(ray geometry.Ray, dist float64) (int, float64, geomet
 		retdist = tFar
 	}
 
-	if retdist > dist {
-		return MISS, dist, ray.Direction
+	if retdist > ray.Maxt || retdist < ray.Mint {
+		return MISS, ray.Maxt, ray.Direction
 	}
 
 	pHit := ray.Origin.Plus(ray.Direction.MultiplyScalar(retdist))

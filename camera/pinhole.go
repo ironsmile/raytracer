@@ -8,6 +8,8 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
+// PinholeCamera is the most basic type of camera. One in which the scene is projected on a
+// rectangle and the viewer is a single point behind the screen.
 type PinholeCamera struct {
 	Film       film.Film
 	camToWorld *transform.Transform
@@ -23,20 +25,22 @@ type PinholeCamera struct {
 	sync.RWMutex
 }
 
+// GenerateRay creates a ray from the camera source through one single point of the screen
 func (p *PinholeCamera) GenerateRay(x, y float64) (geometry.Ray, float64) {
 	p.RLock()
 	defer p.RUnlock()
 
 	posX := p.screen[0] + (x/p.rasterW)*p.screen[1]*2
 	posY := p.screen[3] + (y/p.rasterH)*p.screen[2]*2
-	ray := geometry.Ray{
-		Origin:    geometry.NewVector(0, 0, 0),
-		Direction: geometry.NewVector(posX, posY, p.distance).Normalize(),
-	}
+	ray := geometry.NewRay(
+		geometry.NewVector(0, 0, 0),
+		geometry.NewVector(posX, posY, p.distance).Normalize(),
+	)
 
 	return p.camToWorld.Ray(ray), 1.0
 }
 
+// Forward moves the camera in its lookAt direction
 func (p *PinholeCamera) Forward(speed float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -46,6 +50,7 @@ func (p *PinholeCamera) Forward(speed float64) error {
 	return nil
 }
 
+// Backward moves the camera opposite its lookAt direction
 func (p *PinholeCamera) Backward(speed float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -55,6 +60,7 @@ func (p *PinholeCamera) Backward(speed float64) error {
 	return nil
 }
 
+// Left moves the camera to the left relative to its lookAt and up directions
 func (p *PinholeCamera) Left(speed float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -65,6 +71,7 @@ func (p *PinholeCamera) Left(speed float64) error {
 	return nil
 }
 
+// Right moves the camera to the right relative to its lookAt and up directions
 func (p *PinholeCamera) Right(speed float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -85,6 +92,7 @@ func (p *PinholeCamera) computeMatrix() {
 	p.camToWorld = transform.LookAt(p.origin, p.lookAt, p.up).Inverse()
 }
 
+// Yaw rotats the camera around its up axis
 func (p *PinholeCamera) Yaw(angle float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -93,6 +101,7 @@ func (p *PinholeCamera) Yaw(angle float64) error {
 	return nil
 }
 
+// Pitch rotates the camera around on the lookAt axis
 func (p *PinholeCamera) Pitch(angle float64) error {
 	p.Lock()
 	defer p.Unlock()
@@ -106,6 +115,7 @@ func (p *PinholeCamera) rotate(rotation *transform.Transform) {
 	p.computeMatrix()
 }
 
+// NewPinhole returns a new camera which is set up for writing in particular output
 func NewPinhole(camPosition, camLookAtPoint geometry.Vector,
 	camUp geometry.Vector, dist float64, f film.Film) *PinholeCamera {
 

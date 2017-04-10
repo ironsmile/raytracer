@@ -10,15 +10,15 @@ import (
 )
 
 func BenchmarkPrimitiveIntersection(t *testing.B) {
-	ray := geometry.Ray{
-		Origin:    geometry.Vector{X: 0, Y: 0, Z: -3},
-		Direction: geometry.Vector{X: 0, Y: 0, Z: 1},
-	}
+	ray := geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: -3},
+		geometry.Vector{X: 0, Y: 0, Z: 1},
+	)
 
 	t.Run("Sphere", func(t *testing.B) {
 		shpere := NewSphere(2)
 		for i := 0; i < t.N; i++ {
-			shpere.Intersect(ray, 1000000.0)
+			shpere.Intersect(ray)
 		}
 	})
 
@@ -29,7 +29,7 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 			geometry.NewVector(1, -1, 3),  // c
 		})
 		for i := 0; i < t.N; i++ {
-			triangle.Intersect(ray, 1000000.0)
+			triangle.Intersect(ray)
 		}
 	})
 
@@ -37,7 +37,7 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 		rect := NewRectangle(1, 1)
 		rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
 		for i := 0; i < t.N; i++ {
-			rect.Intersect(ray, 1000000.0)
+			rect.Intersect(ray)
 		}
 	})
 }
@@ -45,12 +45,12 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 	rect := NewRectangle(1, 1)
 	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
-	ray := geometry.Ray{
-		Origin:    geometry.Vector{X: 0, Y: 0, Z: 0},
-		Direction: geometry.Vector{X: 0, Y: 0, Z: 1},
-	}
+	ray := geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: 0},
+		geometry.Vector{X: 0, Y: 0, Z: 1},
+	)
 
-	hitMiss, distance, normal := rect.Intersect(ray, 100)
+	hitMiss, distance, normal := rect.Intersect(ray)
 
 	if hitMiss != shape.HIT {
 		t.Error("The rectangle.Intersect method failed: false negative")
@@ -72,21 +72,21 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 func TestSphereIntersection(t *testing.T) {
 	shpere := NewSphere(2)
 
-	intersectRay := geometry.Ray{
-		Origin:    geometry.Vector{X: 0, Y: 0, Z: -5},
-		Direction: geometry.Vector{X: 0, Y: 0, Z: 1},
-	}
+	intersectRay := geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: -5},
+		geometry.Vector{X: 0, Y: 0, Z: 1},
+	)
 
-	if hit, _, _ := shpere.Intersect(intersectRay, 1000000.0); hit != shape.HIT {
+	if hit, _, _ := shpere.Intersect(intersectRay); hit != shape.HIT {
 		t.Errorf("The ray did not hit the sphere but it was expected to: %d", hit)
 	}
 
-	missRay := geometry.Ray{
-		Origin:    geometry.Vector{X: 0, Y: 0, Z: -5},
-		Direction: geometry.Vector{X: 0, Y: 1, Z: 0},
-	}
+	missRay := geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: -5},
+		geometry.Vector{X: 0, Y: 1, Z: 0},
+	)
 
-	if hit, _, _ := shpere.Intersect(missRay, 1000000.0); hit != shape.MISS {
+	if hit, _, _ := shpere.Intersect(missRay); hit != shape.MISS {
 		t.Errorf("The ray intersected the sphere but it was expected not to: %d", hit)
 	}
 }

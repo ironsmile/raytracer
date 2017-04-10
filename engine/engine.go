@@ -129,10 +129,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		// Warning! InNormal is irrevrsibly changed here.
 		R := ray.Direction.Minus(InNormal.MultiplyScalar(ray.Direction.Product(InNormal) * 2.0))
 
-		refRay := geometry.Ray{
-			Origin:    pi.Plus(R.MultiplyScalar(EPSION)),
-			Direction: R,
-		}
+		refRay := geometry.NewRay(pi.Plus(R.MultiplyScalar(EPSION)), R)
 
 		// refRay.Debug = ray.Debug
 		_, _, refColor := e.Raytrace(refRay, depth+1)
@@ -141,7 +138,8 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 			&refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
-	if e.ShowBBoxes && depth == 1 && e.Scene.IntersectBBoxEdge(ray, retdist) {
+	ray.Maxt = retdist
+	if e.ShowBBoxes && depth == 1 && e.Scene.IntersectBBoxEdge(ray) {
 		retColor = *geometry.NewColor(0, 0, 1)
 	}
 

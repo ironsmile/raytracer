@@ -1,8 +1,6 @@
 package bbox
 
 import (
-	"math"
-
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/utils"
 )
@@ -84,9 +82,11 @@ func UnionPoint(bb *BBox, p geometry.Vector) *BBox {
 	return union
 }
 
+// IntersectP returns whether a ray intersects this boundng box and at which distances
 func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
-	var t0, t1, invRayDir, tNear, tFar float64
-	t1 = math.MaxFloat64
+	var t0 = ray.Mint
+	var t1 = ray.Maxt
+	var invRayDir, tNear, tFar float64
 
 	invRayDir = 1.0 / ray.Direction.X
 	tNear = (b.Min.X - ray.Origin.X) * invRayDir
@@ -139,14 +139,15 @@ func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	return true, t0, t1
 }
 
-func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) {
+// IntersectEdge tells whether a ray intersects any of the edges of this bbox
+func (b *BBox) IntersectEdge(ray geometry.Ray) (bool, float64) {
 	intersected, t0, t1 := b.IntersectP(ray)
 
 	if !intersected {
 		return false, 0
 	}
 
-	if t0 > maxDist {
+	if t0 > ray.Maxt || t0 < ray.Mint {
 		return false, 0
 	}
 
@@ -169,7 +170,7 @@ func (b *BBox) IntersectEdge(ray geometry.Ray, maxDist float64) (bool, float64) 
 		return true, t0
 	}
 
-	if t1 > maxDist {
+	if t1 > ray.Maxt || t1 < ray.Mint {
 		return false, 0
 	}
 
