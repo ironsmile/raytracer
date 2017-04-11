@@ -82,17 +82,12 @@ func (v Vector) Normalize() Vector {
 	return Vector{v.X * l, v.Y * l, v.Z * l}
 }
 
-func (v Vector) ByIndex(index int) float64 {
-	switch index {
-	case 0:
-		return v.X
-	case 1:
-		return v.Y
-	case 2:
-		return v.Z
-	default:
-		panic("Index out of range for vector")
-	}
+func (v Vector) ByAxis(index int) float64 {
+	return [3]float64{v.X, v.Y, v.Z}[index]
+}
+
+func (v *Vector) SetByAxis(index int, val float64) {
+	*([3]*float64{&v.X, &v.Y, &v.Z}[index]) = val
 }
 
 func NewVector(X, Y, Z float64) Vector {

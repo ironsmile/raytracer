@@ -3,15 +3,17 @@ package scene
 import (
 	"fmt"
 
+	"github.com/ironsmile/raytracer/accel"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
-	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
 
 type Scene struct {
 	Primitives []primitive.Primitive
 	Lights     []primitive.Primitive
+
+	accel primitive.Primitive
 }
 
 func (s *Scene) GetNrLights() int {
@@ -30,29 +32,8 @@ func (s *Scene) GetPrimitive(index int) primitive.Primitive {
 	return s.Primitives[index]
 }
 
-func (s *Scene) Intersect(ray geometry.Ray) (prim primitive.Primitive, retdist float64, normal geometry.Vector) {
-	retdist = ray.Maxt
-
-	for sInd, pr := range s.Primitives {
-
-		if pr == nil {
-			fmt.Printf("primitive with index %d was nil\n", sInd)
-			continue
-		}
-
-		res, resDist, resNormal := pr.Intersect(ray)
-
-		if res != shape.HIT || resDist > ray.Maxt || resDist < ray.Mint {
-			continue
-		}
-
-		prim = pr
-		retdist = resDist
-		ray.Maxt = resDist
-		normal = resNormal
-	}
-
-	return
+func (s *Scene) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geometry.Vector) {
+	return s.accel.Intersect(ray)
 }
 
 func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
@@ -249,6 +230,8 @@ func (s *Scene) InitScene() {
 		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(transform.RotateY(-90)),
 	)
 	s.Primitives = append(s.Primitives, blueRect)
+
+	s.accel = accel.NewGrid(s.Primitives)
 }
 
 func NewScene() *Scene {

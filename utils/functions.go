@@ -22,6 +22,19 @@ func Clamp(val, low, high float64) float64 {
 	return val
 }
 
+// ClampInt is the same as Clamp but works with integers instead of float64s
+func ClampInt(val, low, high int) int {
+	if val < low {
+		return low
+	}
+
+	if val > high {
+		return high
+	}
+
+	return val
+}
+
 func ConcentricSampleDisk(u1, u2 float64) (float64, float64) {
 	var r, theta float64
 

@@ -17,14 +17,17 @@ const (
 	TRIANGLE
 	OBJECT
 	RECTANGLE
+	ACCELERATOR
+	BASEPRIMITIVE
 )
 
 // Primitive is the type which marries the shape to its material. It is resposible for
 // the geometry and shading of objects.
 type Primitive interface {
 	GetType() int
-	Intersect(geometry.Ray) (isHit int, distance float64, normal geometry.Vector)
+	Intersect(geometry.Ray) (pr Primitive, distance float64, normal geometry.Vector)
 	IntersectBBoxEdge(geometry.Ray) bool
+	GetWorldBBox() *bbox.BBox
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
@@ -76,13 +79,13 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 
 // Intersect returns whether a ray intersects this primitive and at what distance from the ray
 // origin is this intersection.
-func (b *BasePrimitive) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
+func (b *BasePrimitive) Intersect(ray geometry.Ray) (Primitive, float64, geometry.Vector) {
 
-	worldBound := b.getWorldBBox()
+	worldBound := b.GetWorldBBox()
 	if worldBound != nil {
 		intersected, minT, maxT := worldBound.IntersectP(ray)
 		if !intersected {
-			return shape.MISS, ray.Maxt, ray.Direction
+			return nil, ray.Maxt, ray.Direction
 		}
 		ray.Mint = minT - geometry.EPSILON
 		ray.Maxt = maxT + geometry.EPSILON
@@ -92,17 +95,17 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray) (int, float64, geometry.Vect
 	res, hitDist, normal := b.shape.Intersect(ray)
 
 	if res != shape.HIT {
-		return res, hitDist, normal
+		return nil, hitDist, normal
 	}
 
 	normal = b.objToWorld.Normal(normal)
 
-	return res, hitDist, normal
+	return b, hitDist, normal
 }
 
 // IntersectBBoxEdge returns whether a ray intersects this primitive's bounding box
 func (b *BasePrimitive) IntersectBBoxEdge(ray geometry.Ray) bool {
-	worldBound := b.getWorldBBox()
+	worldBound := b.GetWorldBBox()
 
 	if worldBound == nil {
 		return false
@@ -129,7 +132,8 @@ func (b *BasePrimitive) SetTransform(t *transform.Transform) {
 	b.refreshWorldBBox()
 }
 
-func (b *BasePrimitive) getWorldBBox() *bbox.BBox {
+// GetWorldBBox returns the bound box around this primitive in world space
+func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
 	if b.worldBBox != nil {
 		return b.worldBBox
 	}
@@ -139,9 +143,10 @@ func (b *BasePrimitive) getWorldBBox() *bbox.BBox {
 
 func (b *BasePrimitive) refreshWorldBBox() {
 	objBBox := b.shape.GetObjectBBox()
-	if objBBox == nil {
-		return
-	}
 	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
 	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(objBBox.Max))
+}
+
+func (b *BasePrimitive) GetType() int {
+	return BASEPRIMITIVE
 }

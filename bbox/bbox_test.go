@@ -40,6 +40,25 @@ func TestBBoxIntersections(t *testing.T) {
 	}
 }
 
+func TestBBoxInsideMethod(t *testing.T) {
+	box := New(
+		geometry.NewVector(-1, -1, -1),
+		geometry.NewVector(1, 1, 1),
+	)
+
+	var p = geometry.NewVector(0, 0, 0)
+
+	if !box.Inside(p) {
+		t.Errorf("bbx.Inside says that point %+v is not inside bbox %+v\n", p, box)
+	}
+
+	p = geometry.NewVector(2, 0.5, 0.5)
+
+	if box.Inside(p) {
+		t.Errorf("bbx.Inside says that point %+v is inside bbox %+v\n", p, box)
+	}
+}
+
 func BenchmarkBBoxIntersections(t *testing.B) {
 	box := New(
 		geometry.NewVector(-1, -1, 0),

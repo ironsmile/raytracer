@@ -22,6 +22,11 @@ func (r *Ray) BackToDefaults() {
 	r.Maxt = math.MaxFloat64
 }
 
+// At returns the point which as at distance t from the Origin in Direction
+func (r *Ray) At(t float64) Vector {
+	return r.Origin.Plus(r.Direction.MultiplyScalar(t))
+}
+
 // NewRay retursn a new ray with Min zero and Max the maximum float64 value
 func NewRay(origin, direction Vector) Ray {
 	return Ray{

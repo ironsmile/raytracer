@@ -1,6 +1,8 @@
 package bbox
 
 import (
+	"math"
+
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/utils"
 )
@@ -17,8 +19,20 @@ func (b *BBox) Overlaps(other *BBox) bool {
 }
 
 // Inside thells whether a point is inside the bounding box nor not
-func (b *BBox) Inside(point *geometry.Vector) bool {
-	panic("BBox.Inside is not implemented yet")
+func (b *BBox) Inside(p geometry.Vector) bool {
+	if p.X < b.Min.X || p.X > b.Max.X {
+		return false
+	}
+
+	if p.Y < b.Min.Y || p.Y > b.Max.Y {
+		return false
+	}
+
+	if p.Z < b.Min.Z || p.Z > b.Max.Z {
+		return false
+	}
+
+	return true
 }
 
 // Expand modifies the bound box by scaling it with a certain scalar
@@ -41,8 +55,20 @@ func (b *BBox) Volume() float64 {
 // 0 -> X
 // 1 -> Y
 // 2 -> Z
-func (b *BBox) MaximumExtend() int8 {
-	panic("BBox.MaximumExtend is not implemented yet")
+func (b *BBox) MaximumExtend() int {
+	x := math.Abs(b.Max.X - b.Min.X)
+	y := math.Abs(b.Max.Y - b.Min.Y)
+	z := math.Abs(b.Max.Z - b.Min.Z)
+
+	if x > y && x > z {
+		return 0
+	}
+
+	if y > z {
+		return 1
+	}
+
+	return 2
 }
 
 // Lerp lineary interpolates between the corners of the box by the given amount
@@ -59,19 +85,28 @@ func (b *BBox) Offset(p *geometry.Vector) *geometry.Vector {
 
 // Union returns a bounding box which ecompases the the two input boxes
 func Union(one, other *BBox) *BBox {
+	if one == nil {
+		return other
+	}
 	union := &BBox{}
 	union.Min.X = utils.Min(one.Min.X, other.Min.X)
 	union.Min.Y = utils.Min(one.Min.Y, other.Min.Y)
 	union.Min.Z = utils.Min(one.Min.Z, other.Min.Z)
-	union.Max.X = utils.Min(one.Max.X, other.Max.X)
-	union.Max.Y = utils.Min(one.Max.Y, other.Max.Y)
-	union.Max.Z = utils.Min(one.Max.Z, other.Max.Z)
+	union.Max.X = utils.Max(one.Max.X, other.Max.X)
+	union.Max.Y = utils.Max(one.Max.Y, other.Max.Y)
+	union.Max.Z = utils.Max(one.Max.Z, other.Max.Z)
 	return union
 }
 
 // UnionPoint return a new bounding box which includes the original bounding box and a
 // point.
 func UnionPoint(bb *BBox, p geometry.Vector) *BBox {
+	if bb == nil {
+		return &BBox{
+			Max: p,
+			Min: p,
+		}
+	}
 	union := &BBox{}
 	union.Min.X = utils.Min(bb.Min.X, p.X)
 	union.Min.Y = utils.Min(bb.Min.Y, p.Y)
