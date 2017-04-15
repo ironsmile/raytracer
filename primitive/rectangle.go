@@ -11,10 +11,6 @@ type Rectangle struct {
 	BasePrimitive
 }
 
-func (r *Rectangle) GetType() int {
-	return RECTANGLE
-}
-
 func NewRectangle(w, h float64) *Rectangle {
 	rec := &Rectangle{}
 	rec.shape = shape.NewRectangle(w, h)

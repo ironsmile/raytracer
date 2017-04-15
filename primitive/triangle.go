@@ -25,7 +25,3 @@ func (t *Triangle) String() string {
 	}
 	return "Could not type assert triangle's shape"
 }
-
-func (t *Triangle) GetType() int {
-	return TRIANGLE
-}

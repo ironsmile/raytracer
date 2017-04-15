@@ -8,23 +8,9 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
-// Primitive types which are used whenever the engine needs to know what type of a primitive
-// the intersected one is.
-const (
-	NOTHING = iota
-	SPHERE
-	PLANE
-	TRIANGLE
-	OBJECT
-	RECTANGLE
-	ACCELERATOR
-	BASEPRIMITIVE
-)
-
 // Primitive is the type which marries the shape to its material. It is resposible for
 // the geometry and shading of objects.
 type Primitive interface {
-	GetType() int
 	Intersect(geometry.Ray) (pr Primitive, distance float64, normal geometry.Vector)
 	IntersectBBoxEdge(geometry.Ray) bool
 	GetWorldBBox() *bbox.BBox
@@ -145,8 +131,4 @@ func (b *BasePrimitive) refreshWorldBBox() {
 	objBBox := b.shape.GetObjectBBox()
 	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
 	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(objBBox.Max))
-}
-
-func (b *BasePrimitive) GetType() int {
-	return BASEPRIMITIVE
 }

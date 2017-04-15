@@ -14,10 +14,6 @@ type Object struct {
 	id string
 }
 
-func (o *Object) GetType() int {
-	return OBJECT
-}
-
 func (o *Object) String() string {
 	return fmt.Sprintf("Object <%s>", o.id)
 }

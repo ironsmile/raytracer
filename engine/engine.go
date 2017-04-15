@@ -81,20 +81,17 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 		dot := InNormal.Product(L)
 
-		if light.GetType() == primitive.SPHERE {
+		// Reusing the same object as much as possible
+		shadowRay.BackToDefaults()
+		shadowRay.Origin = pi
+		shadowRay.Direction = L
+		shadowRay.Maxt = pi.Distance(light.GetLightSource())
+		shadowRay.Mint = geometry.EPSILON
 
-			// Reusing the same object as much as possible
-			shadowRay.BackToDefaults()
-			shadowRay.Origin = pi
-			shadowRay.Direction = L
-			shadowRay.Maxt = pi.Distance(light.GetLightSource())
-			shadowRay.Mint = geometry.EPSILON
+		intersected, _, _ := e.Scene.Intersect(shadowRay)
 
-			intersected, _, _ := e.Scene.Intersect(shadowRay)
-
-			if light == intersected {
-				luminousity = 0.8
-			}
+		if light == intersected {
+			luminousity = 0.8
 		}
 
 		if luminousity > 0 && primMat.Diff > 0 && dot > 0 {

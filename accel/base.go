@@ -47,8 +47,3 @@ func (b *Base) GetName() string {
 func (b *Base) Shape() shape.Shape {
 	panic("Shape should not be called for accelerator")
 }
-
-// GetType implements the Primitive's interface
-func (b *Base) GetType() int {
-	return primitive.ACCELERATOR
-}

@@ -16,10 +16,6 @@ func (s *Sphere) String() string {
 	return fmt.Sprintf("Sphere<transofrm=%s>", s.worldToObj)
 }
 
-func (s *Sphere) GetType() int {
-	return SPHERE
-}
-
 func NewSphere(radius float64) *Sphere {
 	s := &Sphere{}
 	s.shape = shape.NewSphere(radius)
