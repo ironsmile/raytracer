@@ -1,7 +1,6 @@
 package accel
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/ironsmile/raytracer/bbox"
@@ -14,11 +13,11 @@ import (
 // box-shaped chunks (called voxels). Each voxel stores references to the primitives that
 // overlap it. Given a ray, the grid steps through each of the voxels that the
 // ray passes through in order, checking for intersections with only the primitives in each
-// voxel. Useless ray intersection tests are reduced substantially because primitives far away
-// from the ray aren’t considered at all. Furthermore, because the voxels are considered
-// from near to far along the ray, it is possible to stop performing intersection tests once
-// an intersection has been found and it is certain that it is not possible for there to be any
-// closer intersections.
+// voxel. Useless ray intersection tests are reduced substantially because primitives far
+// away from the ray aren’t considered at all. Furthermore, because the voxels are
+// considered from near to far along the ray, it is possible to stop performing
+// intersection tests once an intersection has been found and it is certain that
+// it is not possible for there to be any closer intersections.
 type Grid struct {
 	Base
 
@@ -38,13 +37,9 @@ func NewGrid(p []primitive.Primitive) *Grid {
 
 	g.primitives = p
 
-	fmt.Printf("Creating Grid Accel with %d primitives\n", len(g.primitives))
-
 	for i := 0; i < len(p); i++ {
 		g.bounds = bbox.Union(g.bounds, p[i].GetWorldBBox())
 	}
-
-	fmt.Printf("Grid Accel bounds: %+v\n", g.bounds)
 
 	delta := g.bounds.Max.Minus(g.bounds.Min)
 
@@ -54,7 +49,7 @@ func NewGrid(p []primitive.Primitive) *Grid {
 	voxelsPerUnitDist := cubeRoot * invMaxWidth
 
 	for axis := 0; axis < 3; axis++ {
-		g.nVoxels[axis] = int(delta.ByAxis(axis) * voxelsPerUnitDist)
+		g.nVoxels[axis] = utils.RoundToInt(delta.ByAxis(axis) * voxelsPerUnitDist)
 		g.nVoxels[axis] = utils.ClampInt(g.nVoxels[axis], 1, 64)
 	}
 
@@ -66,14 +61,10 @@ func NewGrid(p []primitive.Primitive) *Grid {
 		}
 	}
 
-	fmt.Printf("The new Grid Accel width: %+v\n", g.width)
-
 	nv := g.nVoxels[0] * g.nVoxels[1] * g.nVoxels[2]
 	g.voxels = make([]*Voxel, nv, nv)
 
 	for i := 0; i < len(g.primitives); i++ {
-		fmt.Printf("Placing %s in Grid Accel\n", g.primitives[i].GetName())
-
 		pb := g.primitives[i].GetWorldBBox()
 		var vmin, vmax [3]int
 		for axis := 0; axis < 3; axis++ {
@@ -85,9 +76,6 @@ func NewGrid(p []primitive.Primitive) *Grid {
 			for y := vmin[1]; y <= vmax[1]; y++ {
 				for x := vmin[0]; x <= vmax[0]; x++ {
 					o := g.offset(x, y, z)
-
-					fmt.Printf("%s is in voxel with ind %d\n", g.primitives[i].GetName(), o)
-
 					if g.voxels[o] == nil {
 						g.voxels[o] = NewVoxel()
 					}
@@ -97,8 +85,6 @@ func NewGrid(p []primitive.Primitive) *Grid {
 		}
 	}
 
-	fmt.Printf("Voxel grid: %+v\n", g.voxels)
-
 	return g
 }
 
@@ -107,7 +93,7 @@ func (g *Grid) offset(x, y, z int) int {
 }
 
 func (g *Grid) posToVoxel(p geometry.Vector, axis int) int {
-	v := int(p.ByAxis(axis) - g.bounds.Min.ByAxis(axis)*g.invWidth.ByAxis(axis))
+	v := int((p.ByAxis(axis) - g.bounds.Min.ByAxis(axis)) * g.invWidth.ByAxis(axis))
 	return utils.ClampInt(v, 0, g.nVoxels[axis]-1)
 }
 

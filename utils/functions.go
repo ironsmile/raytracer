@@ -116,3 +116,11 @@ func Quadratic(a, b, c float64) (float64, float64, bool) {
 func EqualFloat64(a, b, precision float64) bool {
 	return math.Abs(a-b) < precision
 }
+
+// RoundToInt rounds int to the nearest integer using half-up as a tie-braker
+func RoundToInt(f float64) int {
+	if math.Abs(f) < 0.5 {
+		return 0
+	}
+	return int(f + math.Copysign(0.5, f))
+}
