@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	EPSION     = 0.00001
 	TRACEDEPTH = 9
 )
 
@@ -42,8 +41,6 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	primitive.Primitive, float64, geometry.Color) {
 	var retColor geometry.Color
 
-	retColor.Set(0, 0, 0)
-
 	if depth > TRACEDEPTH {
 		return nil, 0, retColor
 	}
@@ -62,22 +59,18 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 	shadowRay := geometry.Ray{}
 
-	piDirection := ray.Direction.MultiplyScalar(retdist)
-	pi := ray.Origin.Plus(piDirection)
+	pi := ray.At(retdist)
 
 	primMat := prim.GetMaterial()
 
-	/* Debugging */
-	// if !e.debugged && prim.GetName() == "First teapod" {
-	// 	fmt.Printf("clr %s: %v\n", prim.GetName(), primMat.Color)
-	// 	fmt.Printf("InNormal %s\n", InNormal)
-	// 	ray.Debug = true
+	// /* Debugging */
+	// var debugging bool
+	// if !e.debugged && ray.Debug {
 	// 	e.debugged = true
+	// 	debugging = true
+	// 	fmt.Printf("\nIntersected: %s\nnormal: %s\nretdist: %f\n",
+	// 		prim.GetName(), InNormal, retdist)
 	// }
-
-	//!TODO: maybe make sure the Intersect method returns a copy of a internal Normal vector
-	// so that it can be modified. InNormal, for example is modified further down this method.
-	// InNormal = InNormal.Copy()
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
@@ -89,14 +82,13 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		dot := InNormal.Product(L)
 
 		if light.GetType() == primitive.SPHERE {
-			piOffset := pi.Plus(L.MultiplyScalar(EPSION))
 
 			// Reusing the same object as much as possible
 			shadowRay.BackToDefaults()
-			shadowRay.Origin = piOffset
+			shadowRay.Origin = pi
 			shadowRay.Direction = L
-
-			// shadowRay.Debug = ray.Debug
+			shadowRay.Maxt = pi.Distance(light.GetLightSource())
+			shadowRay.Mint = geometry.EPSILON
 
 			intersected, _, _ := e.Scene.Intersect(shadowRay)
 
@@ -126,10 +118,10 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	// Reflection
 	if primMat.Refl > 0.0 {
 
-		// Warning! InNormal is irrevrsibly changed here.
 		R := ray.Direction.Minus(InNormal.MultiplyScalar(ray.Direction.Product(InNormal) * 2.0))
 
-		refRay := geometry.NewRay(pi.Plus(R.MultiplyScalar(EPSION)), R)
+		refRay := geometry.NewRay(pi, R)
+		refRay.Mint = geometry.EPSILON
 
 		// refRay.Debug = ray.Debug
 		_, _, refColor := e.Raytrace(refRay, depth+1)
@@ -180,13 +172,13 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			fmt.Printf("Error while getting sample: %s\n", err)
 			return
 		}
-		ray, weight := e.Camera.GenerateRay(float64(x), float64(y))
+		ray, weight := e.Camera.GenerateRay(x, y)
 		_, _, accColor = e.Raytrace(ray, 1)
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
-
 }
 
+// New returns a new engine which would use the argument's sampler
 func New(smpl sampler.Sampler) *Engine {
 	eng := new(Engine)
 	initEngine(eng, smpl)
