@@ -52,12 +52,8 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	}
 
 	if prim.IsLight() {
-		clr := prim.GetColor()
-		retColor.Set(clr.Red(), clr.Green(), clr.Blue())
-		return prim, retdist, retColor
+		return prim, retdist, *prim.GetColor()
 	}
-
-	shadowRay := geometry.Ray{}
 
 	pi := ray.At(retdist)
 
@@ -74,33 +70,28 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
-		luminousity := 0.0
 
-		// Reusing the same object as much as possible
 		L := light.GetLightSource().Minus(pi).Normalize()
-
-		dot := InNormal.Product(L)
-
-		// Reusing the same object as much as possible
-		shadowRay.BackToDefaults()
-		shadowRay.Origin = pi
-		shadowRay.Direction = L
+		shadowRay := geometry.NewRay(pi, L)
 		shadowRay.Maxt = pi.Distance(light.GetLightSource())
 		shadowRay.Mint = geometry.EPSILON
 
 		intersected, _, _ := e.Scene.Intersect(shadowRay)
 
-		if light == intersected {
-			luminousity = 0.8
+		if light != intersected {
+			continue
 		}
 
-		if luminousity > 0 && primMat.Diff > 0 && dot > 0 {
+		dot := InNormal.Product(L)
+		luminousity := 0.8
+
+		if primMat.Diff > 0 && dot > 0 {
 			weight := dot * primMat.Diff * luminousity
 			retColor.PlusIP(light.GetMaterial().Color.
 				Multiply(primMat.Color).MultiplyScalarIP(weight))
 		}
 
-		if luminousity > 0 && primMat.GetSpecular() > 0 {
+		if primMat.GetSpecular() > 0 {
 			V := ray.Direction
 			R := L.Minus(InNormal.MultiplyScalar(2.0 * L.Product(InNormal)))
 			dot := V.Product(R)
