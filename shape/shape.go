@@ -19,6 +19,7 @@ type Shape interface {
 	Intersect(geometry.Ray) (isHit int, distance float64, normal geometry.Vector)
 	IntersectP(geometry.Ray) bool
 	GetObjectBBox() *bbox.BBox
+	GetAllShapes() []Shape
 }
 
 // BasicShape implements few common methods and properties among all shapes
@@ -30,4 +31,16 @@ type BasicShape struct {
 // calculated.
 func (b *BasicShape) GetObjectBBox() *bbox.BBox {
 	return b.bbox
+}
+
+func (b *BasicShape) GetAllShapes() []Shape {
+	return []Shape{b}
+}
+
+func (b *BasicShape) Intersect(geometry.Ray) (int, float64, geometry.Vector) {
+	panic("Intersect is not implemented for basic shape")
+}
+
+func (b *BasicShape) IntersectP(geometry.Ray) bool {
+	panic("IntersectP is not implemented for basic shape")
 }

@@ -93,3 +93,11 @@ func NewObject(filePath string) (*Object, error) {
 
 	return o, nil
 }
+
+func (o *Object) GetAllShapes() []Shape {
+	var shapes []Shape
+	for _, mesh := range o.meshes {
+		shapes = append(shapes, mesh.GetAllShapes()...)
+	}
+	return shapes
+}
