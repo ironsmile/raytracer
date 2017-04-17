@@ -1,23 +1,13 @@
 package primitive
 
 import (
-	"fmt"
-
 	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
 
-type Rectangle struct {
-	BasePrimitive
-}
-
-func NewRectangle(w, h float64) *Rectangle {
-	rec := &Rectangle{}
+func NewRectangle(w, h float64) *BasePrimitive {
+	rec := &BasePrimitive{}
 	rec.shape = shape.NewRectangle(w, h)
 	rec.SetTransform(transform.Identity())
 	return rec
-}
-
-func (r *Rectangle) String() string {
-	return fmt.Sprintf("Rectangle<%s>", r.Name)
 }

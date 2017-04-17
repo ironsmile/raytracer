@@ -18,6 +18,5 @@ type Primitive interface {
 	GetMaterial() *mat.Material
 	IsLight() bool
 	GetLightSource() geometry.Vector
-	GetName() string
 	Shape() shape.Shape
 }

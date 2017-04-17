@@ -135,3 +135,10 @@ func (b *BasePrimitive) refreshWorldBBox() {
 	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
 	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(objBBox.Max))
 }
+
+// FromShape returns a primitive from a given shape
+func FromShape(s shape.Shape) *BasePrimitive {
+	b := &BasePrimitive{shape: s}
+	b.SetTransform(transform.Identity())
+	return b
+}
