@@ -61,7 +61,7 @@ func (v Vector) Distance(other Vector) float64 {
 	Y := v.Y - other.Y
 	Z := v.Z - other.Z
 
-	return X*X + Y*Y + Z*Z
+	return math.Sqrt(X*X + Y*Y + Z*Z)
 }
 
 func (v Vector) Equals(other Vector) bool {
