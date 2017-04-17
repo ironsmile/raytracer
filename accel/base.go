@@ -30,7 +30,7 @@ func (b *Base) GetMaterial() *mat.Material {
 
 // IsLight implements the primivite interface
 func (b *Base) IsLight() bool {
-	panic("Shape should not be called for accelerator")
+	panic("IsLight should not be called for accelerator")
 }
 
 // GetLightSource implements the primivite interface
