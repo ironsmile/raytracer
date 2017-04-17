@@ -18,18 +18,16 @@ type Object struct {
 	// faces and raw vertices.
 	model *obj.Model
 
-	// All the triangles which compose this object
-	Triangles []Shape
+	// All the meshes which compose this object
+	meshes []Shape
 }
 
 // Intersect implements the Shape interface
 func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
-	var outNormal geometry.Vector
-
-	prim, distance, normal := IntersectMultiple(o.Triangles, ray)
+	prim, distance, normal := IntersectMultiple(o.meshes, ray)
 
 	if prim == nil {
-		return MISS, distance, outNormal
+		return MISS, distance, normal
 	}
 
 	return HIT, distance, normal
@@ -37,7 +35,7 @@ func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 
 // IntersectP implements the Shape interface
 func (o *Object) IntersectP(ray geometry.Ray) bool {
-	return IntersectPMultiple(o.Triangles, ray)
+	return IntersectPMultiple(o.meshes, ray)
 }
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents
@@ -60,70 +58,46 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("model %s has %d models\n", filePath, len(model.Objects))
 
 	o := &Object{}
-	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
+	var trianglesCount uint32
 
-	for _, obj := range model.Objects {
-		fmt.Printf("object %s has %d meshes\n", obj.Name, len(obj.Meshes))
-		for meshIndex, mesh := range obj.Meshes {
+	for _, modelObj := range model.Objects {
+		fmt.Printf("object %s has %d meshes\n", modelObj.Name, len(modelObj.Meshes))
+		for meshIndex, mesh := range modelObj.Meshes {
 			meshName := mesh.MaterialName
 			if len(meshName) < 1 {
 				meshName = "Unknown"
 			}
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
+			meshTriangles := make([]Shape, 0, len(mesh.Faces))
 			for faceIndex, face := range mesh.Faces {
 				if len(face.References) != 3 {
 					return nil, fmt.Errorf(
 						"face %d [mesh: %d, obj: %s] has %d points, cannot load it",
-						faceIndex, meshIndex, obj.Name, len(face.References))
+						faceIndex, meshIndex, modelObj.Name, len(face.References))
 				}
 
-				a := model.Vertices[face.References[0].VertexIndex]
-				b := model.Vertices[face.References[1].VertexIndex]
-				c := model.Vertices[face.References[2].VertexIndex]
-
-				triangleVertices := [3]geometry.Vector{
-					geometry.NewVector(a.X, a.Y, a.Z),
-					geometry.NewVector(b.X, b.Y, b.Z),
-					geometry.NewVector(c.X, c.Y, c.Z),
-				}
-
-				o.Triangles = append(o.Triangles, NewTriangle(triangleVertices))
+				tr := NewMeshTriangle(model, face)
+				meshTriangles = append(meshTriangles, tr)
+				trianglesCount++
 			}
+
+			triagularMesh := NewMesh(model, meshTriangles)
+			o.bbox = bbox.Union(o.bbox, triagularMesh.GetObjectBBox())
+			o.meshes = append(o.meshes, triagularMesh)
 		}
 	}
 
-	fmt.Printf("%s has %d triangles\n", filePath, len(o.Triangles))
-
-	computedBBox, err := o.objectBound()
-	if err != nil {
-		return nil, err
-	}
-
-	o.bbox = computedBBox
+	fmt.Printf("%s has %d triangles\n", filePath, trianglesCount)
 
 	return o, nil
 }
 
-// objectBound calculates a bounding box which encapsulates the shape
-func (o *Object) objectBound() (*bbox.BBox, error) {
-	var retBox *bbox.BBox
-	for ind, obj := range o.Triangles {
-		obj, ok := obj.(*Triangle)
-		if !ok {
-			return nil, fmt.Errorf(
-				"a shape in object.Triangles is not a triangle? Index %d", ind)
-		}
-		if retBox == nil {
-			retBox = bbox.FromPoint(obj.Vertices[0])
-		}
-		for i := 0; i < 3; i++ {
-			retBox = bbox.UnionPoint(retBox, obj.Vertices[i])
-		}
+func (o *Object) GetAllShapes() []Shape {
+	var shapes []Shape
+	for _, mesh := range o.meshes {
+		shapes = append(shapes, mesh.GetAllShapes()...)
 	}
-	if retBox == nil {
-		return nil, fmt.Errorf("obj does not have any faces")
-	}
-	return retBox, nil
+	return shapes
 }

@@ -27,3 +27,7 @@ func CoordinateSystem(vec1 Vector) (vec2 Vector, vec3 Vector) {
 
 	return
 }
+
+func Lerp(vec1, vec2 Vector, t float64) Vector {
+	return vec1.MultiplyScalar(t).Plus(vec2.MultiplyScalar(1 - t))
+}
