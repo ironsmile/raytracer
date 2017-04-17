@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/momchil-atanasov/go-data-front/decoder/obj"
-
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
+
+	"github.com/momchil-atanasov/go-data-front/decoder/obj"
 )
 
 // Object represents a object in 3d space which shape is loaded from a .obj file
@@ -92,12 +92,4 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("%s has %d triangles\n", filePath, trianglesCount)
 
 	return o, nil
-}
-
-func (o *Object) GetAllShapes() []Shape {
-	var shapes []Shape
-	for _, mesh := range o.meshes {
-		shapes = append(shapes, mesh.GetAllShapes()...)
-	}
-	return shapes
 }
