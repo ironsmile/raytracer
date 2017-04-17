@@ -226,7 +226,7 @@ func (s *Scene) InitScene() {
 	if teapot, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
-		teapot.Name = "First teapod"
+		teapot.Name = "First teapot"
 		teapot.Mat.Refl = 0.0
 		teapot.Mat.Diff = 0.3
 		teapot.Mat.Color = geometry.NewColor(0.3, 1, 0)

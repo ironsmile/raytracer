@@ -10,11 +10,12 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
+// Object represents a object in 3d space which shape is loaded from a .obj file
 type Object struct {
 	BasicShape
 
-	// A model wich contains the parsed .obj information such as objects, meshes, faces and raw
-	// vertices.
+	// A model wich contains the parsed .obj information such as objects, meshes,
+	// faces and raw vertices.
 	model *obj.Model
 
 	// The center of the object
@@ -24,6 +25,7 @@ type Object struct {
 	Triangles []Shape
 }
 
+// Intersect implements the Shape interface
 func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 	var outNormal geometry.Vector
 
@@ -33,19 +35,16 @@ func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 		return MISS, distance, outNormal
 	}
 
-	if distance > ray.Maxt || distance < ray.Mint {
-		return MISS, distance, outNormal
-	}
-
 	return HIT, distance, normal
 }
 
+// IntersectP implements the Shape interface
 func (o *Object) IntersectP(ray geometry.Ray) bool {
 	return IntersectPMultiple(o.Triangles, ray)
 }
 
-// NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
-// the object at the position, given by its second argument - `center`.
+// NewObject parses an .obj file (`filePath`) and returns an Object, which represents
+// it. It places the object at the position, given by its second argument - `center`.
 func NewObject(filePath string) (*Object, error) {
 	decoder := obj.NewDecoder(obj.DefaultLimits())
 	objFile, err := os.Open(filePath)
@@ -80,7 +79,7 @@ func NewObject(filePath string) (*Object, error) {
 			for faceIndex, face := range mesh.Faces {
 				if len(face.References) != 3 {
 					return nil, fmt.Errorf(
-						"face %d [mesh: %d, obj: %s] has %d points, don't know how to load it",
+						"face %d [mesh: %d, obj: %s] has %d points, cannot load it",
 						faceIndex, meshIndex, obj.Name, len(face.References))
 				}
 
@@ -117,7 +116,8 @@ func (o *Object) objectBound() (*bbox.BBox, error) {
 	for ind, obj := range o.Triangles {
 		obj, ok := obj.(*Triangle)
 		if !ok {
-			return nil, fmt.Errorf("a shape in object.Triangles is not a triangle? Index %d", ind)
+			return nil, fmt.Errorf(
+				"a shape in object.Triangles is not a triangle? Index %d", ind)
 		}
 		if retBox == nil {
 			retBox = bbox.FromPoint(obj.Vertices[0])
