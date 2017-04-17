@@ -178,12 +178,6 @@ func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geomet
 
 // IntersectP implements the Primitive interface
 func (g *Grid) IntersectP(ray geometry.Ray) bool {
-	// for _, prim := range g.primitives {
-	// 	if prim.IntersectP(ray) {
-	// 		return true
-	// 	}
-	// }
-	// return false
 	var rayT float64
 
 	if g.bounds.Inside(ray.At(ray.Mint)) {
