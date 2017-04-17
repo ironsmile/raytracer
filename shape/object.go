@@ -40,6 +40,10 @@ func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 	return HIT, distance, normal
 }
 
+func (o *Object) IntersectP(ray geometry.Ray) bool {
+	return IntersectPMultiple(o.Triangles, ray)
+}
+
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents it. It places
 // the object at the position, given by its second argument - `center`.
 func NewObject(filePath string) (*Object, error) {

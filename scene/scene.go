@@ -9,6 +9,7 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
+// Scene is a type which is responsible for loading and managing a scene for rendering.
 type Scene struct {
 	Primitives []primitive.Primitive
 	Lights     []primitive.Primitive
@@ -16,26 +17,40 @@ type Scene struct {
 	accel primitive.Primitive
 }
 
+// GetNrLights returns the number of lights in this scene
 func (s *Scene) GetNrLights() int {
 	return len(s.Lights)
 }
 
-func (s *Scene) GetLight(index int) primitive.Primitive {
-	return s.Lights[index]
+// GetLight returns the nth light in the scene
+func (s *Scene) GetLight(n int) primitive.Primitive {
+	return s.Lights[n]
 }
 
+// GetNrPrimitives returns the number of primitives in the scene. This number includes
+// all the lights.
 func (s *Scene) GetNrPrimitives() int {
 	return len(s.Primitives)
 }
 
-func (s *Scene) GetPrimitive(index int) primitive.Primitive {
-	return s.Primitives[index]
+// GetPrimitive returns the nth primitive in the scene
+func (s *Scene) GetPrimitive(n int) primitive.Primitive {
+	return s.Primitives[n]
 }
 
+// Intersect intersects a ray against all the primitives in the scene.
 func (s *Scene) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geometry.Vector) {
 	return s.accel.Intersect(ray)
 }
 
+// IntersectP tells whether a ray intersects *any* of the primitives in the scene. Thus
+// it is faster than `Intersect`.
+func (s *Scene) IntersectP(ray geometry.Ray) bool {
+	return s.accel.IntersectP(ray)
+}
+
+// IntersectBBoxEdge tells whether a ray intersects a bounding box edge of any of the
+// primitives in the scene.
 func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
 	for _, pr := range s.Primitives {
 		if pr.IntersectBBoxEdge(ray) {
@@ -45,6 +60,7 @@ func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
 	return false
 }
 
+// InitScene programatically creates and loads a demo scene
 func (s *Scene) InitScene() {
 	s.Primitives = make([]primitive.Primitive, 0)
 	s.Lights = make([]primitive.Primitive, 0)
@@ -234,6 +250,7 @@ func (s *Scene) InitScene() {
 	s.accel = accel.NewGrid(s.Primitives)
 }
 
+// NewScene returns a new demo scene
 func NewScene() *Scene {
 	scn := new(Scene)
 	return scn

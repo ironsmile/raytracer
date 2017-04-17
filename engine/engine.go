@@ -16,9 +16,13 @@ import (
 )
 
 const (
-	TRACEDEPTH = 9
+	// TraceDepth is the limit of generated rays recursion
+	TraceDepth = 9
 )
 
+// Engine is the type which is resposible for bringing the camera, scene and
+// everything else together. It generates the rays, intersects them and then
+// paints the result in the output film.
 type Engine struct {
 	Scene         *scene.Scene
 	Dest          film.Film
@@ -30,6 +34,7 @@ type Engine struct {
 	debugged bool
 }
 
+// SetTarget sets the camera and film for rendering.
 func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Width = target.Width()
 	e.Height = target.Height()
@@ -37,11 +42,13 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 	e.Camera = cam
 }
 
+// Raytrace returns intersection information for particular ray in the engine's
+// scene.
 func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	primitive.Primitive, float64, geometry.Color) {
 	var retColor geometry.Color
 
-	if depth > TRACEDEPTH {
+	if depth > TraceDepth {
 		return nil, 0, retColor
 	}
 
@@ -71,14 +78,12 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
 
-		L := light.GetLightSource().Minus(pi).Normalize()
-		shadowRay := geometry.NewRay(pi, L)
-		shadowRay.Maxt = pi.Distance(light.GetLightSource())
-		shadowRay.Mint = geometry.EPSILON
+		shadowRayStart := pi.Plus(InNormal.MultiplyScalar(geometry.EPSILON))
+		L := light.GetLightSource().Minus(shadowRayStart).Normalize()
+		shadowRay := geometry.NewRay(shadowRayStart, L)
+		shadowRay.Maxt = shadowRayStart.Distance(light.GetLightSource())
 
-		intersected, _, _ := e.Scene.Intersect(shadowRay)
-
-		if light != intersected {
+		if intersected := e.Scene.IntersectP(shadowRay); intersected {
 			continue
 		}
 
@@ -106,7 +111,9 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	// Reflection
 	if primMat.Refl > 0.0 {
 
-		R := ray.Direction.Minus(InNormal.MultiplyScalar(ray.Direction.Product(InNormal) * 2.0))
+		R := ray.Direction.Minus(InNormal.MultiplyScalar(
+			ray.Direction.Product(InNormal) * 2.0),
+		)
 
 		refRay := geometry.NewRay(pi, R)
 		refRay.Mint = geometry.EPSILON
@@ -126,6 +133,8 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 	return prim, retdist, retColor
 }
 
+// Render starts the rendering process. Exits when one full frame is done. It does that
+// by starting multiple concurrent renderer goroutines.
 func (e *Engine) Render() {
 
 	var wg sync.WaitGroup

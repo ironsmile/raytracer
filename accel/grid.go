@@ -176,6 +176,82 @@ func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geomet
 	return ret, ray.Maxt, retNormal
 }
 
+// IntersectP implements the Primitive interface
+func (g *Grid) IntersectP(ray geometry.Ray) bool {
+	// for _, prim := range g.primitives {
+	// 	if prim.IntersectP(ray) {
+	// 		return true
+	// 	}
+	// }
+	// return false
+	var rayT float64
+
+	if g.bounds.Inside(ray.At(ray.Mint)) {
+		rayT = ray.Mint
+	} else if intersected, tNear, _ := g.bounds.IntersectP(ray); intersected {
+		rayT = tNear
+	} else {
+		return false
+	}
+
+	gridIntersect := ray.At(rayT)
+
+	var nextCrossingT, deltaT [3]float64
+	var step, out, pos [3]int
+
+	for axis := 0; axis < 3; axis++ {
+		pos[axis] = g.posToVoxel(gridIntersect, axis)
+		axisComp := ray.Direction.ByAxis(axis)
+
+		if axisComp >= 0 {
+			nextCrossingT[axis] = rayT + (g.voxelToPos(pos[axis]+1, axis)-
+				gridIntersect.ByAxis(axis))/axisComp
+			deltaT[axis] = g.width.ByAxis(axis) / axisComp
+			step[axis] = 1
+			out[axis] = g.nVoxels[axis]
+		} else {
+			nextCrossingT[axis] = rayT + (g.voxelToPos(pos[axis], axis)-
+				gridIntersect.ByAxis(axis))/axisComp
+			deltaT[axis] = -g.width.ByAxis(axis) / axisComp
+			step[axis] = -1
+			out[axis] = -1
+		}
+	}
+
+	for {
+		voxel := g.voxels[g.offset(pos[0], pos[1], pos[2])]
+		if voxel != nil {
+			if intersected := voxel.IntersectP(ray); intersected {
+				return true
+			}
+		}
+
+		var stepAxis int
+
+		if nextCrossingT[0] < nextCrossingT[1] && nextCrossingT[0] < nextCrossingT[2] {
+			stepAxis = 0
+		} else if nextCrossingT[1] < nextCrossingT[2] {
+			stepAxis = 1
+		} else {
+			stepAxis = 2
+		}
+
+		if ray.Maxt < nextCrossingT[stepAxis] {
+			break
+		}
+
+		pos[stepAxis] += step[stepAxis]
+
+		if pos[stepAxis] == out[stepAxis] {
+			break
+		}
+
+		nextCrossingT[stepAxis] += deltaT[stepAxis]
+	}
+
+	return false
+}
+
 // GetWorldBBox implements the Primitive interface
 func (g *Grid) GetWorldBBox() *bbox.BBox {
 	return g.bounds

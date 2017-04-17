@@ -1,10 +1,6 @@
 package primitive
 
-import (
-	"fmt"
-
-	"github.com/ironsmile/raytracer/geometry"
-)
+import "github.com/ironsmile/raytracer/geometry"
 
 // IntersectMultiple returns wether the ray intersects a slice of primitives
 func IntersectMultiple(primitives []Primitive, ray geometry.Ray) (
@@ -12,18 +8,11 @@ func IntersectMultiple(primitives []Primitive, ray geometry.Ray) (
 	retdist float64,
 	normal geometry.Vector,
 ) {
-	retdist = ray.Maxt
-
-	for sInd, pr := range primitives {
-
-		if pr == nil {
-			fmt.Printf("primitive with index %d was nil\n", sInd)
-			continue
-		}
+	for _, pr := range primitives {
 
 		res, resDist, resNormal := pr.Intersect(ray)
 
-		if res == nil || resDist > ray.Maxt || resDist < ray.Mint {
+		if res == nil {
 			continue
 		}
 
@@ -34,4 +23,16 @@ func IntersectMultiple(primitives []Primitive, ray geometry.Ray) (
 	}
 
 	return
+}
+
+// IntersectPMultiple returns wether the ray intersects a slice of primitives and returns
+// true or false. It would be faster than IntersectMultiple because it doesn't have to
+// calculate intersection data like
+func IntersectPMultiple(primitives []Primitive, ray geometry.Ray) bool {
+	for _, pr := range primitives {
+		if intersected := pr.IntersectP(ray); intersected {
+			return true
+		}
+	}
+	return false
 }

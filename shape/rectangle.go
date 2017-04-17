@@ -5,6 +5,9 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 )
 
+// Rectangle represents a rectangular shape in the 3d space. It is implemented as a
+// rectangle, centered at the 0,0 point in the xy plane and then rotated with
+// transformations.
 type Rectangle struct {
 	BasicShape
 
@@ -12,6 +15,7 @@ type Rectangle struct {
 	height float64
 }
 
+// NewRectangle returns a pointer to a rectangle with width `w` and height `h`
 func NewRectangle(w, h float64) *Rectangle {
 	if w < 0 || w > 1 || h < 0 || h > 1 {
 		panic("Recatangle width and height must be in the [0-1] region")
@@ -25,21 +29,42 @@ func NewRectangle(w, h float64) *Rectangle {
 	return r
 }
 
+// Intersect implements the Shape interface
 func (r *Rectangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
 
 	d := geometry.NewVector(0, 0, 0).Minus(ray.Origin).Product(normal)
 	d /= ray.Direction.Product(normal)
 
-	if d <= ray.Mint || d > ray.Maxt {
+	if d < ray.Mint || d > ray.Maxt {
 		return MISS, ray.Maxt, normal
 	}
 
-	hitPoint := ray.Origin.Plus(ray.Direction.MultiplyScalar(d))
+	hp := ray.At(d)
 
-	if hitPoint.X >= -0.5*r.width && hitPoint.X <= 0.5*r.width && hitPoint.Y >= -0.5*r.height && hitPoint.Y <= 0.5*r.height {
-		return HIT, d, normal
+	if hp.X < -0.5*r.width || hp.X > 0.5*r.width || hp.Y < -0.5*r.height || hp.Y > 0.5*r.height {
+		return MISS, ray.Maxt, normal
 	}
 
-	return MISS, ray.Maxt, normal
+	return HIT, d, normal
+}
+
+// IntersectP implements the Shape interface
+func (r *Rectangle) IntersectP(ray geometry.Ray) bool {
+	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
+
+	d := geometry.NewVector(0, 0, 0).Minus(ray.Origin).Product(normal)
+	d /= ray.Direction.Product(normal)
+
+	if d < ray.Mint || d > ray.Maxt {
+		return false
+	}
+
+	hp := ray.At(d)
+
+	if hp.X >= -0.5*r.width && hp.X <= 0.5*r.width && hp.Y >= -0.5*r.height && hp.Y <= 0.5*r.height {
+		return true
+	}
+
+	return false
 }

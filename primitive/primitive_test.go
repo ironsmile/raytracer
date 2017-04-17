@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
 
@@ -15,29 +14,50 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
-	t.Run("Sphere", func(t *testing.B) {
-		shpere := NewSphere(2)
+	shpere := NewSphere(2)
+
+	t.Run("Sphere.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
 			shpere.Intersect(ray)
 		}
 	})
 
-	t.Run("Triangle", func(t *testing.B) {
-		triangle := NewTriangle([3]geometry.Vector{
-			geometry.NewVector(-1, -1, 0), // a
-			geometry.NewVector(0, 1, -3),  // b
-			geometry.NewVector(1, -1, 3),  // c
-		})
+	t.Run("Sphere.IntersectP", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			shpere.IntersectP(ray)
+		}
+	})
+
+	triangle := NewTriangle([3]geometry.Vector{
+		geometry.NewVector(-1, -1, 0), // a
+		geometry.NewVector(0, 1, -3),  // b
+		geometry.NewVector(1, -1, 3),  // c
+	})
+
+	t.Run("Triangle.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
 			triangle.Intersect(ray)
 		}
 	})
 
-	t.Run("Rectangle", func(t *testing.B) {
-		rect := NewRectangle(1, 1)
-		rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
+	t.Run("Triangle.IntersectP", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			triangle.IntersectP(ray)
+		}
+	})
+
+	rect := NewRectangle(1, 1)
+	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
+
+	t.Run("Rectangle.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
 			rect.Intersect(ray)
+		}
+	})
+
+	t.Run("Rectangle.IntersectP", func(t *testing.B) {
+		for i := 0; i < t.N; i++ {
+			rect.IntersectP(ray)
 		}
 	})
 }
@@ -50,9 +70,9 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
-	hitMiss, distance, normal := rect.Intersect(ray)
+	pr, distance, normal := rect.Intersect(ray)
 
-	if hitMiss != shape.HIT {
+	if pr == nil {
 		t.Error("The rectangle.Intersect method failed: false negative")
 	}
 
@@ -69,6 +89,43 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 	}
 }
 
+func TestRectangleIntersectionWithDistance(t *testing.T) {
+	rect := NewRectangle(1, 1)
+	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
+	ray := geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: 0},
+		geometry.Vector{X: 0, Y: 0, Z: 1},
+	)
+	ray.Mint = geometry.EPSILON
+	ray.Maxt = 25
+
+	pr, _, _ := rect.Intersect(ray)
+
+	if pr != nil {
+		t.Error("The rectangle.Intersect with maxt method failed: false positive")
+	}
+
+	if rect.IntersectP(ray) {
+		t.Error("The rectangle.IntersectP with maxt method failed: false positive")
+	}
+
+	ray = geometry.NewRay(
+		geometry.Vector{X: 0, Y: 0, Z: 30 - geometry.EPSILON},
+		geometry.Vector{X: 0, Y: 0, Z: 1},
+	)
+	ray.Mint = geometry.EPSILON * 2
+
+	pr, _, _ = rect.Intersect(ray)
+
+	if pr != nil {
+		t.Error("The rectangle.Intersect method failed: false positive")
+	}
+
+	if rect.IntersectP(ray) {
+		t.Error("The rectangle.IntersectP method failed: false positive")
+	}
+}
+
 func TestSphereIntersection(t *testing.T) {
 	shpere := NewSphere(2)
 
@@ -77,8 +134,12 @@ func TestSphereIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
-	if hit, _, _ := shpere.Intersect(intersectRay); hit != shape.HIT {
-		t.Errorf("The ray did not hit the sphere but it was expected to: %d", hit)
+	if pr, _, _ := shpere.Intersect(intersectRay); pr == nil {
+		t.Errorf("The ray did not hit the sphere but it was expected to - Intersect")
+	}
+
+	if !shpere.IntersectP(intersectRay) {
+		t.Errorf("The ray did not hit the sphere but it was expected to - IntersectP")
 	}
 
 	missRay := geometry.NewRay(
@@ -86,7 +147,11 @@ func TestSphereIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 1, Z: 0},
 	)
 
-	if hit, _, _ := shpere.Intersect(missRay); hit != shape.MISS {
-		t.Errorf("The ray intersected the sphere but it was expected not to: %d", hit)
+	if pr, _, _ := shpere.Intersect(missRay); pr != nil {
+		t.Errorf("The ray intersected the sphere but it was expected not to - Intersect")
+	}
+
+	if shpere.IntersectP(missRay) {
+		t.Errorf("The ray intersected the sphere but it was expected not to - IntersectP")
 	}
 }
