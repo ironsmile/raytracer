@@ -2,6 +2,7 @@ package shape
 
 import "github.com/ironsmile/raytracer/geometry"
 
+// IntersectMultiple returns wether the ray intersects a slice of shapes
 func IntersectMultiple(objects []Shape, ray geometry.Ray) (
 	prim Shape, retdist float64, normal geometry.Vector) {
 
@@ -31,6 +32,9 @@ func IntersectMultiple(objects []Shape, ray geometry.Ray) (
 	return
 }
 
+// IntersectPMultiple returns wether the ray intersects a slice of shapes and returns
+// true or false. It would be faster than IntersectMultiple because it doesn't have to
+// calculate intersection data like
 func IntersectPMultiple(objects []Shape, ray geometry.Ray) bool {
 	for _, shape := range objects {
 
