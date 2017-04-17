@@ -18,9 +18,6 @@ type Object struct {
 	// faces and raw vertices.
 	model *obj.Model
 
-	// The center of the object
-	Center geometry.Vector
-
 	// All the triangles which compose this object
 	Triangles []Shape
 }
@@ -63,7 +60,6 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("model %s has %d models\n", filePath, len(model.Objects))
 
 	o := &Object{}
-	o.Center = geometry.NewVector(0, 0, 0)
 	o.Triangles = make([]Shape, 0, len(model.Vertices)/3+1)
 	o.model = model
 
