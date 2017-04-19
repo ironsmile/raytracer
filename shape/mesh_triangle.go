@@ -16,7 +16,7 @@ type MeshTriangle struct {
 }
 
 // Intersect implements the Shape interface
-func (m *MeshTriangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
+func (m *MeshTriangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 
 	p1, p2, p3 := m.getPoints()
 	e1 := p2.Minus(p1)
@@ -26,7 +26,7 @@ func (m *MeshTriangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vecto
 	divisor := s1.Product(e1)
 
 	if divisor == 0 {
-		return MISS, 0, ray.Direction
+		return false
 	}
 
 	invDivisor := 1 / divisor
@@ -35,28 +35,32 @@ func (m *MeshTriangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vecto
 	b1 := d.Product(s1) * invDivisor
 
 	if b1 < 0 || b1 > 1 {
-		return MISS, 0, ray.Direction
+		return false
 	}
 
 	s2 := d.Cross(e1)
 	b2 := ray.Direction.Product(s2) * invDivisor
 
 	if b2 < 0 || b1+b2 > 1 {
-		return MISS, 0, ray.Direction
+		return false
 	}
 
 	t := e2.Product(s2) * invDivisor
 
 	if t < ray.Mint || t > ray.Maxt {
-		return MISS, 0, ray.Direction
+		return false
 	}
+
+	dg.Distance = t
 
 	if m.face.References[0].HasNormal() && m.face.References[1].HasNormal() &&
 		m.face.References[2].HasNormal() {
-		return HIT, t, m.interpolatedNormal(b1, b2)
+		dg.Normal = m.interpolatedNormal(b1, b2)
+	} else {
+		dg.Normal = e1.Cross(e2).Neg().Normalize()
 	}
 
-	return HIT, t, e1.Cross(e2).Neg().Normalize()
+	return true
 }
 
 func (m *MeshTriangle) interpolatedNormal(b1, b2 float64) geometry.Vector {

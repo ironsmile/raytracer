@@ -29,14 +29,8 @@ func NewMesh(model *obj.Model, triangles []Shape) *Mesh {
 }
 
 // Intersect implements the Shape interface
-func (m *Mesh) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
-	prim, distance, normal := IntersectMultiple(m.triangles, ray)
-
-	if prim == nil {
-		return MISS, distance, normal
-	}
-
-	return HIT, distance, normal
+func (m *Mesh) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
+	return IntersectMultiple(m.triangles, ray, dg)
 }
 
 // IntersectP implements the Shape interface

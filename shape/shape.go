@@ -16,7 +16,7 @@ const (
 
 // Shape is a interfece which defines a 3D shape which can be tested for intersection and stuff
 type Shape interface {
-	Intersect(geometry.Ray) (isHit int, distance float64, normal geometry.Vector)
+	Intersect(geometry.Ray, *DifferentialGeometry) bool
 	IntersectP(geometry.Ray) bool
 	GetObjectBBox() *bbox.BBox
 	GetAllShapes() []Shape
@@ -33,14 +33,17 @@ func (b *BasicShape) GetObjectBBox() *bbox.BBox {
 	return b.bbox
 }
 
+// GetAllShapes implements the Shape interface
 func (b *BasicShape) GetAllShapes() []Shape {
 	return []Shape{b}
 }
 
-func (b *BasicShape) Intersect(geometry.Ray) (int, float64, geometry.Vector) {
+// Intersect implements the Shape interface
+func (b *BasicShape) Intersect(geometry.Ray, *DifferentialGeometry) bool {
 	panic("Intersect is not implemented for basic shape")
 }
 
+// IntersectP implements the Shape interface
 func (b *BasicShape) IntersectP(geometry.Ray) bool {
 	panic("IntersectP is not implemented for basic shape")
 }

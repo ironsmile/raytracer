@@ -3,26 +3,19 @@ package primitive
 import "github.com/ironsmile/raytracer/geometry"
 
 // IntersectMultiple returns wether the ray intersects a slice of primitives
-func IntersectMultiple(primitives []Primitive, ray geometry.Ray) (
-	prim Primitive,
-	retdist float64,
-	normal geometry.Vector,
-) {
+func IntersectMultiple(primitives []Primitive, ray geometry.Ray, in *Intersection) bool {
+	var hasHit bool
 	for _, pr := range primitives {
 
-		res, resDist, resNormal := pr.Intersect(ray)
-
-		if res == nil {
+		if ok := pr.Intersect(ray, in); !ok {
 			continue
 		}
 
-		prim = pr
-		retdist = resDist
-		ray.Maxt = resDist
-		normal = resNormal
+		hasHit = true
+		ray.Maxt = in.DfGeometry.Distance
 	}
 
-	return
+	return hasHit
 }
 
 // IntersectPMultiple returns wether the ray intersects a slice of primitives and returns

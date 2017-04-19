@@ -3,10 +3,9 @@ package shape
 import "github.com/ironsmile/raytracer/geometry"
 
 // IntersectMultiple returns wether the ray intersects a slice of shapes
-func IntersectMultiple(objects []Shape, ray geometry.Ray) (
-	prim Shape, retdist float64, normal geometry.Vector) {
+func IntersectMultiple(objects []Shape, ray geometry.Ray, dg *DifferentialGeometry) bool {
 
-	retdist = ray.Maxt
+	var hasHit bool
 
 	for _, shape := range objects {
 
@@ -17,19 +16,13 @@ func IntersectMultiple(objects []Shape, ray geometry.Ray) (
 			}
 		}
 
-		res, resDist, resNormal := shape.Intersect(ray)
-
-		if res != HIT {
-			continue
+		if ok := shape.Intersect(ray, dg); ok {
+			ray.Maxt = dg.Distance
+			hasHit = true
 		}
-
-		prim = shape
-		retdist = resDist
-		ray.Maxt = retdist
-		normal = resNormal
 	}
 
-	return
+	return hasHit
 }
 
 // IntersectPMultiple returns wether the ray intersects a slice of shapes and returns

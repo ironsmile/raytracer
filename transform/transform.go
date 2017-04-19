@@ -76,12 +76,12 @@ func (t *Transform) Normal(vec geometry.Vector) geometry.Vector {
 
 func (t *Transform) BBox(bb *bbox.BBox) *bbox.BBox {
 	ret := bbox.FromPoint(t.Point(geometry.NewVector(bb.Min.X, bb.Min.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Min.Y, bb.Min.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Max.Y, bb.Min.Z)))
 	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Max.Y, bb.Min.Z)))
 	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Min.X, bb.Max.Y, bb.Max.Z)))
-	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Max.Y, bb.Min.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Min.Y, bb.Min.Z)))
 	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Min.Y, bb.Max.Z)))
+	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Max.Y, bb.Min.Z)))
 	ret = bbox.UnionPoint(ret, t.Point(geometry.NewVector(bb.Max.X, bb.Max.Y, bb.Max.Z)))
 	return ret
 }

@@ -53,27 +53,25 @@ func (b *BasePrimitive) GetMaterial() *mat.Material {
 
 // Intersect returns whether a ray intersects this primitive and at what distance from
 // the ray origin is this intersection.
-func (b *BasePrimitive) Intersect(ray geometry.Ray) (Primitive, float64, geometry.Vector) {
+func (b *BasePrimitive) Intersect(ray geometry.Ray, in *Intersection) bool {
 	if b.IsLight() {
-		return nil, ray.Maxt, ray.Direction
+		return false
 	}
 
 	worldBound := b.GetWorldBBox()
 	intersected, _, _ := worldBound.IntersectP(ray)
 	if !intersected {
-		return nil, ray.Maxt, ray.Direction
+		return false
 	}
 
 	ray = b.worldToObj.Ray(ray)
-	res, hitDist, normal := b.shape.Intersect(ray)
 
-	if res != shape.HIT {
-		return nil, hitDist, normal
+	if hit := b.shape.Intersect(ray, &in.DfGeometry); !hit {
+		return false
 	}
 
-	normal = b.objToWorld.Normal(normal)
-
-	return b, hitDist, normal
+	in.Primitive = b
+	return true
 }
 
 // IntersectP returns whether a ray intersects this primitive and nothing more

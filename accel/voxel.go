@@ -17,8 +17,8 @@ func NewVoxel() *Voxel {
 }
 
 // Intersect checks whether a ray itnersects any of the voxel's primitives
-func (v *Voxel) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geometry.Vector) {
-	return primitive.IntersectMultiple(v.primitives, ray)
+func (v *Voxel) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
+	return primitive.IntersectMultiple(v.primitives, ray, in)
 }
 
 // IntersectP checks whether a ray itnersects any of the voxel's primitives. It does not

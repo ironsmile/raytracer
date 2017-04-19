@@ -23,14 +23,8 @@ type Object struct {
 }
 
 // Intersect implements the Shape interface
-func (o *Object) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
-	prim, distance, normal := IntersectMultiple(o.meshes, ray)
-
-	if prim == nil {
-		return MISS, distance, normal
-	}
-
-	return HIT, distance, normal
+func (o *Object) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
+	return IntersectMultiple(o.meshes, ray, dg)
 }
 
 // IntersectP implements the Shape interface

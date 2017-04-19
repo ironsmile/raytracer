@@ -30,23 +30,26 @@ func NewRectangle(w, h float64) *Rectangle {
 }
 
 // Intersect implements the Shape interface
-func (r *Rectangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
+func (r *Rectangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
 
 	d := geometry.NewVector(0, 0, 0).Minus(ray.Origin).Product(normal)
 	d /= ray.Direction.Product(normal)
 
 	if d < ray.Mint || d > ray.Maxt {
-		return MISS, ray.Maxt, normal
+		return false
 	}
 
 	hp := ray.At(d)
 
 	if hp.X < -0.5*r.width || hp.X > 0.5*r.width || hp.Y < -0.5*r.height || hp.Y > 0.5*r.height {
-		return MISS, ray.Maxt, normal
+		return false
 	}
 
-	return HIT, d, normal
+	dg.Distance = d
+	dg.Normal = normal
+
+	return true
 }
 
 // IntersectP implements the Shape interface

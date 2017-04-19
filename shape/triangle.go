@@ -29,17 +29,16 @@ func NewTriangle(vertices [3]geometry.Vector) *Triangle {
 	return triangle
 }
 
-func (t *Triangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
+func (t *Triangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 	// Implements Möller–Trumbore ray-triangle intersection algorithm:
 	// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-	var outNormal geometry.Vector
 
 	s1 := ray.Direction.Cross(t.edge2)
 	divisor := t.edge1.Product(s1)
 
 	// Not culling:
 	if divisor > -geometry.EPSILON && divisor < geometry.EPSILON {
-		return MISS, ray.Maxt, outNormal
+		return false
 	}
 
 	invDivisor := 1.0 / divisor
@@ -48,23 +47,26 @@ func (t *Triangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vector) {
 	b1 := s.Product(s1) * invDivisor
 
 	if b1 < 0.0 || b1 > 1.0 {
-		return MISS, ray.Maxt, outNormal
+		return false
 	}
 
 	s2 := s.Cross(t.edge1)
 	b2 := ray.Direction.Product(s2) * invDivisor
 
 	if b2 < 0.0 || b1+b2 > 1.0 {
-		return MISS, ray.Maxt, outNormal
+		return false
 	}
 
 	tt := t.edge2.Product(s2) * invDivisor
 
-	if tt < geometry.EPSILON || tt > ray.Maxt || tt < ray.Mint {
-		return MISS, ray.Maxt, outNormal
+	if tt > ray.Maxt || tt < ray.Mint {
+		return false
 	}
 
-	return HIT, tt, t.Normal
+	dg.Distance = tt
+	dg.Normal = t.Normal
+
+	return true
 }
 
 func (t *Triangle) IntersectP(ray geometry.Ray) bool {

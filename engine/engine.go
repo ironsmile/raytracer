@@ -44,7 +44,7 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 
 // Raytrace returns intersection information for particular ray in the engine's
 // scene.
-func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
+func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) (
 	primitive.Primitive, float64, geometry.Color) {
 	var retColor geometry.Color
 
@@ -52,11 +52,13 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		return nil, 0, retColor
 	}
 
-	prim, retdist, InNormal := e.Scene.Intersect(ray)
-
-	if prim == nil {
+	if ok := e.Scene.Intersect(ray, in); !ok {
 		return nil, 0, retColor
 	}
+
+	prim := in.Primitive
+	retdist := in.DfGeometry.Distance
+	InNormal := in.DfGeometry.Normal
 
 	if prim.IsLight() {
 		return prim, retdist, *prim.GetColor()
@@ -119,7 +121,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64) (
 		refRay.Mint = geometry.EPSILON
 
 		// refRay.Debug = ray.Debug
-		_, _, refColor := e.Raytrace(refRay, depth+1)
+		_, _, refColor := e.Raytrace(refRay, depth+1, in)
 
 		retColor.PlusIP(primMat.Color.Multiply(
 			&refColor).MultiplyScalarIP(primMat.Refl))
@@ -159,6 +161,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var accColor geometry.Color
+	var in primitive.Intersection
 
 	for {
 		x, y, err := e.Sampler.GetSample()
@@ -170,7 +173,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			return
 		}
 		ray, weight := e.Camera.GenerateRay(x, y)
-		_, _, accColor = e.Raytrace(ray, 1)
+		_, _, accColor = e.Raytrace(ray, 1, &in)
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
 }

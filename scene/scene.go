@@ -39,8 +39,8 @@ func (s *Scene) GetPrimitive(n int) primitive.Primitive {
 }
 
 // Intersect intersects a ray against all the primitives in the scene.
-func (s *Scene) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geometry.Vector) {
-	return s.accel.Intersect(ray)
+func (s *Scene) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
+	return s.accel.Intersect(ray, in)
 }
 
 // IntersectP tells whether a ray intersects *any* of the primitives in the scene. Thus
@@ -153,46 +153,46 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
-	// sphere := primitive.NewSphere(2.5)
-	// sphere.Name = "big sphere"
-	// sphere.Mat.Refl = 0.0
-	// sphere.Mat.Diff = 0.9
-	// sphere.Mat.Color = geometry.NewColor(1, 0, 0)
-	// sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
+	sphere := primitive.NewSphere(2.5)
+	sphere.Name = "big sphere"
+	sphere.Mat.Refl = 0.0
+	sphere.Mat.Diff = 0.9
+	sphere.Mat.Color = geometry.NewColor(1, 0, 0)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
 
-	// s.Primitives = append(s.Primitives, sphere)
+	s.Primitives = append(s.Primitives, sphere)
 
-	// sphere = primitive.NewSphere(2)
-	// sphere.Name = "small sphere"
-	// sphere.Mat.Refl = 0.0
-	// sphere.Mat.Diff = 0.4
-	// sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
-	// sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
+	sphere = primitive.NewSphere(2)
+	sphere.Name = "small sphere"
+	sphere.Mat.Refl = 0.0
+	sphere.Mat.Diff = 0.4
+	sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
 
-	// s.Primitives = append(s.Primitives, sphere)
+	s.Primitives = append(s.Primitives, sphere)
 
-	// sphere = primitive.NewSphere(1.5)
-	// sphere.Name = "small sphere far away"
-	// sphere.Mat.Refl = 0.9
-	// sphere.Mat.Diff = 0.4
-	// sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
-	// sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
+	sphere = primitive.NewSphere(1.5)
+	sphere.Name = "small sphere far away"
+	sphere.Mat.Refl = 0.9
+	sphere.Mat.Diff = 0.4
+	sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
+	sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
 
-	// s.Primitives = append(s.Primitives, sphere)
+	s.Primitives = append(s.Primitives, sphere)
 
-	// triangle := primitive.NewTriangle([3]geometry.Vector{
-	// 	geometry.NewVector(-10.99, 3, 0),  // a
-	// 	geometry.NewVector(-10.99, 0, -3), // b
-	// 	geometry.NewVector(-10.99, 0, 3),  // c
-	// })
-	// triangle.Name = "Green triangle"
-	// triangle.Mat.Refl = 0.0
-	// triangle.Mat.Diff = 0.3
-	// triangle.Mat.Color = geometry.NewColor(0.3, 1, 0)
+	triangle := primitive.NewTriangle([3]geometry.Vector{
+		geometry.NewVector(-10.99, 3, 0),  // a
+		geometry.NewVector(-10.99, 0, -3), // b
+		geometry.NewVector(-10.99, 0, 3),  // c
+	})
+	triangle.Name = "Green triangle"
+	triangle.Mat.Refl = 0.0
+	triangle.Mat.Diff = 0.3
+	triangle.Mat.Color = geometry.NewColor(0.3, 1, 0)
 
-	// s.Primitives = append(s.Primitives, triangle)
+	s.Primitives = append(s.Primitives, triangle)
 
-	sphere := primitive.NewSphere(0.1)
+	sphere = primitive.NewSphere(0.1)
 	sphere.Name = "Visible light source"
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
@@ -222,20 +222,44 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
-	if obj, err := primitive.NewObject("data/objs/alfa147.obj"); err != nil {
-		fmt.Printf("Error loading obj alfa147: %s\n", err)
+	// if obj, err := primitive.NewObject("data/objs/alfa147.obj"); err != nil {
+	// 	fmt.Printf("Error loading obj alfa147: %s\n", err)
+	// } else {
+	// 	obj.Name = "First alfa147"
+	// 	obj.Mat.Refl = 0.0
+	// 	obj.Mat.Diff = 0.3
+	// 	obj.Mat.Color = geometry.NewColor(0.3, 1, 0)
+	// 	obj.SetTransform(
+	// 		transform.Translate(geometry.NewVector(0, -3, 1)).Multiply(
+	// 			transform.UniformScale(0.05).Multiply(
+	// 				transform.RotateX(-90),
+	// 				// Multiply(
+	// 				// 	transform.RotateZ(140),
+	// 				// ),
+	// 			),
+	// 		),
+	// 	)
+
+	// 	var prims []primitive.Primitive
+
+	// 	for _, objShape := range obj.Shape().GetAllShapes() {
+	// 		prims = append(prims, primitive.FromShape(objShape))
+	// 	}
+
+	// 	// s.Primitives = append(s.Primitives, accel.NewGrid(prims))
+	// 	s.Primitives = append(s.Primitives, obj)
+	// }
+
+	if obj, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
+		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
-		obj.Name = "First alfa147"
+		obj.Name = "First teapot"
 		obj.Mat.Refl = 0.0
 		obj.Mat.Diff = 0.3
 		obj.Mat.Color = geometry.NewColor(0.3, 1, 0)
 		obj.SetTransform(
-			transform.Translate(geometry.NewVector(-3, -3, 3)).Multiply(
-				transform.UniformScale(0.05).Multiply(
-					transform.RotateX(-90).Multiply(
-						transform.RotateZ(140),
-					),
-				),
+			transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
+				transform.UniformScale(0.01),
 			),
 		)
 

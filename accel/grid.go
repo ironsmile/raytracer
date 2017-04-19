@@ -102,7 +102,7 @@ func (g *Grid) voxelToPos(p int, axis int) float64 {
 }
 
 // Intersect implements the Primitive interface
-func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geometry.Vector) {
+func (g *Grid) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
 	var rayT float64
 
 	if g.bounds.Inside(ray.At(ray.Mint)) {
@@ -110,7 +110,7 @@ func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geomet
 	} else if intersected, tNear, _ := g.bounds.IntersectP(ray); intersected {
 		rayT = tNear
 	} else {
-		return nil, 0, ray.Direction
+		return false
 	}
 
 	gridIntersect := ray.At(rayT)
@@ -137,16 +137,14 @@ func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geomet
 		}
 	}
 
-	var ret primitive.Primitive
-	var retNormal geometry.Vector
+	var hasHit bool
 
 	for {
 		voxel := g.voxels[g.offset(pos[0], pos[1], pos[2])]
 		if voxel != nil {
-			if pr, dist, normal := voxel.Intersect(ray); pr != nil {
-				retNormal = normal
-				ret = pr
-				ray.Maxt = dist
+			if ok := voxel.Intersect(ray, in); ok {
+				hasHit = true
+				ray.Maxt = in.DfGeometry.Distance
 			}
 		}
 
@@ -173,7 +171,7 @@ func (g *Grid) Intersect(ray geometry.Ray) (primitive.Primitive, float64, geomet
 		nextCrossingT[stepAxis] += deltaT[stepAxis]
 	}
 
-	return ret, ray.Maxt, retNormal
+	return hasHit
 }
 
 // IntersectP implements the Primitive interface
