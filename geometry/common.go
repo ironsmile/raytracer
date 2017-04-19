@@ -1,5 +1,5 @@
 package geometry
 
-const EPSILON = 0.0001
+const EPSILON = 1e-7
 
 type Pixel uint

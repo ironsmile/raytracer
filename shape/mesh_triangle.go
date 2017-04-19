@@ -53,42 +53,13 @@ func (m *MeshTriangle) Intersect(ray geometry.Ray) (int, float64, geometry.Vecto
 
 	if m.face.References[0].HasNormal() && m.face.References[1].HasNormal() &&
 		m.face.References[2].HasNormal() {
-		return HIT, t, m.interpolatedNormal(ray.At(t))
+		return HIT, t, m.interpolatedNormal(b1, b2)
 	}
 
-	if !m.face.References[0].HasTexCoord() {
-		return HIT, t, e1.Cross(e2).Neg().Normalize()
-	}
-
-	uv0 := m.model.GetTexCoordFromReference(m.face.References[0])
-	uv1 := m.model.GetTexCoordFromReference(m.face.References[1])
-	uv2 := m.model.GetTexCoordFromReference(m.face.References[2])
-
-	du1 := uv0.U - uv2.U
-	du2 := uv1.U - uv2.U
-	dv1 := uv0.V - uv2.V
-	dv2 := uv1.V - uv2.V
-
-	dp1 := p1.Minus(p3)
-	dp2 := p2.Minus(p3)
-
-	var dpdu, dpdv geometry.Vector
-	determinant := du1 * dv2 * dv1 * du2
-
-	if determinant == 0 {
-		dpdu, dpdv = geometry.CoordinateSystem(e2.Cross(e1).Normalize())
-	} else {
-		invdet := 1 / determinant
-		dpdu = dp1.MultiplyScalar(dv2).Minus(
-			dp2.MultiplyScalar(dv1)).MultiplyScalar(invdet)
-		dpdv = dp1.MultiplyScalar(-du2).Plus(
-			dp2.MultiplyScalar(du1)).MultiplyScalar(invdet)
-	}
-
-	return HIT, t, dpdu.Cross(dpdv).Normalize()
+	return HIT, t, e1.Cross(e2).Neg().Normalize()
 }
 
-func (m *MeshTriangle) interpolatedNormal(pi geometry.Vector) geometry.Vector {
+func (m *MeshTriangle) interpolatedNormal(b1, b2 float64) geometry.Vector {
 	// Phong interpolation
 	// http://paulbourke.net/texture_colour/interpolation/
 
@@ -102,10 +73,7 @@ func (m *MeshTriangle) interpolatedNormal(pi geometry.Vector) geometry.Vector {
 
 	//!TODO: implement proper coefficients for phong shading. Obviously 0.5
 	// for all points is a lie
-	nv12 := geometry.Lerp(nv1, nv2, 0.5).Normalize()
-	nv13 := geometry.Lerp(nv1, nv3, 0.5).Normalize()
-
-	return geometry.Lerp(nv12, nv13, 0.5).Normalize()
+	return nv1.MultiplyScalar(1 - b1 - b2).Plus(nv2.MultiplyScalar(b1).Plus(nv3.MultiplyScalar(b2)))
 }
 
 // IntersectP implements the Shape interface
