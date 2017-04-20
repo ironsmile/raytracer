@@ -23,13 +23,13 @@ type Object struct {
 }
 
 // Intersect implements the Shape interface
-func (o *Object) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
-	return IntersectMultiple(o.meshes, ray, dg)
+func (o *Object) Intersect(geometry.Ray, *DifferentialGeometry) bool {
+	panic("Object shape is not directly intersectable: Intersect")
 }
 
 // IntersectP implements the Shape interface
-func (o *Object) IntersectP(ray geometry.Ray) bool {
-	return IntersectPMultiple(o.meshes, ray)
+func (o *Object) IntersectP(geometry.Ray) bool {
+	panic("Object shape is not directly intersectable: IntersectP")
 }
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents
@@ -53,7 +53,7 @@ func NewObject(filePath string) (*Object, error) {
 
 	o := &Object{}
 	o.model = model
-	var trianglesCount uint32
+	var trianglesCount int
 
 	for _, modelObj := range model.Objects {
 		fmt.Printf("object %s has %d meshes\n", modelObj.Name, len(modelObj.Meshes))
@@ -64,20 +64,8 @@ func NewObject(filePath string) (*Object, error) {
 			}
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
-			meshTriangles := make([]Shape, 0, len(mesh.Faces))
-			for faceIndex, face := range mesh.Faces {
-				if len(face.References) != 3 {
-					return nil, fmt.Errorf(
-						"face %d [mesh: %d, obj: %s] has %d points, cannot load it",
-						faceIndex, meshIndex, modelObj.Name, len(face.References))
-				}
-
-				tr := NewMeshTriangle(model, face)
-				meshTriangles = append(meshTriangles, tr)
-				trianglesCount++
-			}
-
-			triagularMesh := NewMesh(model, meshTriangles)
+			trianglesCount += len(mesh.Faces)
+			triagularMesh := NewMesh(model, mesh)
 			o.bbox = bbox.Union(o.bbox, triagularMesh.GetObjectBBox())
 			o.meshes = append(o.meshes, triagularMesh)
 		}
@@ -88,10 +76,16 @@ func NewObject(filePath string) (*Object, error) {
 	return o, nil
 }
 
-func (o *Object) GetAllShapes() []Shape {
+// CanIntersect implements the Shape interface
+func (o *Object) CanIntersect() bool {
+	return false
+}
+
+// Refine implemnts the Shape interface
+func (o *Object) Refine() []Shape {
 	var shapes []Shape
 	for _, mesh := range o.meshes {
-		shapes = append(shapes, mesh.GetAllShapes()...)
+		shapes = append(shapes, mesh.Refine()...)
 	}
 	return shapes
 }

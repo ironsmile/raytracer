@@ -15,24 +15,41 @@ type BasePrimitive struct {
 	Mat         mat.Material
 	Light       bool
 	LightSource geometry.Vector
-	Name        string
 	shape       shape.Shape
 
-	objToWorld transform.Transform
-	worldToObj transform.Transform
+	objToWorld *transform.Transform
+	worldToObj *transform.Transform
 
 	worldBBox *bbox.BBox
+}
+
+// CanIntersect returns true when this parimitive can be intersected directly and false
+// when it should be refined before intersection.
+func (b *BasePrimitive) CanIntersect() bool {
+	return b.shape.CanIntersect()
+}
+
+// Refine returns the slice of primitives this one primitive is made of. This method
+// should be called only when CanIntersect returns false
+func (b *BasePrimitive) Refine() []Primitive {
+	if b.shape.CanIntersect() {
+		panic("Refine should not be called on intersectable primitive: BasePrimitive")
+	}
+	var prims []Primitive
+
+	for _, objShape := range b.Shape().Refine() {
+		pr := FromShape(objShape)
+		pr.SetTransform(b.objToWorld)
+		prims = append(prims, pr)
+	}
+
+	return prims
 }
 
 // GetLightSource is strange hacky methods. Returns the ligth source point in the world
 // space from which the light eliminates for this light primitive.
 func (b *BasePrimitive) GetLightSource() geometry.Vector {
 	return b.LightSource
-}
-
-// GetName returns the name of this primitive as set in the scene
-func (b *BasePrimitive) GetName() string {
-	return b.Name
 }
 
 // IsLight returns true if this primitive is a light source
@@ -100,11 +117,7 @@ func (b *BasePrimitive) IntersectBBoxEdge(ray geometry.Ray) bool {
 
 	intersected, _ := worldBound.IntersectEdge(ray)
 
-	if !intersected {
-		return false
-	}
-
-	return true
+	return intersected
 }
 
 // Shape returns this primitive's shape if there is one
@@ -112,17 +125,18 @@ func (b *BasePrimitive) Shape() shape.Shape {
 	return b.shape
 }
 
-// SetTransform sets the transformation matrices for this primitive's shape
+// SetTransform sets the transformation matrices for this primitive's shape. Accepts the
+// object-to-world transformation matrix
 func (b *BasePrimitive) SetTransform(t *transform.Transform) {
-	b.objToWorld = *t
-	b.worldToObj = *t.Inverse()
+	b.objToWorld = t
+	b.worldToObj = t.Inverse()
 	b.refreshWorldBBox()
 }
 
 // GetTransforms returns the two transformation matrices for this primiitive:
 // object-to-world and world-to-object
 func (b *BasePrimitive) GetTransforms() (*transform.Transform, *transform.Transform) {
-	return &b.objToWorld, &b.worldToObj
+	return b.objToWorld, b.worldToObj
 }
 
 // GetWorldBBox returns the bound box around this primitive in world space

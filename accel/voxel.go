@@ -29,5 +29,10 @@ func (v *Voxel) IntersectP(ray geometry.Ray) bool {
 
 // Add inserts a primitive in this voxel
 func (v *Voxel) Add(p primitive.Primitive) {
-	v.primitives = append(v.primitives, p)
+	if p.CanIntersect() {
+		v.primitives = append(v.primitives, p)
+	} else {
+		gridAccel := NewGrid(p.Refine())
+		v.primitives = append(v.primitives, gridAccel)
+	}
 }

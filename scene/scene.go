@@ -65,8 +65,8 @@ func (s *Scene) InitScene() {
 	s.Primitives = make([]primitive.Primitive, 0)
 	s.Lights = make([]primitive.Primitive, 0)
 
+	// "rect-floor"
 	rect := primitive.NewRectangle(0.5, 1)
-	rect.Name = "rect-floor"
 	rect.Mat.Refl = 0
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -80,8 +80,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "rect-ceiling"
 	rect = primitive.NewRectangle(0.5, 1)
-	rect.Name = "rect-ceiling"
 	rect.Mat.Refl = 0
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -95,8 +95,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "rect-left"
 	rect = primitive.NewRectangle(1, 0.5)
-	rect.Name = "rect-left"
 	rect.Mat.Refl = 0
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -110,8 +110,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "rect-right-mirror"
 	rect = primitive.NewRectangle(1, 0.5)
-	rect.Name = "rect-right-mirror"
 	rect.Mat.Refl = 1.0
 	rect.Mat.Diff = 0.4
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -125,8 +125,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "rect-front"
 	rect = primitive.NewRectangle(1, 0.5)
-	rect.Name = "rect-front"
 	rect.Mat.Refl = 0
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -138,8 +138,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "rect-back"
 	rect = primitive.NewRectangle(1, 0.5)
-	rect.Name = "rect-back"
 	rect.Mat.Refl = 0
 	rect.Mat.Diff = 0.95
 	rect.Mat.Color = geometry.NewColor(0.4, 0.3, 0.3)
@@ -153,8 +153,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, rect)
 
+	// "big sphere"
 	sphere := primitive.NewSphere(2.5)
-	sphere.Name = "big sphere"
 	sphere.Mat.Refl = 0.0
 	sphere.Mat.Diff = 0.9
 	sphere.Mat.Color = geometry.NewColor(1, 0, 0)
@@ -162,8 +162,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, sphere)
 
+	// "small sphere"
 	sphere = primitive.NewSphere(2)
-	sphere.Name = "small sphere"
 	sphere.Mat.Refl = 0.0
 	sphere.Mat.Diff = 0.4
 	sphere.Mat.Color = geometry.NewColor(0.7, 0.7, 1)
@@ -171,8 +171,8 @@ func (s *Scene) InitScene() {
 
 	s.Primitives = append(s.Primitives, sphere)
 
+	// "small sphere far away"
 	sphere = primitive.NewSphere(1.5)
-	sphere.Name = "small sphere far away"
 	sphere.Mat.Refl = 0.9
 	sphere.Mat.Diff = 0.4
 	sphere.Mat.Color = geometry.NewColor(0.5, 1, 0)
@@ -184,16 +184,16 @@ func (s *Scene) InitScene() {
 		geometry.NewVector(-10.99, 3, 0),  // a
 		geometry.NewVector(-10.99, 0, -3), // b
 		geometry.NewVector(-10.99, 0, 3),  // c
+		// "Green triangle"
 	})
-	triangle.Name = "Green triangle"
 	triangle.Mat.Refl = 0.0
 	triangle.Mat.Diff = 0.3
 	triangle.Mat.Color = geometry.NewColor(0.3, 1, 0)
 
 	s.Primitives = append(s.Primitives, triangle)
 
+	// "Visible light source"
 	sphere = primitive.NewSphere(0.1)
-	sphere.Name = "Visible light source"
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
@@ -202,8 +202,8 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
+	// "Invisible lightsource"
 	sphere = primitive.NewSphere(0.1)
-	sphere.Name = "Invisible lightsource"
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, 1)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
@@ -212,8 +212,8 @@ func (s *Scene) InitScene() {
 	s.Primitives = append(s.Primitives, sphere)
 	s.Lights = append(s.Lights, sphere)
 
+	// "Behid the shoulder lightsource"
 	sphere = primitive.NewSphere(0.1)
-	sphere.Name = "Behid the shoulder lightsource"
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
 	sphere.Mat.Color = geometry.NewColor(0.9, 0.9, 0.9)
@@ -225,56 +225,38 @@ func (s *Scene) InitScene() {
 	// if obj, err := primitive.NewObject("data/objs/alfa147.obj"); err != nil {
 	// 	fmt.Printf("Error loading obj alfa147: %s\n", err)
 	// } else {
-	// 	obj.Name = "First alfa147"
+	// 	objTransform := transform.Translate(geometry.NewVector(0, -3, 1)).Multiply(
+	// 		transform.UniformScale(0.05).Multiply(
+	// 			transform.RotateX(-90),
+	// 			// Multiply(
+	// 			// 	transform.RotateZ(140),
+	// 			// ),
+	// 		),
+	// 	)
 	// 	obj.Mat.Refl = 0.0
 	// 	obj.Mat.Diff = 0.3
 	// 	obj.Mat.Color = geometry.NewColor(0.3, 1, 0)
-	// 	obj.SetTransform(
-	// 		transform.Translate(geometry.NewVector(0, -3, 1)).Multiply(
-	// 			transform.UniformScale(0.05).Multiply(
-	// 				transform.RotateX(-90),
-	// 				// Multiply(
-	// 				// 	transform.RotateZ(140),
-	// 				// ),
-	// 			),
-	// 		),
-	// 	)
+	// 	obj.SetTransform(objTransform)
 
-	// 	var prims []primitive.Primitive
-
-	// 	for _, objShape := range obj.Shape().GetAllShapes() {
-	// 		prims = append(prims, primitive.FromShape(objShape))
-	// 	}
-
-	// 	// s.Primitives = append(s.Primitives, accel.NewGrid(prims))
 	// 	s.Primitives = append(s.Primitives, obj)
 	// }
 
 	if obj, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
-		obj.Name = "First teapot"
+		objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
+			transform.UniformScale(0.01),
+		)
 		obj.Mat.Refl = 0.0
 		obj.Mat.Diff = 0.3
 		obj.Mat.Color = geometry.NewColor(0.557, 0.286, 0.643)
-		obj.SetTransform(
-			transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
-				transform.UniformScale(0.01),
-			),
-		)
+		obj.SetTransform(objTransform)
 
-		var prims []primitive.Primitive
-
-		for _, objShape := range obj.Shape().GetAllShapes() {
-			prims = append(prims, primitive.FromShape(objShape))
-		}
-
-		// s.Primitives = append(s.Primitives, accel.NewGrid(prims))
 		s.Primitives = append(s.Primitives, obj)
 	}
 
+	// "Blue Rectangle"
 	blueRect := primitive.NewRectangle(1, 0.5)
-	blueRect.Name = "Blue Rectangle"
 	blueRect.Mat.Color = geometry.NewColor(0, 0, 1)
 	blueRect.Mat.Refl = 0.5
 	blueRect.Mat.Diff = 0.8

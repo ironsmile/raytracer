@@ -19,7 +19,8 @@ type Shape interface {
 	Intersect(geometry.Ray, *DifferentialGeometry) bool
 	IntersectP(geometry.Ray) bool
 	GetObjectBBox() *bbox.BBox
-	GetAllShapes() []Shape
+	CanIntersect() bool
+	Refine() []Shape
 }
 
 // BasicShape implements few common methods and properties among all shapes
@@ -33,9 +34,14 @@ func (b *BasicShape) GetObjectBBox() *bbox.BBox {
 	return b.bbox
 }
 
-// GetAllShapes implements the Shape interface
-func (b *BasicShape) GetAllShapes() []Shape {
-	return []Shape{b}
+// CanIntersect implements the Shape interface
+func (b *BasicShape) CanIntersect() bool {
+	return true
+}
+
+// Refine implements the Shape interface
+func (b *BasicShape) Refine() []Shape {
+	panic("Refine should only be called on shapes which cannot be intersected: Basic")
 }
 
 // Intersect implements the Shape interface

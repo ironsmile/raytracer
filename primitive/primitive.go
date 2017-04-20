@@ -15,16 +15,16 @@ type Primitive interface {
 	IntersectP(geometry.Ray) bool
 	IntersectBBoxEdge(geometry.Ray) bool
 	GetWorldBBox() *bbox.BBox
+	SetTransform(*transform.Transform)
+	GetTransforms() (o2w, w2o *transform.Transform)
+	CanIntersect() bool
+	Refine() []Primitive
+
 	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
 	IsLight() bool
 	GetLightSource() geometry.Vector
 	Shape() shape.Shape
-
-	SetTransform(*transform.Transform)
-	GetTransforms() (o2w, w2o *transform.Transform)
-
-	GetName() string
 }
 
 // Intersection holds information about a ray–primitive intersection, in-

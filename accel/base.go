@@ -1,6 +1,7 @@
 package accel
 
 import (
+	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
@@ -12,11 +13,29 @@ import (
 // implement the Primitive interface. And some shared data
 type Base struct {
 	primitives []primitive.Primitive
+	bounds     *bbox.BBox
+}
+
+// GetWorldBBox implements the Primitive interface
+func (b *Base) GetWorldBBox() *bbox.BBox {
+	return b.bounds
 }
 
 // IntersectBBoxEdge implements the Primitive interface
-func (b *Base) IntersectBBoxEdge(_ geometry.Ray) bool {
-	panic("IntersectBBoxEdge should not be called for accelerator")
+func (b *Base) IntersectBBoxEdge(ray geometry.Ray) bool {
+	in, _ := b.GetWorldBBox().IntersectEdge(ray)
+	return in
+}
+
+// CanIntersect implements the Primitive interface. And sice the only purpose of a grid accelerator
+// is to be itnersectable, it returns true in all cases.
+func (b *Base) CanIntersect() bool {
+	return true
+}
+
+// Refine implements the Primitive interface
+func (b *Base) Refine() []primitive.Primitive {
+	panic("Refine should not be called for accelerator")
 }
 
 // GetColor implements the primivite interface

@@ -21,7 +21,6 @@ import (
 type Grid struct {
 	Base
 
-	bounds  *bbox.BBox
 	nVoxels [3]int
 
 	width    geometry.Vector
@@ -242,9 +241,4 @@ func (g *Grid) IntersectP(ray geometry.Ray) bool {
 	}
 
 	return false
-}
-
-// GetWorldBBox implements the Primitive interface
-func (g *Grid) GetWorldBBox() *bbox.BBox {
-	return g.bounds
 }
