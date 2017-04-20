@@ -5,6 +5,7 @@ import (
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 // Base is a accelerator which implements all the stuff that a accelerator needs to
@@ -46,4 +47,14 @@ func (b *Base) GetName() string {
 // Shape implements the primivite interface
 func (b *Base) Shape() shape.Shape {
 	panic("Shape should not be called for accelerator")
+}
+
+// GetTransforms implements the primitive interface
+func (b *Base) GetTransforms() (*transform.Transform, *transform.Transform) {
+	panic("GetTransforms should not be called for accelerator")
+}
+
+// SetTransform implements the primitive interface
+func (b *Base) SetTransform(*transform.Transform) {
+	panic("SetTransform should not be called for accelerator")
 }

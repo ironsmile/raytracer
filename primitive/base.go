@@ -119,6 +119,12 @@ func (b *BasePrimitive) SetTransform(t *transform.Transform) {
 	b.refreshWorldBBox()
 }
 
+// GetTransforms returns the two transformation matrices for this primiitive:
+// object-to-world and world-to-object
+func (b *BasePrimitive) GetTransforms() (*transform.Transform, *transform.Transform) {
+	return &b.objToWorld, &b.worldToObj
+}
+
 // GetWorldBBox returns the bound box around this primitive in world space
 func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
 	if b.worldBBox != nil {

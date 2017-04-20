@@ -76,7 +76,7 @@ func (s *Sphere) IntersectP(ray geometry.Ray) bool {
 
 // GetNormal implements the primitive interface
 func (s *Sphere) GetNormal(pos geometry.Vector) geometry.Vector {
-	return pos
+	return pos.Normalize()
 }
 
 // NewSphere returns a full sphere with a given radius

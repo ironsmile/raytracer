@@ -57,8 +57,9 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	}
 
 	prim := in.Primitive
+	o2w, _ := prim.GetTransforms()
 	retdist := in.DfGeometry.Distance
-	InNormal := in.DfGeometry.Normal
+	InNormal := o2w.Normal(in.DfGeometry.Normal)
 
 	if prim.IsLight() {
 		return prim, retdist, *prim.GetColor()

@@ -5,6 +5,7 @@ import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
+	"github.com/ironsmile/raytracer/transform"
 )
 
 // Primitive is the type which marries the shape to its material. It is resposible for
@@ -19,6 +20,11 @@ type Primitive interface {
 	IsLight() bool
 	GetLightSource() geometry.Vector
 	Shape() shape.Shape
+
+	SetTransform(*transform.Transform)
+	GetTransforms() (o2w, w2o *transform.Transform)
+
+	GetName() string
 }
 
 // Intersection holds information about a ray–primitive intersection, in-
