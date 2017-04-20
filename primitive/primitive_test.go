@@ -14,11 +14,12 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
+	in := Intersection{}
 	shpere := NewSphere(2)
 
 	t.Run("Sphere.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
-			shpere.Intersect(ray)
+			shpere.Intersect(ray, &in)
 		}
 	})
 
@@ -36,7 +37,7 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 
 	t.Run("Triangle.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
-			triangle.Intersect(ray)
+			triangle.Intersect(ray, &in)
 		}
 	})
 
@@ -51,7 +52,7 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 
 	t.Run("Rectangle.Intersect", func(t *testing.B) {
 		for i := 0; i < t.N; i++ {
-			rect.Intersect(ray)
+			rect.Intersect(ray, &in)
 		}
 	})
 
@@ -70,22 +71,22 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
-	pr, distance, normal := rect.Intersect(ray)
+	in := Intersection{}
 
-	if pr == nil {
+	if !rect.Intersect(ray, &in) {
 		t.Error("The rectangle.Intersect method failed: false negative")
 	}
 
 	expectedNormal := geometry.NewVector(0, 0, -1)
 
-	if !normal.Equals(expectedNormal) {
+	if !in.DfGeometry.Normal.Equals(expectedNormal) {
 		t.Errorf("Wrong normal returned by rectangle.Intersect. Expected %s but got %s",
-			expectedNormal, normal)
+			expectedNormal, in.DfGeometry.Normal)
 	}
 
-	if math.Abs(distance-30) > 0.001 {
+	if math.Abs(in.DfGeometry.Distance-30) > 0.001 {
 		t.Errorf("Wrong distance returned by rectangle.Intersect. Exlected %f but got %f",
-			30.0, distance)
+			30.0, in.DfGeometry.Distance)
 	}
 }
 
@@ -99,9 +100,9 @@ func TestRectangleIntersectionWithDistance(t *testing.T) {
 	ray.Mint = geometry.EPSILON
 	ray.Maxt = 25
 
-	pr, _, _ := rect.Intersect(ray)
+	in := Intersection{}
 
-	if pr != nil {
+	if rect.Intersect(ray, &in) {
 		t.Error("The rectangle.Intersect with maxt method failed: false positive")
 	}
 
@@ -115,9 +116,7 @@ func TestRectangleIntersectionWithDistance(t *testing.T) {
 	)
 	ray.Mint = geometry.EPSILON * 2
 
-	pr, _, _ = rect.Intersect(ray)
-
-	if pr != nil {
+	if rect.Intersect(ray, &in) {
 		t.Error("The rectangle.Intersect method failed: false positive")
 	}
 
@@ -134,7 +133,9 @@ func TestSphereIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 0, Z: 1},
 	)
 
-	if pr, _, _ := shpere.Intersect(intersectRay); pr == nil {
+	in := Intersection{}
+
+	if !shpere.Intersect(intersectRay, &in) {
 		t.Errorf("The ray did not hit the sphere but it was expected to - Intersect")
 	}
 
@@ -147,7 +148,7 @@ func TestSphereIntersection(t *testing.T) {
 		geometry.Vector{X: 0, Y: 1, Z: 0},
 	)
 
-	if pr, _, _ := shpere.Intersect(missRay); pr != nil {
+	if shpere.Intersect(missRay, &in) {
 		t.Errorf("The ray intersected the sphere but it was expected not to - Intersect")
 	}
 
