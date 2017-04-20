@@ -138,7 +138,7 @@ func getCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	if obj, err := primitive.NewObject("data/objs/alfa147.obj"); err != nil {
 		fmt.Printf("Error loading obj alfa147: %s\n", err)
 	} else {
-		objTransform := transform.Translate(geometry.NewVector(0, -3, 1)).Multiply(
+		objTransform := transform.Translate(geometry.NewVector(-2.5, -5, 3)).Multiply(
 			transform.UniformScale(0.05).Multiply(
 				transform.RotateX(-90),
 				// Multiply(
