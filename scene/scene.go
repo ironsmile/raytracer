@@ -256,7 +256,7 @@ func (s *Scene) InitScene() {
 		obj.Name = "First teapot"
 		obj.Mat.Refl = 0.0
 		obj.Mat.Diff = 0.3
-		obj.Mat.Color = geometry.NewColor(0.3, 1, 0)
+		obj.Mat.Color = geometry.NewColor(0.557, 0.286, 0.643)
 		obj.SetTransform(
 			transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
 				transform.UniformScale(0.01),
