@@ -19,9 +19,8 @@ type Primitive interface {
 	GetTransforms() (o2w, w2o *transform.Transform)
 	CanIntersect() bool
 	Refine() []Primitive
-
-	GetColor() *geometry.Color
 	GetMaterial() *mat.Material
+	GetColor() *geometry.Color
 	IsLight() bool
 	GetLightSource() geometry.Vector
 	Shape() shape.Shape

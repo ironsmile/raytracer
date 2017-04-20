@@ -12,15 +12,34 @@ import (
 // composed of one BasicPrimitive which alredy has an implementation of most
 // of the methods.
 type BasePrimitive struct {
-	Mat         mat.Material
-	Light       bool
-	LightSource geometry.Vector
-	shape       shape.Shape
 
+	// The material of this primitive. Would be used after intersections in order to
+	// define its shading properties
+	Mat *mat.Material
+
+	// True if this primitive is alight source
+	Light bool
+
+	// If this primitive is a light source, this is its center.
+	LightSource geometry.Vector
+
+	// Hold the underlying shape of this primitive
+	shape shape.Shape
+
+	// Transformations which would trasform geometry from object to world space and vice versa
 	objToWorld *transform.Transform
 	worldToObj *transform.Transform
 
+	// A bounding box around the primitive in world space
 	worldBBox *bbox.BBox
+
+	// True if this primitive was created by refining some other. If this is the case, then
+	// the parent primitive's properties should be used in many situations. For example,
+	// when shading.
+	fromRefiment bool
+
+	// The original primitive which was the parent of this one during refiment
+	refimentParent Primitive
 }
 
 // CanIntersect returns true when this parimitive can be intersected directly and false
@@ -38,8 +57,11 @@ func (b *BasePrimitive) Refine() []Primitive {
 	var prims []Primitive
 
 	for _, objShape := range b.Shape().Refine() {
-		pr := FromShape(objShape)
-		pr.SetTransform(b.objToWorld)
+		pr := &BasePrimitive{shape: objShape}
+		pr.fromRefiment = true
+		pr.refimentParent = b
+		pr.objToWorld = b.objToWorld
+		pr.worldToObj = b.worldToObj
 		prims = append(prims, pr)
 	}
 
@@ -60,12 +82,18 @@ func (b *BasePrimitive) IsLight() bool {
 // GetColor is a hacky method which assumes the whole primitive is from one color and
 // returns it
 func (b *BasePrimitive) GetColor() *geometry.Color {
+	if b.fromRefiment {
+		return b.refimentParent.GetColor()
+	}
 	return b.Mat.Color
 }
 
 // GetMaterial returns thie primitive's material
 func (b *BasePrimitive) GetMaterial() *mat.Material {
-	return &b.Mat
+	if b.fromRefiment {
+		return b.refimentParent.GetMaterial()
+	}
+	return b.Mat
 }
 
 // Intersect returns whether a ray intersects this primitive and at what distance from
