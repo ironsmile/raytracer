@@ -39,7 +39,7 @@ type BasePrimitive struct {
 	fromRefiment bool
 
 	// The original primitive which was the parent of this one during refiment
-	refimentParent Primitive
+	refinementParent Primitive
 
 	// The unique ID of this primitive
 	id uint64
@@ -62,7 +62,7 @@ func (b *BasePrimitive) Refine() []Primitive {
 	for _, objShape := range b.Shape().Refine() {
 		pr := &BasePrimitive{shape: objShape}
 		pr.fromRefiment = true
-		pr.refimentParent = b
+		pr.refinementParent = b
 		pr.objToWorld = b.objToWorld
 		pr.worldToObj = b.worldToObj
 		prims = append(prims, pr)
@@ -85,7 +85,7 @@ func (b *BasePrimitive) IsLight() bool {
 // GetID returns the unique ID of this primitive in the scene
 func (b *BasePrimitive) GetID() uint64 {
 	if b.fromRefiment {
-		return b.refimentParent.GetID()
+		return b.refinementParent.GetID()
 	}
 	return b.id
 }
@@ -94,7 +94,7 @@ func (b *BasePrimitive) GetID() uint64 {
 // returns it
 func (b *BasePrimitive) GetColor() *geometry.Color {
 	if b.fromRefiment {
-		return b.refimentParent.GetColor()
+		return b.refinementParent.GetColor()
 	}
 	return b.Mat.Color
 }
@@ -102,7 +102,7 @@ func (b *BasePrimitive) GetColor() *geometry.Color {
 // GetMaterial returns thie primitive's material
 func (b *BasePrimitive) GetMaterial() *mat.Material {
 	if b.fromRefiment {
-		return b.refimentParent.GetMaterial()
+		return b.refinementParent.GetMaterial()
 	}
 	return b.Mat
 }
