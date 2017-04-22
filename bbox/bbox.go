@@ -43,7 +43,8 @@ func (b *BBox) Expand(delta float64) {
 
 // SurfaceArea computes the surface area of the six faces of the box
 func (b *BBox) SurfaceArea() float64 {
-	panic("BBox.SurfaceArea is not implemented yet")
+	d := b.Max.Minus(b.Min)
+	return 2 * (d.X*d.Y + d.X*d.Z + d.Y*d.Z)
 }
 
 // Volume coputes the inside volume of the bounding box
@@ -85,8 +86,14 @@ func (b *BBox) Offset(p *geometry.Vector) *geometry.Vector {
 
 // Union returns a bounding box which ecompases the the two input boxes
 func Union(one, other *BBox) *BBox {
-	if one == nil {
+	if one == nil && other == nil {
+		return Null()
+	}
+	if one == nil || one.Min.X == math.MaxFloat64 {
 		return other
+	}
+	if other == nil || other.Min.X == math.MaxFloat64 {
+		return one
 	}
 	union := &BBox{}
 	union.Min.X = math.Min(one.Min.X, other.Min.X)
@@ -232,6 +239,12 @@ func (b *BBox) IntersectEdge(ray geometry.Ray) (bool, float64) {
 // FromPoint returns a new bounding box which bounds around a single post
 func FromPoint(p geometry.Vector) *BBox {
 	return &BBox{Min: p, Max: p}
+}
+
+// Null returns a bounding box which would return false for all intersections and
+// any unions with it would result in a bounding box exatly the same as the other bbox or point
+func Null() *BBox {
+	return FromPoint(geometry.NewVector(math.MaxFloat64, math.MaxFloat64, math.MaxFloat64))
 }
 
 // New returns a bounding box defined by two points

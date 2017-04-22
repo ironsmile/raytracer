@@ -15,8 +15,34 @@ import (
 func TestAggregatorsIntersections(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	prims, _ := example.GetTeapotScene()
-	accel := NewGrid(prims)
 
+	tests := []struct {
+		name  string
+		accel primitive.Primitive
+	}{
+		{
+			name:  "grid",
+			accel: NewGrid(prims),
+		},
+		{
+			name:  "bvh",
+			accel: NewBVH(prims, 3),
+		},
+	}
+
+	for _, test := range tests {
+		accel := test.accel
+		t.Run(test.name, func(t *testing.T) {
+			testIntersectionsWithAggregator(t, prims, accel)
+		})
+	}
+}
+
+func testIntersectionsWithAggregator(
+	t *testing.T,
+	prims []primitive.Primitive,
+	accel primitive.Primitive,
+) {
 	var bb *bbox.BBox
 
 	for _, pr := range prims {

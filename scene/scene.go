@@ -65,7 +65,7 @@ func (s *Scene) InitScene() {
 	s.Lights = lights
 	s.Primitives = prims
 
-	s.accel = accel.NewGrid(prims)
+	s.accel = accel.NewBVH(prims, 3)
 }
 
 // NewScene returns a new demo scene
