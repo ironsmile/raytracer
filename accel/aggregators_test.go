@@ -1,6 +1,7 @@
 package accel
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -65,15 +66,26 @@ func TestAggregatorsIntersections(t *testing.T) {
 
 		if hitAccel != hitAll ||
 			(hitAll && isectAll.DfGeometry.Distance != isectAccel.DfGeometry.Distance) {
-			t.Fatalf(
+
+			msg := fmt.Sprintf(
 				"\nDisagreement: hit accel: %t, hit exhaustive: %t\n"+
-					"Distance: t accel %f, t exhaustive %f\n"+
+					"Distance: accel %f, exhaustive %f\n"+
 					"Ray: org [%f, %f, %f] dir [%f, %f, %f], mint: %f",
 				hitAccel, hitAll,
 				isectAccel.DfGeometry.Distance, isectAll.DfGeometry.Distance,
 				ray.Origin.X, ray.Origin.Y, ray.Origin.Z,
 				ray.Direction.X, ray.Direction.Y, ray.Direction.Z, ray.Mint,
 			)
+
+			if hitAll {
+				msg += fmt.Sprintf("\nAll hit prim: %d", isectAll.Primitive.GetID())
+			}
+
+			if hitAccel {
+				msg += fmt.Sprintf("\nAccel hit prim: %d", isectAccel.Primitive.GetID())
+			}
+
+			t.Fatal(msg)
 		}
 
 		if hitAll {
