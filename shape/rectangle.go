@@ -34,7 +34,11 @@ func (r *Rectangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
 
 	d := geometry.NewVector(0, 0, 0).Minus(ray.Origin).Product(normal)
-	d /= ray.Direction.Product(normal)
+	b := ray.Direction.Product(normal)
+
+	if b != 0 {
+		d /= b
+	}
 
 	if d < ray.Mint || d > ray.Maxt {
 		return false
