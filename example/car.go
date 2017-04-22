@@ -1,4 +1,4 @@
-package scene
+package example
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
-func getCarScene() ([]primitive.Primitive, []primitive.Primitive) {
+// GetCarScene returns a predominantly emtpy scene with the alfa147 in the middle
+func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	var primitives []primitive.Primitive
 	var lights []primitive.Primitive
 

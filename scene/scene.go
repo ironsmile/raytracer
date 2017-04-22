@@ -2,6 +2,7 @@ package scene
 
 import (
 	"github.com/ironsmile/raytracer/accel"
+	"github.com/ironsmile/raytracer/example"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
 )
@@ -58,8 +59,8 @@ func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
 
 // InitScene programatically creates and loads a demo scene
 func (s *Scene) InitScene() {
-	prims, lights := getTeapotScene()
-	// prims, lights := getCarScene()
+	prims, lights := example.GetTeapotScene()
+	// prims, lights := example.GetCarScene()
 
 	s.Lights = lights
 	s.Primitives = prims

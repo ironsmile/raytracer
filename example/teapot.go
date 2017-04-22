@@ -1,4 +1,4 @@
-package scene
+package example
 
 import (
 	"fmt"
@@ -9,7 +9,8 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
-func getTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
+// GetTeapotScene returns the default teapot scene used throughout the development
+func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	var primitives []primitive.Primitive
 	var lights []primitive.Primitive
 
