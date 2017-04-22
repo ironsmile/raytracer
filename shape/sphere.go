@@ -40,6 +40,10 @@ func (s *Sphere) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 		return false
 	}
 
+	if dg == nil {
+		return true
+	}
+
 	dg.Distance = retdist
 	dg.Normal = s.GetNormal(ray.At(retdist))
 
@@ -48,30 +52,7 @@ func (s *Sphere) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 
 // IntersectP implements the shape interface
 func (s *Sphere) IntersectP(ray geometry.Ray) bool {
-	var d = ray.Direction
-	var o = ray.Origin
-
-	var a = d.X*d.X + d.Y*d.Y + d.Z*d.Z
-	var b = 2 * (d.X*o.X + d.Y*o.Y + d.Z*o.Z)
-	var c = o.X*o.X + o.Y*o.Y + o.Z*o.Z - s.radius*s.radius
-
-	tNear, tFar, ok := utils.Quadratic(a, b, c)
-
-	if !ok || tNear < 0 {
-		return false
-	}
-
-	var retdist = tNear
-
-	if tNear < 0 {
-		retdist = tFar
-	}
-
-	if retdist > ray.Maxt || retdist < ray.Mint {
-		return false
-	}
-
-	return true
+	return s.Intersect(ray, nil)
 }
 
 // GetNormal implements the primitive interface

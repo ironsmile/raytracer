@@ -51,6 +51,10 @@ func (m *MeshTriangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) boo
 		return false
 	}
 
+	if dg == nil {
+		return true
+	}
+
 	dg.Distance = t
 
 	if m.face.References[0].HasNormal() && m.face.References[1].HasNormal() &&
@@ -82,40 +86,7 @@ func (m *MeshTriangle) interpolatedNormal(b1, b2 float64) geometry.Vector {
 
 // IntersectP implements the Shape interface
 func (m *MeshTriangle) IntersectP(ray geometry.Ray) bool {
-	p1, p2, p3 := m.getPoints()
-	e1 := p2.Minus(p1)
-	e2 := p3.Minus(p1)
-
-	s1 := ray.Direction.Cross(e2)
-	divisor := s1.Product(e1)
-
-	if divisor == 0 {
-		return false
-	}
-
-	invDivisor := 1 / divisor
-
-	d := ray.Origin.Minus(p1)
-	b1 := d.Product(s1) * invDivisor
-
-	if b1 < 0 || b1 > 1 {
-		return false
-	}
-
-	s2 := d.Cross(e1)
-	b2 := ray.Direction.Product(s2) * invDivisor
-
-	if b2 < 0 || b1+b2 > 1 {
-		return false
-	}
-
-	t := e2.Product(s2) * invDivisor
-
-	if t < ray.Mint || t > ray.Maxt {
-		return false
-	}
-
-	return true
+	return m.Intersect(ray, nil)
 }
 
 func (m *MeshTriangle) getPoints() (p1, p2, p3 geometry.Vector) {

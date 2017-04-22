@@ -46,28 +46,15 @@ func (r *Rectangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 		return false
 	}
 
-	dg.Distance = d
-	dg.Normal = normal
+	if dg != nil {
+		dg.Distance = d
+		dg.Normal = normal
+	}
 
 	return true
 }
 
 // IntersectP implements the Shape interface
 func (r *Rectangle) IntersectP(ray geometry.Ray) bool {
-	normal := geometry.Vector{X: 0, Y: 0, Z: -1}
-
-	d := geometry.NewVector(0, 0, 0).Minus(ray.Origin).Product(normal)
-	d /= ray.Direction.Product(normal)
-
-	if d < ray.Mint || d > ray.Maxt {
-		return false
-	}
-
-	hp := ray.At(d)
-
-	if hp.X >= -0.5*r.width && hp.X <= 0.5*r.width && hp.Y >= -0.5*r.height && hp.Y <= 0.5*r.height {
-		return true
-	}
-
-	return false
+	return r.Intersect(ray, nil)
 }
