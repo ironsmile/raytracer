@@ -71,22 +71,6 @@ func ConcentricSampleDisk(u1, u2 float64) (float64, float64) {
 	return r * math.Cos(theta), r * math.Sin(theta)
 }
 
-// Min returns the minimal value betwee two float64s
-func Min(a, b float64) float64 {
-	if a <= b {
-		return a
-	}
-	return b
-}
-
-// Max returns the maximal value betwee two float64s
-func Max(a, b float64) float64 {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // Quadratic solves a quadratic equation and returns the two solutions of there are any.
 // Its last return value is a boolean and true when there is a solution. The first two
 // values are the solutions.

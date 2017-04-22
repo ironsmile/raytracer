@@ -89,12 +89,12 @@ func Union(one, other *BBox) *BBox {
 		return other
 	}
 	union := &BBox{}
-	union.Min.X = utils.Min(one.Min.X, other.Min.X)
-	union.Min.Y = utils.Min(one.Min.Y, other.Min.Y)
-	union.Min.Z = utils.Min(one.Min.Z, other.Min.Z)
-	union.Max.X = utils.Max(one.Max.X, other.Max.X)
-	union.Max.Y = utils.Max(one.Max.Y, other.Max.Y)
-	union.Max.Z = utils.Max(one.Max.Z, other.Max.Z)
+	union.Min.X = math.Min(one.Min.X, other.Min.X)
+	union.Min.Y = math.Min(one.Min.Y, other.Min.Y)
+	union.Min.Z = math.Min(one.Min.Z, other.Min.Z)
+	union.Max.X = math.Max(one.Max.X, other.Max.X)
+	union.Max.Y = math.Max(one.Max.Y, other.Max.Y)
+	union.Max.Z = math.Max(one.Max.Z, other.Max.Z)
 	return union
 }
 
@@ -108,12 +108,12 @@ func UnionPoint(bb *BBox, p geometry.Vector) *BBox {
 		}
 	}
 	union := &BBox{}
-	union.Min.X = utils.Min(bb.Min.X, p.X)
-	union.Min.Y = utils.Min(bb.Min.Y, p.Y)
-	union.Min.Z = utils.Min(bb.Min.Z, p.Z)
-	union.Max.X = utils.Max(bb.Max.X, p.X)
-	union.Max.Y = utils.Max(bb.Max.Y, p.Y)
-	union.Max.Z = utils.Max(bb.Max.Z, p.Z)
+	union.Min.X = math.Min(bb.Min.X, p.X)
+	union.Min.Y = math.Min(bb.Min.Y, p.Y)
+	union.Min.Z = math.Min(bb.Min.Z, p.Z)
+	union.Max.X = math.Max(bb.Max.X, p.X)
+	union.Max.Y = math.Max(bb.Max.Y, p.Y)
+	union.Max.Z = math.Max(bb.Max.Z, p.Z)
 	return union
 }
 
@@ -237,7 +237,7 @@ func FromPoint(p geometry.Vector) *BBox {
 // New returns a bounding box defined by two points
 func New(p1, p2 geometry.Vector) *BBox {
 	return &BBox{
-		Min: geometry.NewVector(utils.Min(p1.X, p2.X), utils.Min(p1.Y, p2.Y), utils.Min(p1.Z, p2.Y)),
-		Max: geometry.NewVector(utils.Max(p1.X, p2.X), utils.Max(p1.Y, p2.Y), utils.Max(p1.Z, p2.Y)),
+		Min: geometry.NewVector(math.Min(p1.X, p2.X), math.Min(p1.Y, p2.Y), math.Min(p1.Z, p2.Y)),
+		Max: geometry.NewVector(math.Max(p1.X, p2.X), math.Max(p1.Y, p2.Y), math.Max(p1.Z, p2.Y)),
 	}
 }
