@@ -9,5 +9,6 @@ func NewRectangle(w, h float64) *BasePrimitive {
 	rec := &BasePrimitive{}
 	rec.shape = shape.NewRectangle(w, h)
 	rec.SetTransform(transform.Identity())
+	rec.id = GetNewID()
 	return rec
 }

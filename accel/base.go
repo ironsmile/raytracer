@@ -77,3 +77,8 @@ func (b *Base) GetTransforms() (*transform.Transform, *transform.Transform) {
 func (b *Base) SetTransform(*transform.Transform) {
 	panic("SetTransform should not be called for accelerator")
 }
+
+// GetID implements the primitive interface
+func (b *Base) GetID() uint64 {
+	panic("GetID should not be called for accelerator")
+}

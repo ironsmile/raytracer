@@ -14,5 +14,6 @@ func NewObject(filePath string) (*BasePrimitive, error) {
 	}
 	obj := &BasePrimitive{shape: oShape}
 	obj.SetTransform(transform.Identity())
+	obj.id = GetNewID()
 	return obj, nil
 }

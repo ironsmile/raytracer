@@ -24,6 +24,7 @@ type Primitive interface {
 	IsLight() bool
 	GetLightSource() geometry.Vector
 	Shape() shape.Shape
+	GetID() uint64
 }
 
 // Intersection holds information about a ray–primitive intersection, in-

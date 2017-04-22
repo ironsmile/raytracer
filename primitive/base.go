@@ -40,6 +40,9 @@ type BasePrimitive struct {
 
 	// The original primitive which was the parent of this one during refiment
 	refimentParent Primitive
+
+	// The unique ID of this primitive
+	id uint64
 }
 
 // CanIntersect returns true when this parimitive can be intersected directly and false
@@ -77,6 +80,14 @@ func (b *BasePrimitive) GetLightSource() geometry.Vector {
 // IsLight returns true if this primitive is a light source
 func (b *BasePrimitive) IsLight() bool {
 	return b.Light
+}
+
+// GetID returns the unique ID of this primitive in the scene
+func (b *BasePrimitive) GetID() uint64 {
+	if b.fromRefiment {
+		return b.refimentParent.GetID()
+	}
+	return b.id
 }
 
 // GetColor is a hacky method which assumes the whole primitive is from one color and
