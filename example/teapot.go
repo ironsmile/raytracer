@@ -1,6 +1,8 @@
 package example
 
 import (
+	"fmt"
+
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
@@ -181,21 +183,21 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
 
-	// if obj, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
-	// 	fmt.Printf("Error loading obj teapot: %s\n", err)
-	// } else {
-	// 	objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
-	// 		transform.UniformScale(0.01),
-	// 	)
-	// 	obj.Mat = &mat.Material{
-	// 		Refl:  0.0,
-	// 		Diff:  0.3,
-	// 		Color: geometry.NewColor(0.557, 0.286, 0.643),
-	// 	}
-	// 	obj.SetTransform(objTransform)
+	if obj, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
+		fmt.Printf("Error loading obj teapot: %s\n", err)
+	} else {
+		objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
+			transform.UniformScale(0.01),
+		)
+		obj.Mat = &mat.Material{
+			Refl:  0.0,
+			Diff:  0.3,
+			Color: geometry.NewColor(0.557, 0.286, 0.643),
+		}
+		obj.SetTransform(objTransform)
 
-	// 	primitives = append(primitives, obj)
-	// }
+		primitives = append(primitives, obj)
+	}
 
 	// "Blue Rectangle"
 	blueRect := primitive.NewRectangle(1, 0.5)
