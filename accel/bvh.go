@@ -1,6 +1,7 @@
 package accel
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -112,6 +113,8 @@ func NewBVH(p []primitive.Primitive, mp int) *BVH {
 
 	var offset int
 	bvh.flattenBVHTree(root, &offset)
+
+	fmt.Printf("Final BVH has %d nodes\n", totalNodes)
 
 	return bvh
 }
@@ -235,7 +238,7 @@ func (bvh *BVH) bvhRecursiveBuild(
 
 			// if nPrimitives > bvh.maxPrimsInNode check can be moved in the leaf creation in
 			// the first if nPrimitives == 1
-			if nPrimitives > bvh.maxPrimsInNode || int(minCost) < nPrimitives {
+			if nPrimitives > bvh.maxPrimsInNode || minCost < float64(nPrimitives) {
 				mid = partitionPrims(buildData,
 					compareToBucket(minCostSplit, nBuckets, dim, centroidBound))
 			} else {
@@ -389,12 +392,12 @@ type bvhSplitFunction func(bvhPrimitiveInfo) bool
 
 func compareToBucket(splitBucket, nBuckets, dim int, centroidBounds *bbox.BBox) bvhSplitFunction {
 	return func(p bvhPrimitiveInfo) bool {
-		b := nBuckets * int((p.centroid.ByAxis(dim)-centroidBounds.Min.ByAxis(dim))/
-			(centroidBounds.Max.ByAxis(dim)-centroidBounds.Min.ByAxis(dim)))
+		b := int(float64(nBuckets) * (p.centroid.ByAxis(dim) - centroidBounds.Min.ByAxis(dim)) /
+			(centroidBounds.Max.ByAxis(dim) - centroidBounds.Min.ByAxis(dim)))
 		if b == nBuckets {
 			b = nBuckets - 1
 		}
-		return b < splitBucket
+		return b <= splitBucket
 	}
 }
 
