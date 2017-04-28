@@ -18,6 +18,9 @@ import (
 // considered from near to far along the ray, it is possible to stop performing
 // intersection tests once an intersection has been found and it is certain that
 // it is not possible for there to be any closer intersections.
+// One slight improvements to a fully naive Grid is that all primitives which are not
+// intersectable will get their own sub-grids after refining. The idea behid this is that
+// most of the time such structures are tightly packed objects with many sub primitives.
 type Grid struct {
 	Base
 

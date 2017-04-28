@@ -108,7 +108,7 @@ func Union(one, other *BBox) *BBox {
 // UnionPoint return a new bounding box which includes the original bounding box and a
 // point.
 func UnionPoint(bb *BBox, p geometry.Vector) *BBox {
-	if bb == nil {
+	if bb == nil || bb.Max.X == math.MaxFloat64 {
 		return &BBox{
 			Max: p,
 			Min: p,
@@ -179,6 +179,66 @@ func (b *BBox) IntersectP(ray geometry.Ray) (bool, float64, float64) {
 	}
 
 	return true, t0, t1
+}
+
+// IntersectPOptimized uses an already calculated invDir and dirIsNeg for calculating ray-box
+// intersections.
+func (b *BBox) IntersectPOptimized(ray *geometry.Ray, invDir *geometry.Vector, dirIsNeg [3]bool) bool {
+	var p0x, p0y, p1x, p1y float64
+
+	if dirIsNeg[0] {
+		p0x = b.Max.X
+		p0y = b.Min.X
+	} else {
+		p0x = b.Min.X
+		p0y = b.Max.X
+	}
+
+	if dirIsNeg[1] {
+		p1x = b.Max.Y
+		p1y = b.Min.Y
+	} else {
+		p1x = b.Min.Y
+		p1y = b.Max.Y
+	}
+
+	tmin := (p0x - ray.Origin.X) * invDir.X
+	tmax := (p0y - ray.Origin.X) * invDir.X
+	tymin := (p1x - ray.Origin.Y) * invDir.Y
+	tymax := (p1y - ray.Origin.Y) * invDir.Y
+	if tmin > tymax || tymin > tmax {
+		return false
+	}
+	if tymin > tmin {
+		tmin = tymin
+	}
+	if tymax < tmax {
+		tmax = tymax
+	}
+
+	var p2x, p2y float64
+
+	if dirIsNeg[2] {
+		p2x = b.Max.Z
+		p2y = b.Min.Z
+	} else {
+		p2x = b.Min.Z
+		p2y = b.Max.Z
+	}
+
+	tzmin := (p2x - ray.Origin.Z) * invDir.Z
+	tzmax := (p2y - ray.Origin.Z) * invDir.Z
+
+	if (tmin > tzmax) || (tzmin > tmax) {
+		return false
+	}
+	if tzmin > tmin {
+		tmin = tzmin
+	}
+	if tzmax < tmax {
+		tmax = tzmax
+	}
+	return (tmin < ray.Maxt) && (tmax > ray.Mint)
 }
 
 // IntersectEdge tells whether a ray intersects any of the edges of this bbox

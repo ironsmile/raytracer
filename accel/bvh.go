@@ -72,24 +72,7 @@ func NewBVH(p []primitive.Primitive, mp int) *BVH {
 		maxPrimsInNode: int(math.Min(float64(mp), 255.0)),
 	}
 
-	// Fully refine the primitives and add them in the bvh.primitives
-	todo := NewPriorityQueue(p)
-
-	for todo.Len() > 0 {
-		prim := todo.PopPrimitive()
-		if prim.CanIntersect() {
-			bvh.primitives = append(bvh.primitives, prim)
-			continue
-		}
-
-		for _, deg := range prim.Refine() {
-			if deg.CanIntersect() {
-				bvh.primitives = append(bvh.primitives, deg)
-			} else {
-				todo.PushPrimitive(deg)
-			}
-		}
-	}
+	bvh.primitives = FullyRefinePrimitives(p)
 
 	// Nothing else to do, this would be an empty BVH
 	if len(bvh.primitives) == 0 {
@@ -145,7 +128,8 @@ func (bvh *BVH) bvhRecursiveBuild(
 ) (*bvhBuildNode, []primitive.Primitive) {
 	(*totalNodes)++
 
-	var start int
+	var centroidBound *bbox.BBox
+	var start, dim, mid int
 	end := len(buildData)
 
 	node := &bvhBuildNode{}
@@ -156,7 +140,7 @@ func (bvh *BVH) bvhRecursiveBuild(
 	}
 
 	nPrimitives := end - start
-	if nPrimitives <= 1 {
+	if nPrimitives == 1 {
 		// Create leaf bvhBuildNode
 		firstPrimOffset := len(orderedPrims)
 		for i := start; i < end; i++ {
@@ -164,16 +148,19 @@ func (bvh *BVH) bvhRecursiveBuild(
 			orderedPrims = append(orderedPrims, bvh.primitives[primNum])
 		}
 		node.InitLeaf(firstPrimOffset, nPrimitives, bb)
-	} else {
-		// build of primitive centroid and dim
-		var centroidBound *bbox.BBox
-		for i := start; i < end; i++ {
-			centroidBound = bbox.UnionPoint(centroidBound, buildData[i].centroid)
-		}
-		dim := centroidBound.MaximumExtend()
-		// partition primitives in two sets and build children
-		mid := (start + end) / 2
-		if centroidBound.Max.ByAxis(dim) == centroidBound.Min.ByAxis(dim) {
+		return node, orderedPrims
+	}
+
+	// build of primitive centroid and dim
+	for i := start; i < end; i++ {
+		centroidBound = bbox.UnionPoint(centroidBound, buildData[i].centroid)
+	}
+	dim = centroidBound.MaximumExtend()
+	// partition primitives in two sets and build children
+	mid = (start + end) / 2
+	if centroidBound.Max.ByAxis(dim) == centroidBound.Min.ByAxis(dim) {
+
+		if nPrimitives <= bvh.maxPrimsInNode {
 			firstPrimOffset := len(orderedPrims)
 			for i := start; i < end; i++ {
 				primNum := buildData[i].primitiveNumber
@@ -182,81 +169,89 @@ func (bvh *BVH) bvhRecursiveBuild(
 			node.InitLeaf(firstPrimOffset, nPrimitives, bb)
 			return node, orderedPrims
 		}
-		// Partition primitives base on the Serfice Area Heuristic split method
-		if nPrimitives <= 4 {
-			// Instead of sort one can use C++'s std::nth_element-like function to partinion
-			// the slice in two parts in O(n).
-			sort.Slice(buildData, func(i, j int) bool {
-				return buildData[i].centroid.ByAxis(dim) < buildData[j].centroid.ByAxis(dim)
-			})
-		} else {
-			const nBuckets = 12
-			var buckets [nBuckets]bucketInfo
-			for i := start; i < end; i++ {
-				b := int(nBuckets * ((buildData[i].centroid.ByAxis(dim) - centroidBound.Min.ByAxis(dim)) /
-					(centroidBound.Max.ByAxis(dim) - centroidBound.Min.ByAxis(dim))))
-
-				if b == nBuckets {
-					b = nBuckets - 1
-				}
-
-				buckets[b].count++
-				buckets[b].bounds = bbox.Union(buckets[b].bounds, buildData[i].bounds)
-			}
-
-			const traversalCost = 0.25 // relative to ray-bbox intersection
-
-			var cost [nBuckets - 1]float64
-
-			for i := 0; i < nBuckets-1; i++ {
-				var b0, b1 = bbox.Null(), bbox.Null()
-				var count0, count1 int
-				for j := 0; j < i; j++ {
-					b0 = bbox.Union(b0, buckets[j].bounds)
-					count0 += buckets[j].count
-				}
-				for j := i + 1; j < nBuckets; j++ {
-					b1 = bbox.Union(b1, buckets[j].bounds)
-					count1 += buckets[j].count
-				}
-
-				cost[i] = traversalCost + (float64(count0)*b0.SurfaceArea()+
-					float64(count1)*b1.SurfaceArea())/
-					bb.SurfaceArea()
-			}
-
-			var minCost = cost[0]
-			var minCostSplit int
-
-			for i := 1; i < nBuckets-1; i++ {
-				if minCost >= cost[i] {
-					continue
-				}
-				minCost = cost[i]
-				minCostSplit = i
-			}
-
-			// if nPrimitives > bvh.maxPrimsInNode check can be moved in the leaf creation in
-			// the first if nPrimitives == 1
-			if nPrimitives > bvh.maxPrimsInNode || minCost < float64(nPrimitives) {
-				mid = partitionPrims(buildData,
-					compareToBucket(minCostSplit, nBuckets, dim, centroidBound))
-			} else {
-				firstPrimOffset := len(orderedPrims)
-				for i := start; i < end; i++ {
-					primNum := buildData[i].primitiveNumber
-					orderedPrims = append(orderedPrims, bvh.primitives[primNum])
-				}
-				node.InitLeaf(firstPrimOffset, nPrimitives, bb)
-				return node, orderedPrims
-			}
-		}
 
 		c0, c0ordered := bvh.bvhRecursiveBuild(buildData[start:mid], totalNodes, orderedPrims)
 		c1, c1ordered := bvh.bvhRecursiveBuild(buildData[mid:], totalNodes, c0ordered)
 		orderedPrims = c1ordered
 		node.InitInterior(dim, c0, c1)
+		return node, orderedPrims
 	}
+
+	// Partition primitives base on the Serfice Area Heuristic split method
+	if nPrimitives <= 4 {
+		// Instead of sort one can use C++'s std::nth_element-like function to partinion
+		// the slice in two parts in O(n).
+		sort.Slice(buildData, func(i, j int) bool {
+			return buildData[i].centroid.ByAxis(dim) < buildData[j].centroid.ByAxis(dim)
+		})
+	} else {
+		const nBuckets = 12
+		var buckets [nBuckets]bucketInfo
+		for i := start; i < end; i++ {
+			b := int(nBuckets *
+				((buildData[i].centroid.ByAxis(dim) - centroidBound.Min.ByAxis(dim)) /
+					(centroidBound.Max.ByAxis(dim) - centroidBound.Min.ByAxis(dim))))
+
+			if b == nBuckets {
+				b = nBuckets - 1
+			}
+
+			buckets[b].count++
+			buckets[b].bounds = bbox.Union(buckets[b].bounds, buildData[i].bounds)
+		}
+
+		const traversalCost = 0.85 // relative to ray-bbox intersection
+
+		var cost [nBuckets - 1]float64
+
+		for i := 0; i < nBuckets-1; i++ {
+			var b0, b1 = bbox.Null(), bbox.Null()
+			var count0, count1 int
+			for j := 0; j < i; j++ {
+				b0 = bbox.Union(b0, buckets[j].bounds)
+				count0 += buckets[j].count
+			}
+			for j := i + 1; j < nBuckets; j++ {
+				b1 = bbox.Union(b1, buckets[j].bounds)
+				count1 += buckets[j].count
+			}
+
+			cost[i] = traversalCost + (float64(count0)*b0.SurfaceArea()+
+				float64(count1)*b1.SurfaceArea())/
+				bb.SurfaceArea()
+		}
+
+		var minCost = cost[0]
+		var minCostSplit int
+
+		for i := 1; i < nBuckets-1; i++ {
+			if minCost > cost[i] {
+				continue
+			}
+			minCost = cost[i]
+			minCostSplit = i
+		}
+
+		// if nPrimitives > bvh.maxPrimsInNode check can be moved in the leaf creation in
+		// the first if nPrimitives == 1
+		if nPrimitives > bvh.maxPrimsInNode || minCost < float64(nPrimitives) {
+			mid = partitionPrims(buildData,
+				compareToBucket(minCostSplit, nBuckets, dim, centroidBound))
+		} else {
+			firstPrimOffset := len(orderedPrims)
+			for i := start; i < end; i++ {
+				primNum := buildData[i].primitiveNumber
+				orderedPrims = append(orderedPrims, bvh.primitives[primNum])
+			}
+			node.InitLeaf(firstPrimOffset, nPrimitives, bb)
+			return node, orderedPrims
+		}
+	}
+
+	c0, c0ordered := bvh.bvhRecursiveBuild(buildData[start:mid], totalNodes, orderedPrims)
+	c1, c1ordered := bvh.bvhRecursiveBuild(buildData[mid:], totalNodes, c0ordered)
+	orderedPrims = c1ordered
+	node.InitInterior(dim, c0, c1)
 
 	return node, orderedPrims
 }
@@ -278,10 +273,10 @@ func (bvh *BVH) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
 	}
 
 	var todoOffset, nodeNum int
-	var todo [64]int
+	var todo [256]int
 	for {
 		node := &bvh.nodes[nodeNum]
-		if intersected, _, _ := node.bounds.IntersectP(ray); intersected {
+		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
 			if node.nPrimitives > 0 {
 				// intersect with all primitives
 				for i := 0; i < node.nPrimitives; i++ {
@@ -335,10 +330,10 @@ func (bvh *BVH) IntersectP(ray geometry.Ray) bool {
 	}
 
 	var todoOffset, nodeNum int
-	var todo [64]int
+	var todo [256]int
 	for {
 		node := &bvh.nodes[nodeNum]
-		if intersected, _, _ := node.bounds.IntersectP(ray); intersected {
+		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
 			if node.nPrimitives > 0 {
 				// intersect with all primitives
 				for i := 0; i < node.nPrimitives; i++ {
