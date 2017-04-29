@@ -58,15 +58,15 @@ func (bn *bvhBuildNode) InitInterior(axis int, c0, c1 *bvhBuildNode) {
 
 // linearBVHNode represents a node in the compact tree of bvh
 type linearBVHNode struct {
-	bounds      *bbox.BBox
-	offset      int
-	nPrimitives int
-	axis        int
+	bounds      bbox.BBox
+	offset      uint32
+	nPrimitives uint8
+	axis        uint8
 }
 
 // NewBVH returns a new BVH structure which would accelerate the intersection of the
 // primitives `p`. The mp arguments is the number of primitives that can be in any leaf node.
-func NewBVH(p []primitive.Primitive, mp int) *BVH {
+func NewBVH(p []primitive.Primitive, mp uint8) *BVH {
 
 	bvh := &BVH{
 		maxPrimsInNode: int(math.Min(float64(mp), 255.0)),
@@ -94,7 +94,7 @@ func NewBVH(p []primitive.Primitive, mp int) *BVH {
 
 	bvh.nodes = make([]linearBVHNode, totalNodes)
 
-	var offset int
+	var offset uint32
 	bvh.flattenBVHTree(root, &offset)
 
 	fmt.Printf("Final BVH has %d nodes\n", totalNodes)
@@ -102,17 +102,17 @@ func NewBVH(p []primitive.Primitive, mp int) *BVH {
 	return bvh
 }
 
-func (bvh *BVH) flattenBVHTree(node *bvhBuildNode, offset *int) int {
+func (bvh *BVH) flattenBVHTree(node *bvhBuildNode, offset *uint32) uint32 {
 	linearNode := &bvh.nodes[*offset]
-	linearNode.bounds = node.bounds
+	linearNode.bounds = *node.bounds
 	myOffset := *offset
 	(*offset)++
 
 	if node.nPrimitives > 0 {
-		linearNode.offset = node.firstPrimOffset
-		linearNode.nPrimitives = node.nPrimitives
+		linearNode.offset = uint32(node.firstPrimOffset)
+		linearNode.nPrimitives = uint8(node.nPrimitives)
 	} else {
-		linearNode.axis = node.splitAxis
+		linearNode.axis = uint8(node.splitAxis)
 		linearNode.nPrimitives = 0
 		bvh.flattenBVHTree(node.childern[0], offset)
 		linearNode.offset = bvh.flattenBVHTree(node.childern[1], offset)
@@ -272,14 +272,14 @@ func (bvh *BVH) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
 		invDir.Z < 0,
 	}
 
-	var todoOffset, nodeNum int
-	var todo [256]int
+	var todoOffset, nodeNum uint32
+	var todo [256]uint32
 	for {
 		node := &bvh.nodes[nodeNum]
 		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
 			if node.nPrimitives > 0 {
 				// intersect with all primitives
-				for i := 0; i < node.nPrimitives; i++ {
+				for i := uint32(0); i < uint32(node.nPrimitives); i++ {
 					if bvh.primitives[node.offset+i].Intersect(ray, in) {
 						hit = true
 						ray.Maxt = in.DfGeometry.Distance
@@ -329,14 +329,14 @@ func (bvh *BVH) IntersectP(ray geometry.Ray) bool {
 		invDir.Z < 0,
 	}
 
-	var todoOffset, nodeNum int
-	var todo [256]int
+	var todoOffset, nodeNum uint32
+	var todo [256]uint32
 	for {
 		node := &bvh.nodes[nodeNum]
 		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
 			if node.nPrimitives > 0 {
 				// intersect with all primitives
-				for i := 0; i < node.nPrimitives; i++ {
+				for i := uint32(0); i < uint32(node.nPrimitives); i++ {
 					if bvh.primitives[node.offset+i].IntersectP(ray) {
 						return true
 					}
