@@ -114,12 +114,6 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, in *Intersection) bool {
 		return false
 	}
 
-	worldBound := b.GetWorldBBox()
-	intersected, _, _ := worldBound.IntersectP(ray)
-	if !intersected {
-		return false
-	}
-
 	ray = b.worldToObj.Ray(ray)
 
 	if hit := b.shape.Intersect(ray, &in.DfGeometry); !hit {
@@ -133,12 +127,6 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, in *Intersection) bool {
 // IntersectP returns whether a ray intersects this primitive and nothing more
 func (b *BasePrimitive) IntersectP(ray geometry.Ray) bool {
 	if b.IsLight() {
-		return false
-	}
-
-	worldBound := b.GetWorldBBox()
-	intersected, _, _ := worldBound.IntersectP(ray)
-	if !intersected {
 		return false
 	}
 
