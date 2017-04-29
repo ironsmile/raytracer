@@ -30,9 +30,6 @@ type BasePrimitive struct {
 	objToWorld *transform.Transform
 	worldToObj *transform.Transform
 
-	// A bounding box around the primitive in world space
-	worldBBox *bbox.BBox
-
 	// True if this primitive was created by refining some other. If this is the case, then
 	// the parent primitive's properties should be used in many situations. For example,
 	// when shading.
@@ -157,7 +154,6 @@ func (b *BasePrimitive) Shape() shape.Shape {
 func (b *BasePrimitive) SetTransform(t *transform.Transform) {
 	b.objToWorld = t
 	b.worldToObj = t.Inverse()
-	b.refreshWorldBBox()
 }
 
 // GetTransforms returns the two transformation matrices for this primiitive:
@@ -168,17 +164,9 @@ func (b *BasePrimitive) GetTransforms() (*transform.Transform, *transform.Transf
 
 // GetWorldBBox returns the bound box around this primitive in world space
 func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
-	if b.worldBBox != nil {
-		return b.worldBBox
-	}
-	b.refreshWorldBBox()
-	return b.worldBBox
-}
-
-func (b *BasePrimitive) refreshWorldBBox() {
 	objBBox := b.shape.GetObjectBBox()
-	b.worldBBox = bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
-	b.worldBBox = bbox.UnionPoint(b.worldBBox, b.objToWorld.Point(objBBox.Max))
+	worldBBox := bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
+	return bbox.UnionPoint(worldBBox, b.objToWorld.Point(objBBox.Max))
 }
 
 // FromShape returns a primitive from a given shape
