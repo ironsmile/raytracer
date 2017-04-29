@@ -2,9 +2,9 @@ package scene
 
 import (
 	"github.com/ironsmile/raytracer/accel"
-	"github.com/ironsmile/raytracer/example"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
+	"github.com/ironsmile/raytracer/scene/example"
 )
 
 // Scene is a type which is responsible for loading and managing a scene for rendering.

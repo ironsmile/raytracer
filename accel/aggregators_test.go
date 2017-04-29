@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/ironsmile/raytracer/bbox"
-	"github.com/ironsmile/raytracer/example"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
+	"github.com/ironsmile/raytracer/scene/example"
 )
 
 func TestAggregatorsIntersections(t *testing.T) {
