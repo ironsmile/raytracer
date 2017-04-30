@@ -25,7 +25,12 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	reflectiveWallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
 
 	// "rect-floor"
-	rect := primitive.NewRectangle(0.5, 1)
+	rect := primitive.NewQuad(
+		geometry.NewVector(-0.5, 1, 0),
+		geometry.NewVector(0.5, 1, 0),
+		geometry.NewVector(0.5, -1, 0),
+		geometry.NewVector(-0.5, -1, 0),
+	)
 	rect.Mat = &wallMaterial
 	rect.SetTransform(
 		transform.Translate(geometry.NewVector(-10, -5, 0)).Multiply(
@@ -34,11 +39,17 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-floor")
 
 	primitives = append(primitives, rect)
 
 	// "rect-ceiling"
-	rect = primitive.NewRectangle(0.5, 1)
+	rect = primitive.NewQuad(
+		geometry.NewVector(-0.5, 1, 0),
+		geometry.NewVector(0.5, 1, 0),
+		geometry.NewVector(0.5, -1, 0),
+		geometry.NewVector(-0.5, -1, 0),
+	)
 	rect.Mat = &wallMaterial
 	rect.SetTransform(
 		transform.Translate(geometry.NewVector(-10, 16, 0)).Multiply(
@@ -47,11 +58,17 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-ceiling")
 
 	primitives = append(primitives, rect)
 
 	// "rect-left"
-	rect = primitive.NewRectangle(1, 0.5)
+	rect = primitive.NewQuad(
+		geometry.NewVector(-1, 0.5, 0),
+		geometry.NewVector(1, 0.5, 0),
+		geometry.NewVector(1, -0.5, 0),
+		geometry.NewVector(-1, -0.5, 0),
+	)
 	rect.Mat = &wallMaterial
 	rect.SetTransform(
 		transform.RotateY(270).Multiply(
@@ -60,11 +77,17 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-left")
 
 	primitives = append(primitives, rect)
 
 	// "rect-right-mirror"
-	rect = primitive.NewRectangle(1, 0.5)
+	rect = primitive.NewQuad(
+		geometry.NewVector(-1, 0.5, 0),
+		geometry.NewVector(1, 0.5, 0),
+		geometry.NewVector(1, -0.5, 0),
+		geometry.NewVector(-1, -0.5, 0),
+	)
 	rect.Mat = &reflectiveWallMaterial
 	rect.SetTransform(
 		transform.RotateY(90).Multiply(
@@ -73,22 +96,34 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-right-mirror")
 
 	primitives = append(primitives, rect)
 
 	// "rect-front"
-	rect = primitive.NewRectangle(1, 0.5)
+	rect = primitive.NewQuad(
+		geometry.NewVector(-1, 0.5, 0),
+		geometry.NewVector(1, 0.5, 0),
+		geometry.NewVector(1, -0.5, 0),
+		geometry.NewVector(-1, -0.5, 0),
+	)
 	rect.Mat = &wallMaterial
 	rect.SetTransform(
 		transform.Scale(68, 68, 1).Multiply(
 			transform.Translate(geometry.NewVector(0, 0, 30)),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-front")
 
 	primitives = append(primitives, rect)
 
 	// "rect-back"
-	rect = primitive.NewRectangle(1, 0.5)
+	rect = primitive.NewQuad(
+		geometry.NewVector(-1, 0.5, 0),
+		geometry.NewVector(1, 0.5, 0),
+		geometry.NewVector(1, -0.5, 0),
+		geometry.NewVector(-1, -0.5, 0),
+	)
 	rect.Mat = &wallMaterial
 	rect.SetTransform(
 		transform.RotateY(180).Multiply(
@@ -97,6 +132,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-back")
 
 	primitives = append(primitives, rect)
 

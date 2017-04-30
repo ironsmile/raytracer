@@ -47,7 +47,12 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 		}
 	})
 
-	rect := NewRectangle(1, 1)
+	rect := NewQuad(
+		geometry.NewVector(-1, 1, 0),
+		geometry.NewVector(1, 1, 0),
+		geometry.NewVector(1, -1, 0),
+		geometry.NewVector(-1, -1, 0),
+	)
 	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
 
 	t.Run("Rectangle.Intersect", func(t *testing.B) {
@@ -64,7 +69,12 @@ func BenchmarkPrimitiveIntersection(t *testing.B) {
 }
 
 func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
-	rect := NewRectangle(1, 1)
+	rect := NewQuad(
+		geometry.NewVector(-1, 1, 0),
+		geometry.NewVector(1, 1, 0),
+		geometry.NewVector(1, -1, 0),
+		geometry.NewVector(-1, -1, 0),
+	)
 	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
 	ray := geometry.NewRay(
 		geometry.Vector{X: 0, Y: 0, Z: 0},
@@ -91,7 +101,12 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 }
 
 func TestRectangleIntersectionWithDistance(t *testing.T) {
-	rect := NewRectangle(1, 1)
+	rect := NewQuad(
+		geometry.NewVector(-1, 1, 0),
+		geometry.NewVector(1, 1, 0),
+		geometry.NewVector(1, -1, 0),
+		geometry.NewVector(-1, -1, 0),
+	)
 	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
 	ray := geometry.NewRay(
 		geometry.Vector{X: 0, Y: 0, Z: 0},
