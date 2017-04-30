@@ -34,6 +34,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-floor")
 
 	primitives = append(primitives, rect)
 
@@ -47,6 +48,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-ceiling")
 
 	primitives = append(primitives, rect)
 
@@ -60,6 +62,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-left")
 
 	primitives = append(primitives, rect)
 
@@ -73,6 +76,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-right-mirror")
 
 	primitives = append(primitives, rect)
 
@@ -84,6 +88,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			transform.Translate(geometry.NewVector(0, 0, 30)),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-front")
 
 	primitives = append(primitives, rect)
 
@@ -97,6 +102,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			),
 		),
 	)
+	primitive.SetName(rect.GetID(), "rect-back")
 
 	primitives = append(primitives, rect)
 
@@ -108,6 +114,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(1, 0, 0),
 	}
 	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
+	primitive.SetName(sphere.GetID(), "big red sphere")
 
 	primitives = append(primitives, sphere)
 
@@ -119,6 +126,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(0.7, 0.7, 1),
 	}
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
+	primitive.SetName(sphere.GetID(), "small sphere")
 
 	primitives = append(primitives, sphere)
 
@@ -130,6 +138,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(0.5, 1, 0),
 	}
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
+	primitive.SetName(sphere.GetID(), "small sphere far away")
 
 	primitives = append(primitives, sphere)
 
@@ -144,6 +153,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Diff:  0.3,
 		Color: geometry.NewColor(0.3, 1, 0),
 	}
+	primitive.SetName(triangle.GetID(), "green triangle")
 
 	primitives = append(primitives, triangle)
 
@@ -155,6 +165,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
 	}
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
+	primitive.SetName(sphere.GetID(), "Visible light source")
 
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
@@ -167,11 +178,12 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
 	}
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
+	primitive.SetName(sphere.GetID(), "Invisible light source")
 
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
 
-	// "Behid the shoulder lightsource"
+	// "Behind the shoulder lightsource"
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
@@ -179,6 +191,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
 	}
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
+	primitive.SetName(sphere.GetID(), "Behind the shoulder lightsource")
 
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
@@ -195,6 +208,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			Color: geometry.NewColor(0.557, 0.286, 0.643),
 		}
 		obj.SetTransform(objTransform)
+		primitive.SetName(obj.GetID(), "teapot")
 
 		primitives = append(primitives, obj)
 	}
@@ -211,6 +225,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 			transform.RotateY(-90),
 		),
 	)
+	primitive.SetName(blueRect.GetID(), "Blue Rectangle")
 	primitives = append(primitives, blueRect)
 
 	return primitives, lights
