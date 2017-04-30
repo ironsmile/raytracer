@@ -28,32 +28,101 @@ func (r *Ray) At(t float64) Vector {
 // Intersect returns the intersection point between two rays. Two rays may not always
 // intersect so that the second argument says wether there is an intersectoin at all
 func (r *Ray) Intersect(o Ray) (Vector, bool) {
-	n := r.Direction.Y*r.Origin.Z + r.Direction.Z*o.Origin.Y - r.Direction.Z*r.Origin.Y -
-		r.Direction.Y*o.Origin.Z
+	const width = 0.03
 
-	m := r.Direction.Y*o.Direction.Z - r.Direction.Z*o.Direction.Y
+	clampInRange := func(p Vector) (Vector, bool) {
+		dist := r.Origin.Distance(p)
+		if dist < r.Mint || dist > r.Maxt {
+			return r.Origin, false
+		}
 
-	v := n / m
-
-	if v < 0 && v > -EPSILON {
-		v = 0
+		return p, true
 	}
 
-	if v < 0 || v > o.Maxt {
-		return o.Direction, false
+	if r.Origin == o.Origin {
+		return r.Origin, true
 	}
 
-	u := (o.Origin.Y + o.Direction.Y*v - r.Origin.Y) / r.Direction.Y
+	d3 := r.Direction.Cross(o.Direction)
 
-	if u < 0 && u > -EPSILON {
-		u = 0
+	if !d3.Equals(NewVector(0, 0, 0)) {
+		matrix := [12]float64{
+			r.Direction.X,
+			-o.Direction.X,
+			d3.X,
+			o.Origin.X - r.Origin.X,
+
+			r.Direction.Y,
+			-o.Direction.Y,
+			d3.Y,
+			o.Origin.Y - r.Origin.Y,
+
+			r.Direction.Z,
+			-o.Direction.Z,
+			d3.Z,
+			o.Origin.Z - r.Origin.Z,
+		}
+
+		result := solve(matrix, 3, 4)
+
+		a := result[3]
+		b := result[7]
+		c := result[11]
+
+		if a >= 0 && b >= 0 {
+			dist := d3.MultiplyScalar(c)
+			if dist.Length() <= width {
+				return clampInRange(r.At(a))
+			}
+			return r.Origin, false
+		}
 	}
 
-	if u < 0 || u > r.Maxt {
-		return o.Direction, false
+	dP := o.Origin.Multiply(r.Origin)
+
+	a2 := r.Direction.Dot(dP)
+	b2 := o.Direction.Dot(dP.Neg())
+
+	if a2 < 0 && b2 < 0 {
+		dist := r.Origin.Distance(dP)
+		if dP.Length() <= width {
+			return clampInRange(r.At(dist))
+		}
+		return r.Origin, false
 	}
 
-	return r.At(u), true
+	p3a := r.Origin.Plus(r.Direction.MultiplyScalar(a2))
+	d3a := o.Origin.Minus(p3a)
+
+	p3b := r.Origin
+	d3b := o.Origin.Plus(o.Direction.MultiplyScalar(b2)).Minus(p3b)
+
+	if b2 < 0 {
+		if d3a.Length() <= width {
+			return clampInRange(p3a)
+		}
+		return r.Origin, false
+	}
+
+	if a2 < 0 {
+		if d3b.Length() <= width {
+			return clampInRange(p3b)
+		}
+		return r.Origin, false
+	}
+
+	if d3a.Length() <= d3b.Length() {
+		if d3a.Length() <= width {
+			return clampInRange(p3a)
+		}
+		return r.Origin, false
+	}
+
+	if d3b.Length() <= width {
+		return clampInRange(p3b)
+	}
+
+	return r.Origin, false
 }
 
 // NewRay retursn a new ray with Min zero and Max the maximum float64 value
@@ -63,4 +132,42 @@ func NewRay(origin, direction Vector) Ray {
 		Direction: direction,
 		Maxt:      math.MaxFloat64,
 	}
+}
+
+func solve(matrix [12]float64, rows, cols int) [12]float64 {
+
+	for i := 0; i < cols-1; i++ {
+		for j := i; j < rows; j++ {
+			if matrix[i+j*cols] != 0 {
+				if i != j {
+					for k := i; k < cols; k++ {
+						temp := matrix[k+j*cols]
+						matrix[k+j*cols] = matrix[k+i*cols]
+						matrix[k+i*cols] = temp
+					}
+				}
+
+				j = i
+
+				for v := 0; v < rows; v++ {
+					if v == j {
+						continue
+					} else {
+						factor := matrix[i+v*cols] / matrix[i+j*cols]
+						matrix[i+v*cols] = 0
+
+						for u := i + 1; u < cols; u++ {
+							matrix[u+v*cols] -= factor * matrix[u+j*cols]
+							matrix[u+j*cols] /= matrix[i+j*cols]
+						}
+						matrix[i+j*cols] = 1
+					}
+				}
+
+				break
+			}
+		}
+	}
+
+	return matrix
 }

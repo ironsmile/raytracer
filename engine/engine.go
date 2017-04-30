@@ -128,11 +128,6 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 			&refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
-	ray.Maxt = retdist
-	if e.ShowBBoxes && depth == 1 && e.Scene.IntersectBBoxEdge(ray) {
-		retColor = *geometry.NewColor(0, 0, 1)
-	}
-
 	return prim, retdist, retColor
 }
 
@@ -161,6 +156,7 @@ func (e *Engine) Render() {
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	var pr primitive.Primitive
 	var accColor geometry.Color
 	var in primitive.Intersection
 
@@ -174,7 +170,29 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			return
 		}
 		ray, weight := e.Camera.GenerateRay(x, y)
-		_, _, accColor = e.Raytrace(ray, 1, &in)
+		pr, _, accColor = e.Raytrace(ray, 1, &in)
+
+		if e.ShowBBoxes {
+			if pr != nil {
+				ray.Maxt = in.DfGeometry.Distance
+			}
+
+			if e.Scene.IntersectBBoxEdge(ray) {
+				accColor = *geometry.NewColor(0, 0, 1)
+			}
+
+			// Debug ray visualization example:
+			//
+			// debugRay := geometry.NewRay(
+			// 	geometry.NewVector(-10.000000, 0.030721, 0.435039),
+			// 	geometry.NewVector(0.882750, -0.448091, -0.141302),
+			// )
+
+			// if _, ok := ray.Intersect(debugRay); ok {
+			// 	accColor = *geometry.NewColor(0, 0, 1)
+			// }
+		}
+
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
 }
