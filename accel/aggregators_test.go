@@ -15,6 +15,7 @@ import (
 func TestAggregatorsIntersections(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	prims, _ := example.GetTeapotScene()
+	prims = FullyRefinePrimitives(prims)
 
 	tests := []struct {
 		name  string
@@ -26,7 +27,7 @@ func TestAggregatorsIntersections(t *testing.T) {
 		},
 		{
 			name:  "bvh",
-			accel: NewBVH(prims, 3),
+			accel: NewBVH(prims, 1),
 		},
 	}
 
@@ -43,9 +44,11 @@ func testIntersectionsWithAggregator(
 	prims []primitive.Primitive,
 	accel primitive.Primitive,
 ) {
+	bboxes := make([]*bbox.BBox, len(prims))
 	var bb *bbox.BBox
 
-	for _, pr := range prims {
+	for i, pr := range prims {
+		bboxes[i] = pr.GetWorldBBox()
 		bb = bbox.Union(bb, pr.GetWorldBBox())
 	}
 
@@ -54,7 +57,7 @@ func testIntersectionsWithAggregator(
 
 	var lastHit geometry.Vector
 
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 40000; i++ {
 		// Choos ray origin for testing accelerator
 		orig := geometry.NewVector(
 			randInRange(bb.Min.X, bb.Max.X),
@@ -85,9 +88,37 @@ func testIntersectionsWithAggregator(
 
 		ray := geometry.NewRay(orig, dir.Normalize())
 		ray.Mint = eps
+		rayAll := ray
 
 		var isectAll, isectAccel primitive.Intersection
-		hitAll := primitive.IntersectMultiple(prims, ray, &isectAll)
+		var hitAll, inconsistentBounds bool
+
+		for i, pr := range prims {
+			if is, _, _ := bboxes[i].IntersectP(rayAll); is {
+				if pr.Intersect(rayAll, &isectAll) {
+					hitAll = true
+					rayAll.Maxt = isectAll.DfGeometry.Distance
+				} else if pr.Intersect(rayAll, &isectAll) {
+					// It is possible for an accelerator to report a hit even though intersection
+					// between the ray and this primitive's bounding box is not reported. This
+					// might be because of a rounding error of float calculations while
+					// intersecting the bounding box. Cases like this would be ignored.
+					inconsistentBounds = true
+				}
+			}
+		}
+
+		if hitAll {
+			lastHit = ray.At(isectAll.DfGeometry.Distance).Plus(
+				isectAll.DfGeometry.Normal.MultiplyScalar(geometry.EPSILON),
+			)
+		}
+
+		if inconsistentBounds {
+			continue
+		}
+
+		// hitAll := primitive.IntersectMultiple(prims, ray, &isectAll)
 		hitAccel := accel.Intersect(ray, &isectAccel)
 
 		if hitAccel != hitAll ||
@@ -104,18 +135,16 @@ func testIntersectionsWithAggregator(
 			)
 
 			if hitAll {
-				msg += fmt.Sprintf("\nAll hit prim: %d", isectAll.Primitive.GetID())
+				msg += fmt.Sprintf("\nAll hit prim: %d (%s)", isectAll.Primitive.GetID(),
+					primitive.GetName(isectAll.Primitive.GetID()))
 			}
 
 			if hitAccel {
-				msg += fmt.Sprintf("\nAccel hit prim: %d", isectAccel.Primitive.GetID())
+				msg += fmt.Sprintf("\nAccel hit prim: %d (%s)", isectAccel.Primitive.GetID(),
+					primitive.GetName(isectAccel.Primitive.GetID()))
 			}
 
 			t.Fatal(msg)
-		}
-
-		if hitAll {
-			lastHit = ray.At(isectAll.DfGeometry.Distance)
 		}
 	}
 }
