@@ -214,19 +214,24 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	}
 
 	// "Blue Rectangle"
-	blueRect := primitive.NewRectangle(1, 0.5)
-	blueRect.Mat = &mat.Material{
+	quad := primitive.NewQuad(
+		geometry.NewVector(-1, 0.5, 0),
+		geometry.NewVector(1, 0.5, 0),
+		geometry.NewVector(1, -0.5, 0),
+		geometry.NewVector(-1, -0.5, 0),
+	)
+	quad.Mat = &mat.Material{
 		Refl:  0.5,
 		Diff:  0.8,
 		Color: geometry.NewColor(0, 0, 1),
 	}
-	blueRect.SetTransform(
+	quad.SetTransform(
 		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(
 			transform.RotateY(-90),
 		),
 	)
-	primitive.SetName(blueRect.GetID(), "Blue Rectangle")
-	primitives = append(primitives, blueRect)
+	primitive.SetName(quad.GetID(), "Blue Rectangle")
+	primitives = append(primitives, quad)
 
 	return primitives, lights
 }
