@@ -13,10 +13,6 @@ import (
 // of the methods.
 type BasePrimitive struct {
 
-	// The material of this primitive. Would be used after intersections in order to
-	// define its shading properties
-	Mat *mat.Material
-
 	// True if this primitive is alight source
 	Light bool
 
@@ -90,18 +86,12 @@ func (b *BasePrimitive) GetID() uint64 {
 // GetColor is a hacky method which assumes the whole primitive is from one color and
 // returns it
 func (b *BasePrimitive) GetColor() *geometry.Color {
-	if b.fromRefiment {
-		return b.refinementParent.GetColor()
-	}
-	return b.Mat.Color
+	return b.shape.GetMaterial().Color
 }
 
 // GetMaterial returns thie primitive's material
 func (b *BasePrimitive) GetMaterial() *mat.Material {
-	if b.fromRefiment {
-		return b.refinementParent.GetMaterial()
-	}
-	return b.Mat
+	return b.shape.GetMaterial()
 }
 
 // Intersect returns whether a ray intersects this primitive and at what distance from

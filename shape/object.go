@@ -3,12 +3,19 @@ package shape
 import (
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/ironsmile/raytracer/mat"
 
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
 
-	"github.com/momchil-atanasov/go-data-front/decoder/obj"
+	"github.com/mokiat/go-data-front/decoder/mtl"
+	"github.com/mokiat/go-data-front/decoder/obj"
 )
+
+const objFileSuffix = ".obj"
+const mtlFileSuffix = ".mtl"
 
 // Object represents a object in 3d space which shape is loaded from a .obj file
 type Object struct {
@@ -35,7 +42,8 @@ func (o *Object) IntersectP(geometry.Ray) bool {
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents
 // it. It places the object at the position, given by its second argument - `center`.
 func NewObject(filePath string) (*Object, error) {
-	decoder := obj.NewDecoder(obj.DefaultLimits())
+	objDecoder := obj.NewDecoder(obj.DefaultLimits())
+	mtlDecoder := mtl.NewDecoder(mtl.DefaultLimits())
 	objFile, err := os.Open(filePath)
 
 	if err != nil {
@@ -43,13 +51,33 @@ func NewObject(filePath string) (*Object, error) {
 	}
 	defer objFile.Close()
 
-	model, err := decoder.Decode(objFile)
+	model, err := objDecoder.Decode(objFile)
 
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("model %s has %d models\n", filePath, len(model.Objects))
+	fmt.Printf("model %s has %d objects\n", filePath, len(model.Objects))
+
+	var matLib *mtl.Library
+
+	if strings.HasSuffix(filePath, objFileSuffix) {
+		materialPath := strings.TrimSuffix(filePath, objFileSuffix)
+		materialPath += mtlFileSuffix
+
+		if matFile, err := os.Open(materialPath); err == nil {
+			defer matFile.Close()
+			matLib, err = mtlDecoder.Decode(matFile)
+
+			if err != nil {
+				return nil, fmt.Errorf("error decoding material file: %s", err)
+			}
+		} else {
+			fmt.Printf("Error opening material file %s: %s\n", materialPath, err)
+		}
+	}
+
+	fmt.Printf("model %s has has a material: %p\n", filePath, matLib)
 
 	o := &Object{}
 	o.model = model
@@ -65,9 +93,27 @@ func NewObject(filePath string) (*Object, error) {
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
 			trianglesCount += len(mesh.Faces)
-			triagularMesh := NewMesh(model, mesh)
-			o.bbox = bbox.Union(o.bbox, triagularMesh.GetObjectBBox())
-			o.meshes = append(o.meshes, triagularMesh)
+			faceMesh := NewMesh(model, mesh)
+
+			if matLib != nil {
+				if foundMat, ok := matLib.FindMaterial(mesh.MaterialName); ok {
+					faceMesh.SetMaterial(mat.Material{
+						Color: geometry.NewColor(
+							foundMat.DiffuseColor.R,
+							foundMat.DiffuseColor.G,
+							foundMat.DiffuseColor.B,
+						),
+						Diff: 1 - foundMat.SpecularExponent/1000,
+					})
+				}
+			}
+
+			if faceMesh.GetMaterial() == nil {
+				faceMesh.SetMaterial(mat.DefaultMetiral())
+			}
+
+			o.bbox = bbox.Union(o.bbox, faceMesh.GetObjectBBox())
+			o.meshes = append(o.meshes, faceMesh)
 		}
 	}
 
@@ -79,6 +125,16 @@ func NewObject(filePath string) (*Object, error) {
 // CanIntersect implements the Shape interface
 func (o *Object) CanIntersect() bool {
 	return false
+}
+
+// GetMaterial implements the Shape interface
+func (o *Object) GetMaterial() *mat.Material {
+	panic("GetMaterial should not  be called for shape.Object")
+}
+
+// SetMaterial implements Shape interface
+func (o *Object) SetMaterial(mat.Material) {
+	panic("SetMaterial should not  be called for shape.Object")
 }
 
 // Refine implemnts the Shape interface

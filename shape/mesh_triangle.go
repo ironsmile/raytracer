@@ -2,17 +2,18 @@ package shape
 
 import (
 	"github.com/ironsmile/raytracer/bbox"
-	"github.com/momchil-atanasov/go-data-front/decoder/obj"
-
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/mat"
+
+	"github.com/mokiat/go-data-front/decoder/obj"
 )
 
 // MeshTriangle is a triangle defined in a object mesh
 type MeshTriangle struct {
 	BasicShape
 
-	model *obj.Model
-	face  *obj.Face
+	mesh *Mesh
+	face *obj.Face
 }
 
 // Intersect implements the Shape interface
@@ -71,9 +72,9 @@ func (m *MeshTriangle) interpolatedNormal(b1, b2 float64) geometry.Vector {
 	// Phong interpolation
 	// http://paulbourke.net/texture_colour/interpolation/
 
-	n1 := m.model.GetNormalFromReference(m.face.References[0])
-	n2 := m.model.GetNormalFromReference(m.face.References[1])
-	n3 := m.model.GetNormalFromReference(m.face.References[2])
+	n1 := m.mesh.model.GetNormalFromReference(m.face.References[0])
+	n2 := m.mesh.model.GetNormalFromReference(m.face.References[1])
+	n3 := m.mesh.model.GetNormalFromReference(m.face.References[2])
 
 	nv1 := geometry.NewVector(n1.X, n1.Y, n1.Z).Normalize()
 	nv2 := geometry.NewVector(n2.X, n2.Y, n2.Z).Normalize()
@@ -90,23 +91,33 @@ func (m *MeshTriangle) IntersectP(ray geometry.Ray) bool {
 }
 
 func (m *MeshTriangle) getPoints() (p1, p2, p3 geometry.Vector) {
-	v1 := m.model.GetVertexFromReference(m.face.References[0])
+	v1 := m.mesh.model.GetVertexFromReference(m.face.References[0])
 	p1 = geometry.NewVector(v1.X, v1.Y, v1.Z)
 
-	v2 := m.model.GetVertexFromReference(m.face.References[1])
+	v2 := m.mesh.model.GetVertexFromReference(m.face.References[1])
 	p2 = geometry.NewVector(v2.X, v2.Y, v2.Z)
 
-	v3 := m.model.GetVertexFromReference(m.face.References[2])
+	v3 := m.mesh.model.GetVertexFromReference(m.face.References[2])
 	p3 = geometry.NewVector(v3.X, v3.Y, v3.Z)
 
 	return
 }
 
+// GetMaterial implements the Shape interface
+func (m *MeshTriangle) GetMaterial() *mat.Material {
+	return m.mesh.GetMaterial()
+}
+
+// SetMaterial implements Shape interface
+func (m *MeshTriangle) SetMaterial(mtl mat.Material) {
+	m.mesh.SetMaterial(mtl)
+}
+
 // NewMeshTriangle returns a newly created mesh triangle
-func NewMeshTriangle(m *obj.Model, face *obj.Face) *MeshTriangle {
+func NewMeshTriangle(m *Mesh, face *obj.Face) *MeshTriangle {
 	mt := MeshTriangle{
-		model: m,
-		face:  face,
+		mesh: m,
+		face: face,
 	}
 
 	p1, p2, p3 := mt.getPoints()

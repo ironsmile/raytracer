@@ -181,16 +181,14 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 				accColor = *geometry.NewColor(0, 0, 1)
 			}
 
-			// Debug ray visualization example:
-			//
-			// debugRay := geometry.NewRay(
-			// 	geometry.NewVector(-10.000000, 0.030721, 0.435039),
-			// 	geometry.NewVector(0.882750, -0.448091, -0.141302),
-			// )
+			debugRay := geometry.NewRay(
+				geometry.NewVector(-10.000000, -0.097124, 0.562618),
+				geometry.NewVector(0.151860, -0.768368, 0.621731),
+			)
 
-			// if _, ok := ray.Intersect(debugRay); ok {
-			// 	accColor = *geometry.NewColor(0, 0, 1)
-			// }
+			if _, ok := ray.Intersect(debugRay); ok {
+				accColor = *geometry.NewColor(1, 1, 0)
+			}
 		}
 
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))

@@ -31,7 +31,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, -25),
 		geometry.NewVector(-25, -5, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-floor")
 	primitives = append(primitives, rect)
 
@@ -42,7 +42,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, 16, -25),
 		geometry.NewVector(10, 16, 30),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-ceiling")
 	primitives = append(primitives, rect)
 
@@ -53,7 +53,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(-25, -5, 30),
 		geometry.NewVector(-25, -5, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-left")
 	primitives = append(primitives, rect)
 
@@ -64,7 +64,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, 30),
 		geometry.NewVector(10, 16, 30),
 	)
-	rect.Mat = &reflectiveWallMaterial
+	rect.Shape().SetMaterial(reflectiveWallMaterial)
 	primitive.SetName(rect.GetID(), "rect-right-mirror")
 	primitives = append(primitives, rect)
 
@@ -75,7 +75,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, 30),
 		geometry.NewVector(-25, -5, 30),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-front")
 	primitives = append(primitives, rect)
 
@@ -86,7 +86,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, -25),
 		geometry.NewVector(10, 16, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-back")
 	primitives = append(primitives, rect)
 
@@ -94,9 +94,9 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere := primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	primitives = append(primitives, sphere)
@@ -106,9 +106,9 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, 1)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	primitives = append(primitives, sphere)
@@ -118,9 +118,9 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
 	primitives = append(primitives, sphere)
@@ -130,18 +130,10 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 		fmt.Printf("Error loading obj alfa147: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-2.5, -5, 3)).Multiply(
-			transform.UniformScale(0.05).Multiply(
-				transform.RotateX(-90),
-				// Multiply(
-				//  transform.RotateZ(140),
-				// ),
+			transform.UniformScale(1).Multiply(
+				transform.RotateX(-180),
 			),
 		)
-		obj.Mat = &mat.Material{
-			Refl:  0.0,
-			Diff:  0.3,
-			Color: geometry.NewColor(0.729, 0.572, 0.780),
-		}
 		obj.SetTransform(objTransform)
 
 		primitives = append(primitives, obj)

@@ -5,7 +5,8 @@ import (
 
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/momchil-atanasov/go-data-front/decoder/obj"
+
+	"github.com/mokiat/go-data-front/decoder/obj"
 )
 
 // Mesh represents a single mesh with triangles
@@ -24,7 +25,7 @@ func NewMesh(model *obj.Model, mesh *obj.Mesh) *Mesh {
 	}
 
 	for _, face := range m.mesh.Faces {
-		m.bbox = bbox.Union(m.bbox, NewMeshTriangle(model, face).GetObjectBBox())
+		m.bbox = bbox.Union(m.bbox, NewMeshTriangle(&m, face).GetObjectBBox())
 	}
 
 	return &m
@@ -55,7 +56,7 @@ func (m *Mesh) Refine() []Shape {
 				faceIndex, m.mesh, len(face.References)))
 		}
 
-		meshTriangles = append(meshTriangles, NewMeshTriangle(m.model, face))
+		meshTriangles = append(meshTriangles, NewMeshTriangle(m, face))
 	}
 	return meshTriangles
 }

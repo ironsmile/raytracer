@@ -3,6 +3,7 @@ package shape
 import (
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/mat"
 )
 
 // The following constants are used as a return values for Intersect. HIT means that the
@@ -21,11 +22,14 @@ type Shape interface {
 	GetObjectBBox() *bbox.BBox
 	CanIntersect() bool
 	Refine() []Shape
+	GetMaterial() *mat.Material
+	SetMaterial(mat.Material)
 }
 
 // BasicShape implements few common methods and properties among all shapes
 type BasicShape struct {
-	bbox *bbox.BBox // in object space
+	bbox     *bbox.BBox // in object space
+	material *mat.Material
 }
 
 // GetObjectBBox returns a bounding box around the shape in object space or nil if no such was
@@ -52,4 +56,18 @@ func (b *BasicShape) Intersect(geometry.Ray, *DifferentialGeometry) bool {
 // IntersectP implements the Shape interface
 func (b *BasicShape) IntersectP(geometry.Ray) bool {
 	panic("IntersectP is not implemented for basic shape")
+}
+
+// GetMaterial implements the Shape interface
+func (b *BasicShape) GetMaterial() *mat.Material {
+	return b.material
+}
+
+// SetMaterial implements Shape interface
+func (b *BasicShape) SetMaterial(mtl mat.Material) {
+	if b.material == nil {
+		b.material = &mtl
+	} else {
+		*b.material = mtl
+	}
 }

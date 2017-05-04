@@ -31,7 +31,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, -25),
 		geometry.NewVector(-25, -5, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-floor")
 	primitives = append(primitives, rect)
 
@@ -42,7 +42,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, 16, -25),
 		geometry.NewVector(10, 16, 30),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-ceiling")
 	primitives = append(primitives, rect)
 
@@ -53,7 +53,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(-25, -5, 30),
 		geometry.NewVector(-25, -5, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-left")
 	primitives = append(primitives, rect)
 
@@ -64,7 +64,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, 30),
 		geometry.NewVector(10, 16, 30),
 	)
-	rect.Mat = &reflectiveWallMaterial
+	rect.Shape().SetMaterial(reflectiveWallMaterial)
 	primitive.SetName(rect.GetID(), "rect-right-mirror")
 	primitives = append(primitives, rect)
 
@@ -75,7 +75,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, 30),
 		geometry.NewVector(-25, -5, 30),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-front")
 	primitives = append(primitives, rect)
 
@@ -86,39 +86,39 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(10, -5, -25),
 		geometry.NewVector(10, 16, -25),
 	)
-	rect.Mat = &wallMaterial
+	rect.Shape().SetMaterial(wallMaterial)
 	primitive.SetName(rect.GetID(), "rect-back")
 	primitives = append(primitives, rect)
 
 	// "big sphere"
 	sphere := primitive.NewSphere(2.5)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
 		Diff:  0.9,
 		Color: geometry.NewColor(1, 0, 0),
-	}
+	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
 	primitive.SetName(sphere.GetID(), "big red sphere")
 	primitives = append(primitives, sphere)
 
 	// "small sphere"
 	sphere = primitive.NewSphere(2)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
 		Diff:  0.4,
 		Color: geometry.NewColor(0.7, 0.7, 1),
-	}
+	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
 	primitive.SetName(sphere.GetID(), "small sphere")
 	primitives = append(primitives, sphere)
 
 	// "small sphere far away"
 	sphere = primitive.NewSphere(1.5)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.9,
 		Diff:  0.4,
 		Color: geometry.NewColor(0.5, 1, 0),
-	}
+	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
 	primitive.SetName(sphere.GetID(), "small sphere far away")
 	primitives = append(primitives, sphere)
@@ -129,11 +129,11 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(-10.99, 0, -3), // b
 		geometry.NewVector(-10.99, 0, 3),  // c
 	})
-	triangle.Mat = &mat.Material{
+	triangle.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
 		Diff:  0.3,
 		Color: geometry.NewColor(0.3, 1, 0),
-	}
+	})
 	primitive.SetName(triangle.GetID(), "green triangle")
 	primitives = append(primitives, triangle)
 
@@ -141,9 +141,9 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Visible light source")
 
@@ -154,9 +154,9 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, 1)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Invisible light source")
 
@@ -167,9 +167,9 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(0.1)
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
-	sphere.Mat = &mat.Material{
+	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
-	}
+	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Behind the shoulder lightsource")
 
@@ -180,13 +180,8 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
-			transform.UniformScale(0.01),
+			transform.UniformScale(0.2),
 		)
-		obj.Mat = &mat.Material{
-			Refl:  0.0,
-			Diff:  0.3,
-			Color: geometry.NewColor(0.557, 0.286, 0.643),
-		}
 		obj.SetTransform(objTransform)
 		primitive.SetName(obj.GetID(), "teapot")
 
@@ -200,11 +195,11 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(1, -0.5, 0),
 		geometry.NewVector(-1, -0.5, 0),
 	)
-	quad.Mat = &mat.Material{
+	quad.Shape().SetMaterial(mat.Material{
 		Refl:  0.5,
 		Diff:  0.8,
 		Color: geometry.NewColor(0, 0, 1),
-	}
+	})
 	quad.SetTransform(
 		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(
 			transform.RotateY(-90),
