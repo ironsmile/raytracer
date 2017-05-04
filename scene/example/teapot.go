@@ -105,6 +105,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere = primitive.NewSphere(2)
 	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
+		Refr:  0.6,
 		Diff:  0.4,
 		Color: geometry.NewColor(0.7, 0.7, 1),
 	})

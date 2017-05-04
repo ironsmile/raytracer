@@ -13,6 +13,7 @@ type Material struct {
 	Color *geometry.Color
 	Refl  float64
 	Diff  float64
+	Refr  float64
 }
 
 func (m *Material) GetSpecular() float64 {

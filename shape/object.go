@@ -103,7 +103,8 @@ func NewObject(filePath string) (*Object, error) {
 							foundMat.DiffuseColor.G,
 							foundMat.DiffuseColor.B,
 						),
-						Diff: 1 - foundMat.SpecularExponent/1000,
+						Diff: foundMat.Dissolve,
+						Refr: 1 - foundMat.Dissolve,
 					})
 				}
 			}

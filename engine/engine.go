@@ -128,6 +128,16 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 			&refColor).MultiplyScalarIP(primMat.Refl))
 	}
 
+	// Refraction
+	if primMat.Refr > 0.0 {
+
+		shadowRayStart := pi.Plus(ray.Direction.MultiplyScalar(geometry.EPSILON))
+		refRay := geometry.NewRay(shadowRayStart, ray.Direction)
+		refRay.Mint = geometry.EPSILON
+		_, _, refrColor := e.Raytrace(refRay, depth+1, in)
+		retColor.PlusIP((&refrColor).MultiplyScalarIP(primMat.Refr))
+	}
+
 	return prim, retdist, retColor
 }
 
