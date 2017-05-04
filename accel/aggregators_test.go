@@ -98,13 +98,13 @@ func testIntersectionsWithAggregator(
 				if pr.Intersect(rayAll, &isectAll) {
 					hitAll = true
 					rayAll.Maxt = isectAll.DfGeometry.Distance
-				} else if pr.Intersect(rayAll, &isectAll) {
-					// It is possible for an accelerator to report a hit even though intersection
-					// between the ray and this primitive's bounding box is not reported. This
-					// might be because of a rounding error of float calculations while
-					// intersecting the bounding box. Cases like this would be ignored.
-					inconsistentBounds = true
 				}
+			} else if pr.Intersect(rayAll, &isectAll) {
+				// It is possible for an accelerator to report a hit even though intersection
+				// between the ray and this primitive's bounding box is not reported. This
+				// might be because of a rounding error of float calculations while
+				// intersecting the bounding box. Cases like this would be ignored.
+				inconsistentBounds = true
 			}
 		}
 
@@ -118,7 +118,6 @@ func testIntersectionsWithAggregator(
 			continue
 		}
 
-		// hitAll := primitive.IntersectMultiple(prims, ray, &isectAll)
 		hitAccel := accel.Intersect(ray, &isectAccel)
 
 		if hitAccel != hitAll ||
