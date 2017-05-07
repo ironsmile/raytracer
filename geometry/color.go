@@ -5,26 +5,26 @@ import (
 )
 
 type Color struct {
-	red   float64
-	green float64
-	blue  float64
+	red   float32
+	green float32
+	blue  float32
 }
 
 func (c *Color) clamp() {
-	c.red = utils.Clamp(c.red, 0, 1)
-	c.green = utils.Clamp(c.green, 0, 1)
-	c.blue = utils.Clamp(c.blue, 0, 1)
+	c.red = utils.Clamp32(c.red, 0, 1)
+	c.green = utils.Clamp32(c.green, 0, 1)
+	c.blue = utils.Clamp32(c.blue, 0, 1)
 }
 
-func (c *Color) Red() float64 {
+func (c *Color) Red() float32 {
 	return c.red
 }
 
-func (c *Color) Green() float64 {
+func (c *Color) Green() float32 {
 	return c.green
 }
 
-func (c *Color) Blue() float64 {
+func (c *Color) Blue() float32 {
 	return c.blue
 }
 
@@ -54,22 +54,24 @@ func (c *Color) MultiplyIP(other *Color) *Color {
 }
 
 func (c *Color) MultiplyScalar(sclr float64) *Color {
-	r := &Color{c.red * sclr, c.green * sclr, c.blue * sclr}
+	s := float32(sclr)
+	r := &Color{c.red * s, c.green * s, c.blue * s}
 	r.clamp()
 	return r
 }
 
 func (c *Color) MultiplyScalarIP(sclr float64) *Color {
-	c.red, c.green, c.blue = c.red*sclr, c.green*sclr, c.blue*sclr
+	s := float32(sclr)
+	c.red, c.green, c.blue = c.red*s, c.green*s, c.blue*s
 	c.clamp()
 	return c
 }
 
-func (c *Color) Set(red, green, blue float64) {
+func (c *Color) Set(red, green, blue float32) {
 	c.red, c.green, c.blue = red, green, blue
 	c.clamp()
 }
 
-func NewColor(r, g, b float64) *Color {
+func NewColor(r, g, b float32) *Color {
 	return &Color{r, g, b}
 }

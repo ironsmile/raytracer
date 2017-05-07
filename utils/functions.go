@@ -22,6 +22,20 @@ func Clamp(val, low, high float64) float64 {
 	return val
 }
 
+// Clamp32 clamps the given value val to be between the values low and high. For
+// float 32s
+func Clamp32(val, low, high float32) float32 {
+	if val < low {
+		return low
+	}
+
+	if val > high {
+		return high
+	}
+
+	return val
+}
+
 // ClampInt is the same as Clamp but works with integers instead of float64s
 func ClampInt(val, low, high int) int {
 	if val < low {

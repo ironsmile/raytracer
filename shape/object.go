@@ -99,9 +99,9 @@ func NewObject(filePath string) (*Object, error) {
 				if foundMat, ok := matLib.FindMaterial(mesh.MaterialName); ok {
 					faceMesh.SetMaterial(mat.Material{
 						Color: geometry.NewColor(
-							foundMat.DiffuseColor.R,
-							foundMat.DiffuseColor.G,
-							foundMat.DiffuseColor.B,
+							float32(foundMat.DiffuseColor.R),
+							float32(foundMat.DiffuseColor.G),
+							float32(foundMat.DiffuseColor.B),
 						),
 						Diff: foundMat.Dissolve,
 						Refr: 1 - foundMat.Dissolve,
