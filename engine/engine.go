@@ -44,28 +44,26 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 
 // Raytrace returns intersection information for particular ray in the engine's
 // scene.
-func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) (
-	primitive.Primitive, float64, geometry.Color) {
+func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) geometry.Color {
 	var retColor geometry.Color
 
 	if depth > TraceDepth {
-		return nil, 0, retColor
+		return retColor
 	}
 
 	if ok := e.Scene.Intersect(ray, in); !ok {
-		return nil, 0, retColor
+		return retColor
 	}
 
 	prim := in.Primitive
 	o2w, _ := prim.GetTransforms()
-	retdist := in.DfGeometry.Distance
 	InNormal := o2w.Normal(in.DfGeometry.Normal)
 
 	if prim.IsLight() {
-		return prim, retdist, *prim.GetColor()
+		return *prim.GetColor()
 	}
 
-	pi := ray.At(retdist)
+	pi := ray.At(in.DfGeometry.Distance)
 
 	primMat := prim.GetMaterial()
 
@@ -122,7 +120,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 		refRay.Mint = geometry.EPSILON
 
 		// refRay.Debug = ray.Debug
-		_, _, refColor := e.Raytrace(refRay, depth+1, in)
+		refColor := e.Raytrace(refRay, depth+1, in)
 
 		retColor.PlusIP(primMat.Color.Multiply(
 			&refColor).MultiplyScalarIP(primMat.Refl))
@@ -134,11 +132,11 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 		shadowRayStart := pi.Plus(ray.Direction.MultiplyScalar(geometry.EPSILON))
 		refRay := geometry.NewRay(shadowRayStart, ray.Direction)
 		refRay.Mint = geometry.EPSILON
-		_, _, refrColor := e.Raytrace(refRay, depth+1, in)
+		refrColor := e.Raytrace(refRay, depth+1, in)
 		retColor.PlusIP((&refrColor).MultiplyScalarIP(primMat.Refr))
 	}
 
-	return prim, retdist, retColor
+	return retColor
 }
 
 // Render starts the rendering process. Exits when one full frame is done. It does that
@@ -166,7 +164,6 @@ func (e *Engine) Render() {
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	var pr primitive.Primitive
 	var accColor geometry.Color
 	var in primitive.Intersection
 
@@ -180,10 +177,10 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			return
 		}
 		ray, weight := e.Camera.GenerateRay(x, y)
-		pr, _, accColor = e.Raytrace(ray, 1, &in)
+		accColor = e.Raytrace(ray, 1, &in)
 
 		if e.ShowBBoxes {
-			if pr != nil {
+			if in.Primitive != nil {
 				ray.Maxt = in.DfGeometry.Distance
 			}
 
@@ -191,14 +188,14 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 				accColor = *geometry.NewColor(0, 0, 1)
 			}
 
-			debugRay := geometry.NewRay(
-				geometry.NewVector(-10.000000, -0.097124, 0.562618),
-				geometry.NewVector(0.151860, -0.768368, 0.621731),
-			)
+			// debugRay := geometry.NewRay(
+			// 	geometry.NewVector(-10.000000, -0.097124, 0.562618),
+			// 	geometry.NewVector(0.151860, -0.768368, 0.621731),
+			// )
 
-			if _, ok := ray.Intersect(debugRay); ok {
-				accColor = *geometry.NewColor(1, 1, 0)
-			}
+			// if _, ok := ray.Intersect(debugRay); ok {
+			// 	accColor = *geometry.NewColor(1, 1, 0)
+			// }
 		}
 
 		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
