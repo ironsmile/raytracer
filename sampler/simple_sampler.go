@@ -2,8 +2,9 @@ package sampler
 
 import (
 	"errors"
-	"image/color"
 	"sync/atomic"
+
+	"github.com/ironsmile/raytracer/geometry"
 
 	"github.com/ironsmile/raytracer/film"
 )
@@ -55,7 +56,7 @@ func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 	return
 }
 
-func (s *SimpleSampler) UpdateScreen(x, y float64, clr color.Color) {
+func (s *SimpleSampler) UpdateScreen(x, y float64, clr *geometry.Color) {
 	s.output.Set(int(x), int(y), clr)
 }
 

@@ -2,9 +2,10 @@ package film
 
 import (
 	"fmt"
-	"image/color"
 	"sync"
 	"time"
+
+	"github.com/ironsmile/raytracer/geometry"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -172,18 +173,16 @@ func (g *GlWindow) LastFrameRederTime() time.Duration {
 	return g.lastFrameTime
 }
 
-func (g *GlWindow) Set(x int, y int, clr color.Color) error {
+func (g *GlWindow) Set(x int, y int, clr *geometry.Color) error {
 
 	// Locking is slow, embrace the race!
 	// g.pixBufferLock.Lock()
 	// defer g.pixBufferLock.Unlock()
 
-	ri, gi, bi, _ := clr.RGBA()
-
 	ind := g.width*y*3 + x*3
-	g.pixBuffer[ind] = float32(ri) / 65535.0
-	g.pixBuffer[ind+1] = float32(gi) / 65535.0
-	g.pixBuffer[ind+2] = float32(bi) / 65535.0
+	g.pixBuffer[ind] = float32(clr.Red())
+	g.pixBuffer[ind+1] = float32(clr.Green())
+	g.pixBuffer[ind+2] = float32(clr.Blue())
 
 	return nil
 }

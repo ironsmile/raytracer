@@ -1,13 +1,13 @@
 package film
 
-import "image/color"
+import "github.com/ironsmile/raytracer/geometry"
 
 type NullFilm struct {
 	width  int
 	height int
 }
 
-func (n *NullFilm) Set(x int, y int, clr color.Color) error {
+func (n *NullFilm) Set(x int, y int, clr *geometry.Color) error {
 	return nil
 }
 

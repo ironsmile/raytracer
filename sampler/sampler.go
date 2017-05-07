@@ -1,8 +1,6 @@
 package sampler
 
-import (
-	"image/color"
-)
+import "github.com/ironsmile/raytracer/geometry"
 
 type Sample struct {
 	X, Y float64
@@ -10,6 +8,6 @@ type Sample struct {
 
 type Sampler interface {
 	GetSample() (float64, float64, error)
-	UpdateScreen(float64, float64, color.Color)
+	UpdateScreen(float64, float64, *geometry.Color)
 	Stop()
 }

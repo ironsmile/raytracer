@@ -3,9 +3,10 @@ package film
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"image/png"
 	"os"
+
+	"github.com/ironsmile/raytracer/geometry"
 )
 
 type Image struct {
@@ -62,7 +63,7 @@ func (i *Image) StartFrame() {
 
 }
 
-func (i *Image) Set(x, y int, clr color.Color) error {
+func (i *Image) Set(x, y int, clr *geometry.Color) error {
 	i.img.Set(x, y, clr)
 	return nil
 }
