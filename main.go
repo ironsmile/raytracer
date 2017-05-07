@@ -135,7 +135,7 @@ func openglWindowRenderer() {
 	}
 
 	if err != nil {
-		log.Fatal("%s\n", err.Error())
+		log.Fatalf("%s\n", err.Error())
 	}
 
 	window.MakeContextCurrent()
