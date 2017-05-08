@@ -104,10 +104,11 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	// "small sphere"
 	sphere = primitive.NewSphere(2)
 	sphere.Shape().SetMaterial(mat.Material{
-		Refl:  0.0,
-		Refr:  0.6,
-		Diff:  0.4,
-		Color: geometry.NewColor(0.7, 0.7, 1),
+		Refl:      0.0,
+		Refr:      0.6,
+		RefrIndex: 1.5,
+		Diff:      0.4,
+		Color:     geometry.NewColor(0.7, 0.7, 1),
 	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
 	primitive.SetName(sphere.GetID(), "small sphere")

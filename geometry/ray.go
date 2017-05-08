@@ -25,6 +25,23 @@ func (r *Ray) At(t float64) Vector {
 	return r.Origin.Plus(r.Direction.MultiplyScalar(t))
 }
 
+// Refract returns refraction direction between this ray's direction and the normal n
+// for ray passing from material with refraction index n1 to one with refraction index n2.
+func (r *Ray) Refract(n Vector, n1, n2 float64) (refrDirection Vector, tir bool) {
+	nr := n1 / n2
+	cosI := -n.Dot(r.Direction)
+	sinT2 := nr * nr * (1 - cosI*cosI)
+	if sinT2 > 1.0 {
+		tir = true
+		return
+	}
+	cosT := math.Sqrt(1 - sinT2)
+
+	refrDirection = r.Direction.MultiplyScalar(nr).Plus(
+		n.MultiplyScalar(nr*cosI - cosT))
+	return
+}
+
 // Intersect returns the intersection point between two rays. Two rays may not always
 // intersect so that the second argument says wether there is an intersectoin at all
 func (r *Ray) Intersect(o Ray) (Vector, bool) {

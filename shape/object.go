@@ -97,15 +97,19 @@ func NewObject(filePath string) (*Object, error) {
 
 			if matLib != nil {
 				if foundMat, ok := matLib.FindMaterial(mesh.MaterialName); ok {
-					faceMesh.SetMaterial(mat.Material{
+					faceMath := mat.Material{
 						Color: geometry.NewColor(
 							foundMat.DiffuseColor.R,
 							foundMat.DiffuseColor.G,
 							foundMat.DiffuseColor.B,
 						),
-						Diff: foundMat.Dissolve,
 						Refr: 1 - foundMat.Dissolve,
-					})
+						Diff: 1,
+					}
+					if faceMath.Refr > 0 {
+						faceMath.RefrIndex = 1.5
+					}
+					faceMesh.SetMaterial(faceMath)
 				}
 			}
 

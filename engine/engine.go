@@ -56,11 +56,17 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	}
 
 	prim := in.Primitive
-	o2w, _ := prim.GetTransforms()
-	InNormal := o2w.Normal(in.DfGeometry.Normal)
 
 	if prim.IsLight() {
 		return *prim.GetColor()
+	}
+
+	o2w, _ := prim.GetTransforms()
+	InNormal := o2w.Normal(in.DfGeometry.Normal)
+
+	cosI := InNormal.Dot(ray.Direction)
+	if cosI > 0 {
+		InNormal = InNormal.Neg()
 	}
 
 	pi := ray.At(in.DfGeometry.Distance)
@@ -127,13 +133,43 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	}
 
 	// Refraction
-	if primMat.Refr > 0.0 {
+	if primMat.Refr > 0.0 && primMat.RefrIndex > 0 {
 
-		shadowRayStart := pi.Plus(ray.Direction.MultiplyScalar(geometry.EPSILON))
-		refRay := geometry.NewRay(shadowRayStart, ray.Direction)
-		refRay.Mint = geometry.EPSILON
-		refrColor := e.Raytrace(refRay, depth+1, in)
-		retColor.PlusIP((&refrColor).MultiplyScalarIP(primMat.Refr))
+		var refrNormal = InNormal
+		var n1, n2 = 1.0, primMat.RefrIndex
+		var reflectance, transmittance float64
+
+		refrDirection, tir := ray.Refract(refrNormal, n1, n2)
+
+		if tir {
+			reflectance = 1
+		} else {
+			reflectance = geometry.Schlick2(refrNormal, ray.Direction, n1, n2)
+		}
+
+		var endColor geometry.Color
+
+		transmittance = 1 - reflectance
+
+		if transmittance > 0 {
+			reflRay := geometry.NewRay(pi, refrDirection)
+			reflRay.Mint = geometry.EPSILON * 2
+			refrColor := e.Raytrace(reflRay, depth+1, in)
+			endColor.PlusIP(refrColor.MultiplyScalarIP(transmittance))
+		}
+
+		if reflectance > 0 {
+			cosI := -refrNormal.Dot(ray.Direction)
+			R := ray.Direction.Plus(refrNormal.MultiplyScalar(2 * cosI))
+
+			refRay := geometry.NewRay(pi, R)
+			refRay.Mint = geometry.EPSILON
+			refColor := e.Raytrace(refRay, depth+1, in)
+			endColor.PlusIP(refColor.MultiplyScalarIP(reflectance))
+		}
+
+		retColor.MultiplyScalarIP(1 - primMat.Refr).PlusIP(
+			(&endColor).MultiplyScalarIP(primMat.Refr))
 	}
 
 	return retColor
@@ -192,7 +228,6 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			// 	geometry.NewVector(-10.000000, -0.097124, 0.562618),
 			// 	geometry.NewVector(0.151860, -0.768368, 0.621731),
 			// )
-
 			// if _, ok := ray.Intersect(debugRay); ok {
 			// 	accColor = *geometry.NewColor(1, 1, 0)
 			// }
