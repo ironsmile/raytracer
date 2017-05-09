@@ -205,7 +205,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 
 	for {
 		x, y, err := e.Sampler.GetSample()
-		if err == sampler.EndOfSampling {
+		if err == sampler.ErrEndOfSampling {
 			return
 		}
 		if err != nil {

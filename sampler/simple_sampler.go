@@ -8,8 +8,10 @@ import (
 	"github.com/ironsmile/raytracer/film"
 )
 
-var EndOfSampling error = errors.New("End of sampling")
+// ErrEndOfSampling would be returned by the sampler when no further sampling is needed
+var ErrEndOfSampling = errors.New("End of sampling")
 
+// SimpleSampler implements the most simple of samplers. It generates one sample per pixel
 type SimpleSampler struct {
 	output film.Film
 
@@ -26,17 +28,19 @@ type SimpleSampler struct {
 	width uint64
 }
 
+// GetSample returns the next (x,y) screen coordinates for whic a ray should be generated
+// and traced
 func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 
 	if s.stopped {
-		e = EndOfSampling
+		e = ErrEndOfSampling
 		return
 	}
 
 	sample := atomic.AddUint64(&s.currentSample, 1) - 1
 
 	if !s.continuous && sample >= s.lastSample {
-		e = EndOfSampling
+		e = ErrEndOfSampling
 		return
 	}
 
@@ -55,21 +59,24 @@ func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
 	return
 }
 
+// UpdateScreen sets a pixel color for this sampler's output
 func (s *SimpleSampler) UpdateScreen(x, y float64, clr color.Color) {
 	s.output.Set(int(x), int(y), clr)
 }
 
+// Stop would cause all further calls to GetSample to return ErrEndOfSampling
 func (s *SimpleSampler) Stop() {
-	if s.stopped {
-		return
-	}
 	s.stopped = true
 }
 
+// MakeContinuous makes sure this sampler would contiuoue to generate samples
+// in perpetuity, eventually looping back to the start of the image
 func (s *SimpleSampler) MakeContinuous() {
 	s.continuous = true
 }
 
+// NewSimple returns a SimpleSampler, suited for a film. This means that the sampler
+// would take into consideration the film's width and height.
 func NewSimple(f film.Film) *SimpleSampler {
 	s := new(SimpleSampler)
 
