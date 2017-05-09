@@ -14,81 +14,81 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	var primitives []primitive.Primitive
 	var lights []primitive.Primitive
 
-	wallMaterial := mat.Material{}
-	wallMaterial.Refl = 0
-	wallMaterial.Diff = 0.95
-	wallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	// wallMaterial := mat.Material{}
+	// wallMaterial.Refl = 0
+	// wallMaterial.Diff = 0.95
+	// wallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
 
-	reflectiveWallMaterial := mat.Material{}
-	reflectiveWallMaterial.Refl = 1.0
-	reflectiveWallMaterial.Diff = 0.4
-	reflectiveWallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	// reflectiveWallMaterial := mat.Material{}
+	// reflectiveWallMaterial.Refl = 1.0
+	// reflectiveWallMaterial.Diff = 0.4
+	// reflectiveWallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
 
-	// "rect-floor"
-	rect := primitive.NewQuad(
-		geometry.NewVector(-25, -5, 30),
-		geometry.NewVector(10, -5, 30),
-		geometry.NewVector(10, -5, -25),
-		geometry.NewVector(-25, -5, -25),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-floor")
-	primitives = append(primitives, rect)
+	// // "rect-floor"
+	// rect := primitive.NewQuad(
+	// 	geometry.NewVector(-25, -5, 30),
+	// 	geometry.NewVector(10, -5, 30),
+	// 	geometry.NewVector(10, -5, -25),
+	// 	geometry.NewVector(-25, -5, -25),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-floor")
+	// primitives = append(primitives, rect)
 
-	// "rect-ceiling"
-	rect = primitive.NewQuad(
-		geometry.NewVector(-25, 16, 30),
-		geometry.NewVector(-25, 16, -25),
-		geometry.NewVector(10, 16, -25),
-		geometry.NewVector(10, 16, 30),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-ceiling")
-	primitives = append(primitives, rect)
+	// // "rect-ceiling"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(-25, 16, 30),
+	// 	geometry.NewVector(-25, 16, -25),
+	// 	geometry.NewVector(10, 16, -25),
+	// 	geometry.NewVector(10, 16, 30),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-ceiling")
+	// primitives = append(primitives, rect)
 
-	// "rect-left"
-	rect = primitive.NewQuad(
-		geometry.NewVector(-25, 16, -25),
-		geometry.NewVector(-25, 16, 30),
-		geometry.NewVector(-25, -5, 30),
-		geometry.NewVector(-25, -5, -25),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-left")
-	primitives = append(primitives, rect)
+	// // "rect-left"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(-25, 16, -25),
+	// 	geometry.NewVector(-25, 16, 30),
+	// 	geometry.NewVector(-25, -5, 30),
+	// 	geometry.NewVector(-25, -5, -25),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-left")
+	// primitives = append(primitives, rect)
 
-	// "rect-right-mirror"
-	rect = primitive.NewQuad(
-		geometry.NewVector(10, 16, -25),
-		geometry.NewVector(10, -5, -25),
-		geometry.NewVector(10, -5, 30),
-		geometry.NewVector(10, 16, 30),
-	)
-	rect.Shape().SetMaterial(reflectiveWallMaterial)
-	primitive.SetName(rect.GetID(), "rect-right-mirror")
-	primitives = append(primitives, rect)
+	// // "rect-right-mirror"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(10, 16, -25),
+	// 	geometry.NewVector(10, -5, -25),
+	// 	geometry.NewVector(10, -5, 30),
+	// 	geometry.NewVector(10, 16, 30),
+	// )
+	// rect.Shape().SetMaterial(reflectiveWallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-right-mirror")
+	// primitives = append(primitives, rect)
 
-	// "rect-front"
-	rect = primitive.NewQuad(
-		geometry.NewVector(-25, 16, 30),
-		geometry.NewVector(10, 16, 30),
-		geometry.NewVector(10, -5, 30),
-		geometry.NewVector(-25, -5, 30),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-front")
-	primitives = append(primitives, rect)
+	// // "rect-front"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(-25, 16, 30),
+	// 	geometry.NewVector(10, 16, 30),
+	// 	geometry.NewVector(10, -5, 30),
+	// 	geometry.NewVector(-25, -5, 30),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-front")
+	// primitives = append(primitives, rect)
 
-	// "rect-back"
-	rect = primitive.NewQuad(
-		geometry.NewVector(-25, 16, -25),
-		geometry.NewVector(-25, -5, -25),
-		geometry.NewVector(10, -5, -25),
-		geometry.NewVector(10, 16, -25),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-back")
-	primitives = append(primitives, rect)
+	// // "rect-back"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(-25, 16, -25),
+	// 	geometry.NewVector(-25, -5, -25),
+	// 	geometry.NewVector(10, -5, -25),
+	// 	geometry.NewVector(10, 16, -25),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-back")
+	// primitives = append(primitives, rect)
 
 	// "Visible light source"
 	sphere := primitive.NewSphere(0.1)
