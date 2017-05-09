@@ -44,6 +44,7 @@ func (s *Sphere) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 		return true
 	}
 
+	dg.Shape = s
 	dg.Distance = retdist
 	dg.Normal = s.GetNormal(ray.At(retdist))
 

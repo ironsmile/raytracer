@@ -56,6 +56,7 @@ func (m *MeshTriangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) boo
 		return true
 	}
 
+	dg.Shape = m
 	dg.Distance = t
 
 	if m.face.References[0].HasNormal() && m.face.References[1].HasNormal() &&

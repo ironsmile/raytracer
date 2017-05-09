@@ -81,6 +81,7 @@ func (q *Quad) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 		return true
 	}
 
+	dg.Shape = q
 	dg.Normal = e01.Cross(e03).Normalize()
 	dg.Distance = tDist
 

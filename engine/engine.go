@@ -71,7 +71,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 
 	pi := ray.At(in.DfGeometry.Distance)
 
-	primMat := prim.GetMaterial()
+	primMat := in.DfGeometry.Shape.GetMaterial()
 
 	// /* Debugging */
 	// var debugging bool

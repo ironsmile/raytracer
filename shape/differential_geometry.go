@@ -17,4 +17,7 @@ type DifferentialGeometry struct {
 
 	// The distance from the ray origin for this intersection
 	Distance float64
+
+	// WHich shape was hit with this intersection
+	Shape Shape
 }

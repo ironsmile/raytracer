@@ -67,6 +67,7 @@ func (t *Triangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 		return true
 	}
 
+	dg.Shape = t
 	dg.Distance = tt
 	dg.Normal = t.Normal
 
