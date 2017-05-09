@@ -3,7 +3,6 @@ package primitive
 import (
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
@@ -19,8 +18,6 @@ type Primitive interface {
 	GetTransforms() (o2w, w2o *transform.Transform)
 	CanIntersect() bool
 	Refine() []Primitive
-	GetMaterial() *mat.Material
-	GetColor() *geometry.Color
 	IsLight() bool
 	GetLightSource() geometry.Vector
 	Shape() shape.Shape

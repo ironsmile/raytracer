@@ -3,7 +3,6 @@ package primitive
 import (
 	"github.com/ironsmile/raytracer/bbox"
 	"github.com/ironsmile/raytracer/geometry"
-	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
@@ -81,17 +80,6 @@ func (b *BasePrimitive) GetID() uint64 {
 		return b.refinementParent.GetID()
 	}
 	return b.id
-}
-
-// GetColor is a hacky method which assumes the whole primitive is from one color and
-// returns it
-func (b *BasePrimitive) GetColor() *geometry.Color {
-	return b.shape.GetMaterial().Color
-}
-
-// GetMaterial returns thie primitive's material
-func (b *BasePrimitive) GetMaterial() *mat.Material {
-	return b.shape.GetMaterial()
 }
 
 // Intersect returns whether a ray intersects this primitive and at what distance from

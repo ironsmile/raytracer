@@ -56,9 +56,10 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	}
 
 	prim := in.Primitive
+	pi := ray.At(in.DfGeometry.Distance)
 
 	if prim.IsLight() {
-		return *prim.GetColor()
+		return *prim.Shape().MaterialAt(pi).Color
 	}
 
 	o2w, _ := prim.GetTransforms()
@@ -69,9 +70,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 		InNormal = InNormal.Neg()
 	}
 
-	pi := ray.At(in.DfGeometry.Distance)
-
-	primMat := in.DfGeometry.Shape.GetMaterial()
+	primMat := in.DfGeometry.Shape.MaterialAt(pi)
 
 	// /* Debugging */
 	// var debugging bool
@@ -85,10 +84,11 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
 		light := e.Scene.GetLight(l)
 
+		source := light.GetLightSource()
 		shadowRayStart := pi.Plus(InNormal.MultiplyScalar(geometry.EPSILON))
-		L := light.GetLightSource().Minus(shadowRayStart).Normalize()
+		L := source.Minus(shadowRayStart).Normalize()
 		shadowRay := geometry.NewRay(shadowRayStart, L)
-		shadowRay.Maxt = shadowRayStart.Distance(light.GetLightSource())
+		shadowRay.Maxt = shadowRayStart.Distance(source)
 
 		if intersected := e.Scene.IntersectP(shadowRay); intersected {
 			continue
@@ -99,7 +99,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 
 		if primMat.Diff > 0 && dot > 0 {
 			weight := dot * primMat.Diff * luminousity
-			retColor.PlusIP(light.GetMaterial().Color.
+			retColor.PlusIP(light.Shape().MaterialAt(source).Color.
 				Multiply(primMat.Color).MultiplyScalarIP(weight))
 		}
 
@@ -109,7 +109,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 			dot := V.Product(R)
 			if dot > 0 {
 				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
-				retColor.PlusIP(light.GetMaterial().Color.
+				retColor.PlusIP(light.Shape().MaterialAt(source).Color.
 					MultiplyScalar(spec))
 			}
 		}

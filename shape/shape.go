@@ -22,7 +22,7 @@ type Shape interface {
 	GetObjectBBox() *bbox.BBox
 	CanIntersect() bool
 	Refine() []Shape
-	GetMaterial() *mat.Material
+	MaterialAt(geometry.Vector) *mat.Material
 	SetMaterial(mat.Material)
 }
 
@@ -58,8 +58,8 @@ func (b *BasicShape) IntersectP(geometry.Ray) bool {
 	panic("IntersectP is not implemented for basic shape")
 }
 
-// GetMaterial implements the Shape interface
-func (b *BasicShape) GetMaterial() *mat.Material {
+// MaterialAt implements the Shape interface
+func (b *BasicShape) MaterialAt(geometry.Vector) *mat.Material {
 	return b.material
 }
 

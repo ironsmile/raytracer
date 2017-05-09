@@ -113,7 +113,7 @@ func NewObject(filePath string) (*Object, error) {
 				}
 			}
 
-			if faceMesh.GetMaterial() == nil {
+			if faceMesh.material == nil {
 				faceMesh.SetMaterial(mat.DefaultMetiral())
 			}
 

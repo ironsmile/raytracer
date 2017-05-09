@@ -104,9 +104,9 @@ func (m *MeshTriangle) getPoints() (p1, p2, p3 geometry.Vector) {
 	return
 }
 
-// GetMaterial implements the Shape interface
-func (m *MeshTriangle) GetMaterial() *mat.Material {
-	return m.mesh.GetMaterial()
+// MaterialAt implements the Shape interface
+func (m *MeshTriangle) MaterialAt(p geometry.Vector) *mat.Material {
+	return m.mesh.MaterialAt(p)
 }
 
 // SetMaterial implements Shape interface
