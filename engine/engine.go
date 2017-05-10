@@ -28,7 +28,7 @@ type Engine struct {
 	Dest          film.Film
 	Width, Height int
 	Camera        camera.Camera
-	Sampler       sampler.Sampler
+	Sampler       *sampler.SimpleSampler
 	ShowBBoxes    bool
 
 	debugged bool
@@ -208,47 +208,63 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 	var in primitive.Intersection
 
 	for {
-		x, y, err := e.Sampler.GetSample()
+
+		subSampler, err := e.Sampler.GetSubSampler()
+
 		if err == sampler.ErrEndOfSampling {
 			return
 		}
-		if err != nil {
-			fmt.Printf("Error while getting sample: %s\n", err)
-			return
-		}
-		ray, weight := e.Camera.GenerateRay(x, y)
-		accColor = e.Raytrace(ray, 1, &in)
 
-		if e.ShowBBoxes {
-			if in.Primitive != nil {
-				ray.Maxt = in.DfGeometry.Distance
+		for {
+			x, y, w, err := subSampler.GetSample()
+
+			if err == sampler.ErrEndOfSampling {
+				return
+			}
+			if err == sampler.ErrSubSamplerEnd {
+				break
+			}
+			if err != nil {
+				fmt.Printf("Error while getting sample: %s\n", err)
+				return
 			}
 
-			if e.Scene.IntersectBBoxEdge(ray) {
-				accColor = *geometry.NewColor(0, 0, 1)
+			// fmt.Printf("x: %f, y: %f\n", x, y)
+
+			ray := e.Camera.GenerateRay(x, y)
+			accColor = e.Raytrace(ray, 1, &in)
+
+			if e.ShowBBoxes {
+				if in.Primitive != nil {
+					ray.Maxt = in.DfGeometry.Distance
+				}
+
+				if e.Scene.IntersectBBoxEdge(ray) {
+					accColor = *geometry.NewColor(0, 0, 1)
+				}
+
+				// debugRay := geometry.NewRay(
+				// 	geometry.NewVector(-10.000000, -0.097124, 0.562618),
+				// 	geometry.NewVector(0.151860, -0.768368, 0.621731),
+				// )
+				// if _, ok := ray.Intersect(debugRay); ok {
+				// 	accColor = *geometry.NewColor(1, 1, 0)
+				// }
 			}
 
-			// debugRay := geometry.NewRay(
-			// 	geometry.NewVector(-10.000000, -0.097124, 0.562618),
-			// 	geometry.NewVector(0.151860, -0.768368, 0.621731),
-			// )
-			// if _, ok := ray.Intersect(debugRay); ok {
-			// 	accColor = *geometry.NewColor(1, 1, 0)
-			// }
+			e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(w))
 		}
-
-		e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(weight))
 	}
 }
 
 // New returns a new engine which would use the argument's sampler
-func New(smpl sampler.Sampler) *Engine {
+func New(smpl *sampler.SimpleSampler) *Engine {
 	eng := new(Engine)
 	initEngine(eng, smpl)
 	return eng
 }
 
-func initEngine(eng *Engine, smpl sampler.Sampler) {
+func initEngine(eng *Engine, smpl *sampler.SimpleSampler) {
 	eng.Scene = scene.NewScene()
 	eng.Sampler = smpl
 }

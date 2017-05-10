@@ -26,7 +26,7 @@ type PinholeCamera struct {
 }
 
 // GenerateRay creates a ray from the camera source through one single point of the screen
-func (p *PinholeCamera) GenerateRay(x, y float64) (geometry.Ray, float64) {
+func (p *PinholeCamera) GenerateRay(x, y float64) geometry.Ray {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -37,7 +37,7 @@ func (p *PinholeCamera) GenerateRay(x, y float64) (geometry.Ray, float64) {
 		geometry.NewVector(posX, posY, p.distance).Normalize(),
 	)
 
-	return p.camToWorld.Ray(ray), 1.0
+	return p.camToWorld.Ray(ray)
 }
 
 // Forward moves the camera in its lookAt direction

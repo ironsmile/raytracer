@@ -2,6 +2,7 @@ package sampler
 
 import (
 	"errors"
+	"fmt"
 	"image/color"
 	"sync/atomic"
 
@@ -13,45 +14,38 @@ var ErrEndOfSampling = errors.New("End of sampling")
 
 // SimpleSampler implements the most simple of samplers. It generates one sample per pixel
 type SimpleSampler struct {
-	output film.Film
+	output           film.Film
+	subSamplers      []*SubSampler
+	subSamplersCount uint32
+	current          uint32
 
 	stopped    bool
 	continuous bool
-
-	// A counter which is used for generating samples
-	currentSample uint64
-
-	// This is the number of samples needed to generate the scene once
-	lastSample uint64
-
-	// The width of the scene. This is used when currentSample exeeds lastSample
-	width uint64
 }
 
-// GetSample returns the next (x,y) screen coordinates for whic a ray should be generated
-// and traced
-func (s *SimpleSampler) GetSample() (x float64, y float64, e error) {
+// GetSubSampler ...
+func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
 
 	if s.stopped {
 		e = ErrEndOfSampling
 		return
 	}
 
-	sample := atomic.AddUint64(&s.currentSample, 1) - 1
+	sample := atomic.AddUint32(&s.current, 1) - 1
 
-	if !s.continuous && sample >= s.lastSample {
+	if !s.continuous && sample >= s.subSamplersCount {
 		e = ErrEndOfSampling
 		return
 	}
 
-	if s.continuous && sample >= s.lastSample {
-		sample = sample % s.lastSample
+	if s.continuous && sample >= s.subSamplersCount {
+		sample = sample % s.subSamplersCount
 	}
 
-	y = float64(sample / s.width)
-	x = float64(sample % s.width)
+	ss = s.subSamplers[sample]
+	ss.Reset()
 
-	if x == 0 && y == 0 {
+	if sample == 0 {
 		s.output.DoneFrame()
 		s.output.StartFrame()
 	}
@@ -78,11 +72,37 @@ func (s *SimpleSampler) MakeContinuous() {
 // NewSimple returns a SimpleSampler, suited for a film. This means that the sampler
 // would take into consideration the film's width and height.
 func NewSimple(f film.Film) *SimpleSampler {
-	s := new(SimpleSampler)
+	s := &SimpleSampler{
+		output: f,
+	}
 
-	s.output = f
-	s.lastSample = uint64(f.Width() * f.Height())
-	s.width = uint64(f.Width())
+	const size = 32
 
+	var countW = uint32(f.Width()) / size
+	var countH = uint32(f.Height()) / size
+	var count = countW * countH
+
+	fmt.Printf("Creating %d sub samplers\n", count)
+
+	s.subSamplersCount = count
+	s.subSamplers = make([]*SubSampler, count)
+
+	for i := uint32(0); i < count; i++ {
+		sy := (i / countW) * size
+		sx := (i % countW) * size
+
+		var sw uint32 = size
+		var sh uint32 = size
+
+		if sx+sw > uint32(f.Width()) {
+			sw = uint32(f.Width()) - sx
+		}
+
+		if sy+sh > uint32(f.Height()) {
+			sh = uint32(f.Height()) - sy
+		}
+
+		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 1, s)
+	}
 	return s
 }

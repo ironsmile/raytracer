@@ -48,7 +48,7 @@ func (e *FPSEngine) StopRendering() {
 	e.Dest.Wait()
 }
 
-func NewFPS(smpl sampler.Sampler) *FPSEngine {
+func NewFPS(smpl *sampler.SimpleSampler) *FPSEngine {
 	eng := new(FPSEngine)
 	initEngine(&eng.Engine, smpl)
 	return eng
