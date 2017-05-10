@@ -62,15 +62,19 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 		return *prim.Shape().MaterialAt(pi).Color
 	}
 
-	o2w, _ := prim.GetTransforms()
-	InNormal := o2w.Normal(in.DfGeometry.Normal)
+	o2w, w2o := prim.GetTransforms()
+	pio := w2o.Point(pi)
+	InNormal := o2w.Normal(in.DfGeometry.Shape.NormalAt(pio))
 
 	cosI := InNormal.Dot(ray.Direction)
 	if cosI > 0 {
+		// The hit is from the inside of the primitive. Normally, all normals would be
+		// pointing toward the primitive exterior. So we have to invert it to the interior
+		// for proper calculations.
 		InNormal = InNormal.Neg()
 	}
 
-	primMat := in.DfGeometry.Shape.MaterialAt(pi)
+	primMat := in.DfGeometry.Shape.MaterialAt(pio)
 
 	// /* Debugging */
 	// var debugging bool

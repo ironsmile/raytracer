@@ -46,7 +46,6 @@ func (s *Sphere) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 
 	dg.Shape = s
 	dg.Distance = retdist
-	dg.Normal = s.GetNormal(ray.At(retdist))
 
 	return true
 }
@@ -56,8 +55,8 @@ func (s *Sphere) IntersectP(ray geometry.Ray) bool {
 	return s.Intersect(ray, nil)
 }
 
-// GetNormal implements the primitive interface
-func (s *Sphere) GetNormal(pos geometry.Vector) geometry.Vector {
+// NormalAt implements the Shape interface
+func (s *Sphere) NormalAt(pos geometry.Vector) geometry.Vector {
 	return pos.Normalize()
 }
 

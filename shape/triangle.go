@@ -69,9 +69,12 @@ func (t *Triangle) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 
 	dg.Shape = t
 	dg.Distance = tt
-	dg.Normal = t.Normal
 
 	return true
+}
+
+func (t *Triangle) NormalAt(geometry.Vector) geometry.Vector {
+	return t.Normal
 }
 
 func (t *Triangle) IntersectP(ray geometry.Ray) bool {

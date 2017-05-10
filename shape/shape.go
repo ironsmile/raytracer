@@ -24,6 +24,7 @@ type Shape interface {
 	Refine() []Shape
 	MaterialAt(geometry.Vector) *mat.Material
 	SetMaterial(mat.Material)
+	NormalAt(geometry.Vector) geometry.Vector
 }
 
 // BasicShape implements few common methods and properties among all shapes
@@ -61,6 +62,11 @@ func (b *BasicShape) IntersectP(geometry.Ray) bool {
 // MaterialAt implements the Shape interface
 func (b *BasicShape) MaterialAt(geometry.Vector) *mat.Material {
 	return b.material
+}
+
+// NormalAt implements the Shape interface
+func (b *BasicShape) NormalAt(geometry.Vector) geometry.Vector {
+	panic("NormalAt is not implemented for basic shape")
 }
 
 // SetMaterial implements Shape interface

@@ -82,10 +82,16 @@ func (q *Quad) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 	}
 
 	dg.Shape = q
-	dg.Normal = e01.Cross(e03).Normalize()
 	dg.Distance = tDist
 
 	return true
+}
+
+// NormalAt implements the Shape interface
+func (q *Quad) NormalAt(geometry.Vector) geometry.Vector {
+	e01 := q.vertices[1].Minus(q.vertices[0])
+	e03 := q.vertices[3].Minus(q.vertices[0])
+	return e01.Cross(e03).Normalize()
 }
 
 // IntersectP implements the Shape interface
