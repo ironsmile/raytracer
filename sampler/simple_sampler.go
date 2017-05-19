@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
+	"math"
 	"sync/atomic"
 
 	"github.com/ironsmile/raytracer/film"
@@ -23,7 +24,7 @@ type SimpleSampler struct {
 	continuous bool
 }
 
-// GetSubSampler ...
+// GetSubSampler returns a rectangular sampler for a smaller section of the screen.
 func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
 
 	if s.stopped {
@@ -76,11 +77,11 @@ func NewSimple(f film.Film) *SimpleSampler {
 		output: f,
 	}
 
-	const size = 32
+	var splits = uint32(f.Width() / 32)
 
-	var countW = uint32(f.Width()) / size
-	var countH = uint32(f.Height()) / size
-	var count = countW * countH
+	var sizeW = uint32(math.Ceil(float64(f.Width()) / float64(splits)))
+	var sizeH = uint32(math.Ceil(float64(f.Height()) / float64(splits)))
+	var count = splits * splits
 
 	fmt.Printf("Creating %d sub samplers\n", count)
 
@@ -88,11 +89,11 @@ func NewSimple(f film.Film) *SimpleSampler {
 	s.subSamplers = make([]*SubSampler, count)
 
 	for i := uint32(0); i < count; i++ {
-		sy := (i / countW) * size
-		sx := (i % countW) * size
+		sy := (i / splits) * sizeH
+		sx := (i % splits) * sizeW
 
-		var sw uint32 = size
-		var sh uint32 = size
+		var sw uint32 = sizeW
+		var sh uint32 = sizeH
 
 		if sx+sw > uint32(f.Width()) {
 			sw = uint32(f.Width()) - sx

@@ -29,8 +29,8 @@ func (s *SubSampler) GetSample() (x, y, w float64, err error) {
 		err = ErrEndOfSampling
 		return
 	}
-	x = float64(s.current/s.w + s.x)
-	y = float64(s.current%s.w + s.y)
+	x = float64(s.current%s.w + s.x)
+	y = float64(s.current/s.w + s.y)
 	w = 1
 	s.current++
 	return
