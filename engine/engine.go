@@ -216,7 +216,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 		}
 
 		for {
-			x, y, w, err := subSampler.GetSample()
+			x, y, _, err := subSampler.GetSample()
 
 			if err == sampler.ErrEndOfSampling {
 				return
@@ -252,7 +252,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 				// }
 			}
 
-			e.Sampler.UpdateScreen(x, y, accColor.MultiplyScalarIP(w))
+			e.Sampler.UpdateScreen(x, y, &accColor)
 		}
 	}
 }

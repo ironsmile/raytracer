@@ -103,7 +103,7 @@ func NewSimple(f film.Film) *SimpleSampler {
 			sh = uint32(f.Height()) - sy
 		}
 
-		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 1, s)
+		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 10, s)
 	}
 	return s
 }
