@@ -8,6 +8,8 @@ import (
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
+
+	rColor "github.com/ironsmile/raytracer/color"
 )
 
 // GLWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
@@ -22,9 +24,12 @@ type GlWindow struct {
 
 	window *glfw.Window
 
-	pixBufferLock sync.RWMutex
+	// The pixBufferLock is disabled for performance reasons. Races are not a problem at
+	// this point.
+	// pixBufferLock sync.RWMutex
+
 	pixBuffer     []float32
-	pixSamples    []uint16
+	sampledBuffer rColor.Buf
 
 	glProgram uint32 // Holds the OpenGL program
 	glVao     uint32 // Our only vertex array object
@@ -40,7 +45,7 @@ func (g *GlWindow) Init(width int, height int) error {
 	g.height = height
 
 	g.pixBuffer = make([]float32, g.width*g.height*3)
-	g.pixSamples = make([]uint16, g.width*g.height)
+	g.sampledBuffer = rColor.NewBuf(g.width * g.height)
 
 	return g.initOpenGL()
 }
@@ -160,9 +165,7 @@ func (g *GlWindow) Wait() {
 
 func (g *GlWindow) StartFrame() {
 	g.frameStart = time.Now()
-	for i := 0; i < len(g.pixSamples); i++ {
-		g.pixSamples[i] = 0
-	}
+	g.sampledBuffer.Clear()
 }
 
 func (g *GlWindow) DoneFrame() {
@@ -184,19 +187,16 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 	// defer g.pixBufferLock.Unlock()
 
 	sampleInd := g.width*y + x
-	samples := g.pixSamples[sampleInd]
-
-	oldWeight := float32(samples) / float32(samples+1)
-	newWeight := 1 - oldWeight
+	ind := sampleInd * 3
+	const itof = 1.0 / 65535.0
 
 	ri, gi, bi, _ := clr.RGBA()
+	g.sampledBuffer.UpdateRGB(sampleInd, float32(ri)*itof, float32(gi)*itof, float32(bi)*itof)
+	weightedClr := g.sampledBuffer.Get(sampleInd)
 
-	ind := g.width*y*3 + x*3
-	g.pixBuffer[ind] = g.pixBuffer[ind]*oldWeight + newWeight*float32(ri)/65535.0
-	g.pixBuffer[ind+1] = g.pixBuffer[ind+1]*oldWeight + newWeight*float32(gi)/65535.0
-	g.pixBuffer[ind+2] = g.pixBuffer[ind+2]*oldWeight + newWeight*float32(bi)/65535.0
-
-	g.pixSamples[sampleInd]++
+	g.pixBuffer[ind] = float32(weightedClr.Red())
+	g.pixBuffer[ind+1] = float32(weightedClr.Green())
+	g.pixBuffer[ind+2] = float32(weightedClr.Blue())
 
 	return nil
 }
