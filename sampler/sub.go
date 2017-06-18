@@ -19,13 +19,11 @@ type SubSampler struct {
 	perPixel    uint32
 	samplesDone uint32
 
-	sampleWeight float64
-
 	parent *SimpleSampler
 }
 
 // GetSample returns a single sample which should be raytraced
-func (s *SubSampler) GetSample() (x, y, w float64, err error) {
+func (s *SubSampler) GetSample() (x, y float64, err error) {
 	if s.current >= s.end {
 		if s.samplesDone+1 >= s.perPixel {
 			err = ErrSubSamplerEnd
@@ -40,7 +38,6 @@ func (s *SubSampler) GetSample() (x, y, w float64, err error) {
 	}
 	x = float64(s.current%s.w+s.x) + rand.Float64()
 	y = float64(s.current/s.w+s.y) + rand.Float64()
-	w = s.sampleWeight
 	s.current++
 	return
 }
@@ -57,12 +54,11 @@ func (s *SubSampler) Reset() {
 // pixle should be generated.
 func NewSubSampler(x, y, w, h uint32, perPixel uint32, p *SimpleSampler) *SubSampler {
 	return &SubSampler{
-		x:            x,
-		y:            y,
-		w:            w,
-		perPixel:     perPixel,
-		sampleWeight: 1.0 / float64(perPixel),
-		end:          w * h,
-		parent:       p,
+		x:        x,
+		y:        y,
+		w:        w,
+		perPixel: perPixel,
+		end:      w * h,
+		parent:   p,
 	}
 }
