@@ -50,6 +50,7 @@ var (
 		"maximum number of frames per second")
 	showBBoxes = flag.Bool("show-bboxes", false,
 		"show bounding boxes around objects")
+	samples = flag.Uint("samples", 10, "How many samples per pixel to be taken")
 )
 
 func main() {
@@ -92,7 +93,7 @@ func infileRenderer() {
 		log.Fatalf("%s\n", err)
 	}
 
-	smpl := sampler.NewSimple(output)
+	smpl := sampler.NewSimple(output, *samples)
 	cam := MakePinholeCamera(output)
 	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
@@ -160,7 +161,7 @@ func openglWindowRenderer() {
 		log.Fatalf("%s\n", err.Error())
 	}
 
-	smpl := sampler.NewSimple(output)
+	smpl := sampler.NewSimple(output, *samples)
 
 	if *interactive {
 		smpl.MakeContinuous()

@@ -15,7 +15,7 @@ func BenchmarkImageCreation(t *testing.B) {
 	if err := output.Init(1024, 768); err != nil {
 		t.Fatalf("Initializing nil output failed. %s", err)
 	}
-	smpl := sampler.NewSimple(output)
+	smpl := sampler.NewSimple(output, 1)
 	cam := MakePinholeCamera(output)
 	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)

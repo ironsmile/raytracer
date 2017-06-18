@@ -72,7 +72,7 @@ func (s *SimpleSampler) MakeContinuous() {
 
 // NewSimple returns a SimpleSampler, suited for a film. This means that the sampler
 // would take into consideration the film's width and height.
-func NewSimple(f film.Film) *SimpleSampler {
+func NewSimple(f film.Film, samples uint) *SimpleSampler {
 	s := &SimpleSampler{
 		output: f,
 	}
@@ -103,7 +103,7 @@ func NewSimple(f film.Film) *SimpleSampler {
 			sh = uint32(f.Height()) - sy
 		}
 
-		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 10, s)
+		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, uint32(samples), s)
 	}
 	return s
 }
