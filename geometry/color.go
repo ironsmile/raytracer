@@ -10,6 +10,15 @@ type Color struct {
 	blue  float64
 }
 
+var (
+	// Black is simply the black color
+	Black = Color{
+		red:   0,
+		green: 0,
+		blue:  0,
+	}
+)
+
 func (c *Color) clamp() {
 	c.red = utils.Clamp(c.red, 0, 1)
 	c.green = utils.Clamp(c.green, 0, 1)

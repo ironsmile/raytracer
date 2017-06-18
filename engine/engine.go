@@ -2,7 +2,7 @@ package engine
 
 import (
 	"fmt"
-	"math"
+	"math/rand"
 	"runtime"
 	"sync"
 	"time"
@@ -64,14 +64,14 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 
 	o2w, w2o := prim.GetTransforms()
 	pio := w2o.Point(pi)
-	InNormal := o2w.Normal(in.DfGeometry.Shape.NormalAt(pio))
+	inNormal := o2w.Normal(in.DfGeometry.Shape.NormalAt(pio))
 
-	cosI := InNormal.Dot(ray.Direction)
+	cosI := inNormal.Dot(ray.Direction)
 	if cosI > 0 {
 		// The hit is from the inside of the primitive. Normally, all normals would be
 		// pointing toward the primitive exterior. So we have to invert it to the interior
 		// for proper calculations.
-		InNormal = InNormal.Neg()
+		inNormal = inNormal.Neg()
 	}
 
 	primMat := in.DfGeometry.Shape.MaterialAt(pio)
@@ -82,48 +82,20 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	// 	e.debugged = true
 	// 	debugging = true
 	// 	fmt.Printf("\nIntersected: %s\nnormal: %s\nretdist: %f\n",
-	// 		prim.GetName(), InNormal, retdist)
+	// 		prim.GetName(), inNormal, retdist)
 	// }
 
-	for l := 0; l < e.Scene.GetNrLights(); l++ {
-		light := e.Scene.GetLight(l)
+	light := e.calculateLight(pi, inNormal)
 
-		source := light.GetLightSource()
-		shadowRayStart := pi.Plus(InNormal.MultiplyScalar(geometry.EPSILON))
-		L := source.Minus(shadowRayStart).Normalize()
-		shadowRay := geometry.NewRay(shadowRayStart, L)
-		shadowRay.Maxt = shadowRayStart.Distance(source)
-
-		if intersected := e.Scene.IntersectP(shadowRay); intersected {
-			continue
-		}
-
-		dot := InNormal.Product(L)
-		luminousity := 0.8
-
-		if primMat.Diff > 0 && dot > 0 {
-			weight := dot * primMat.Diff * luminousity
-			retColor.PlusIP(light.Shape().MaterialAt(source).Color.
-				Multiply(primMat.Color).MultiplyScalarIP(weight))
-		}
-
-		if primMat.GetSpecular() > 0 {
-			V := ray.Direction
-			R := L.Minus(InNormal.MultiplyScalar(2.0 * L.Product(InNormal)))
-			dot := V.Product(R)
-			if dot > 0 {
-				spec := math.Pow(dot, 20) * primMat.GetSpecular() * luminousity
-				retColor.PlusIP(light.Shape().MaterialAt(source).Color.
-					MultiplyScalar(spec))
-			}
-		}
+	if primMat.Diff > 0 {
+		retColor.PlusIP(primMat.Color.Multiply(&light))
 	}
 
 	// Reflection
 	if primMat.Refl > 0.0 {
 
-		R := ray.Direction.Minus(InNormal.MultiplyScalar(
-			ray.Direction.Product(InNormal) * 2.0),
+		R := ray.Direction.Minus(inNormal.MultiplyScalar(
+			ray.Direction.Product(inNormal) * 2.0),
 		)
 
 		refRay := geometry.NewRay(pi, R)
@@ -139,7 +111,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	// Refraction
 	if primMat.Refr > 0.0 && primMat.RefrIndex > 0 {
 
-		var refrNormal = InNormal
+		var refrNormal = inNormal
 		var n1, n2 = 1.0, primMat.RefrIndex
 		var reflectance, transmittance float64
 
@@ -177,6 +149,29 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	}
 
 	return retColor
+}
+
+func (e *Engine) calculateLight(pi, inNormal geometry.Vector) geometry.Color {
+	l := rand.Intn(e.Scene.GetNrLights() - 1)
+	light := e.Scene.GetLight(l)
+
+	source := light.GetLightSource()
+	shadowRayStart := pi.Plus(inNormal.MultiplyScalar(geometry.EPSILON))
+	L := source.Minus(shadowRayStart).Normalize()
+	shadowRay := geometry.NewRay(shadowRayStart, L)
+	shadowRay.Maxt = shadowRayStart.Distance(source)
+
+	if intersected := e.Scene.IntersectP(shadowRay); intersected {
+		return geometry.Black
+	}
+
+	dot := inNormal.Product(L)
+
+	if dot <= 0 {
+		return geometry.Black
+	}
+
+	return *light.Shape().MaterialAt(source).Color.MultiplyScalar(dot)
 }
 
 // Render starts the rendering process. Exits when one full frame is done. It does that
