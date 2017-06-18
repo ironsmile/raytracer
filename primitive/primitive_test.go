@@ -87,11 +87,16 @@ func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
 		t.Error("The rectangle.Intersect method failed: false negative")
 	}
 
+	pi := ray.At(in.DfGeometry.Distance)
+	o2w, w2o := in.Primitive.GetTransforms()
+	pio := w2o.Point(pi)
+	inNormal := o2w.Normal(in.DfGeometry.Shape.NormalAt(pio))
+
 	expectedNormal := geometry.NewVector(0, 0, -1)
 
-	if !in.DfGeometry.Normal.Equals(expectedNormal) {
+	if !inNormal.Equals(expectedNormal) {
 		t.Errorf("Wrong normal returned by rectangle.Intersect. Expected %s but got %s",
-			expectedNormal, in.DfGeometry.Normal)
+			expectedNormal, inNormal)
 	}
 
 	if math.Abs(in.DfGeometry.Distance-30) > 0.001 {

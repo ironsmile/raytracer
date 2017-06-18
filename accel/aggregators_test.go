@@ -109,9 +109,12 @@ func testIntersectionsWithAggregator(
 		}
 
 		if hitAll {
-			lastHit = ray.At(isectAll.DfGeometry.Distance).Plus(
-				isectAll.DfGeometry.Normal.MultiplyScalar(geometry.EPSILON),
-			)
+			pi := ray.At(isectAll.DfGeometry.Distance)
+			o2w, w2o := isectAll.Primitive.GetTransforms()
+			pio := w2o.Point(pi)
+			inNormal := o2w.Normal(isectAll.DfGeometry.Shape.NormalAt(pio))
+
+			lastHit = pi.Plus(inNormal.MultiplyScalar(geometry.EPSILON))
 		}
 
 		if inconsistentBounds {
