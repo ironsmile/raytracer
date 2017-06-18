@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ironsmile/raytracer/camera"
+	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
@@ -44,8 +45,8 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 
 // Raytrace returns intersection information for particular ray in the engine's
 // scene.
-func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) geometry.Color {
-	var retColor geometry.Color
+func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) color.Color {
+	var retColor color.Color
 
 	if depth > TraceDepth {
 		return retColor
@@ -123,7 +124,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 			reflectance = geometry.Schlick2(refrNormal, ray.Direction, n1, n2)
 		}
 
-		var endColor geometry.Color
+		var endColor color.Color
 
 		transmittance = 1 - reflectance
 
@@ -151,7 +152,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	return retColor
 }
 
-func (e *Engine) calculateLight(pi, inNormal geometry.Vector) geometry.Color {
+func (e *Engine) calculateLight(pi, inNormal geometry.Vector) color.Color {
 	l := rand.Intn(e.Scene.GetNrLights() - 1)
 	light := e.Scene.GetLight(l)
 
@@ -162,13 +163,13 @@ func (e *Engine) calculateLight(pi, inNormal geometry.Vector) geometry.Color {
 	shadowRay.Maxt = shadowRayStart.Distance(source)
 
 	if intersected := e.Scene.IntersectP(shadowRay); intersected {
-		return geometry.Black
+		return color.Black
 	}
 
 	dot := inNormal.Product(L)
 
 	if dot <= 0 {
-		return geometry.Black
+		return color.Black
 	}
 
 	return *light.Shape().MaterialAt(source).Color.MultiplyScalar(dot)
@@ -199,7 +200,7 @@ func (e *Engine) Render() {
 func (e *Engine) subRender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	var accColor geometry.Color
+	var accColor color.Color
 	var in primitive.Intersection
 
 	for {
@@ -235,7 +236,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 				}
 
 				if e.Scene.IntersectBBoxEdge(ray) {
-					accColor = *geometry.NewColor(0, 0, 1)
+					accColor = *color.NewColor(0, 0, 1)
 				}
 
 				// debugRay := geometry.NewRay(
@@ -243,7 +244,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 				// 	geometry.NewVector(0.151860, -0.768368, 0.621731),
 				// )
 				// if _, ok := ray.Intersect(debugRay); ok {
-				// 	accColor = *geometry.NewColor(1, 1, 0)
+				// 	accColor = *color.NewColor(1, 1, 0)
 				// }
 			}
 

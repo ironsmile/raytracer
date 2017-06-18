@@ -187,14 +187,14 @@ func (g *GlWindow) Set(x int, y int, clr color.Color) error {
 	samples := g.pixSamples[sampleInd]
 
 	oldWeight := float32(samples) / float32(samples+1)
-	newWiehgt := 1 - oldWeight
+	newWeight := 1 - oldWeight
 
 	ri, gi, bi, _ := clr.RGBA()
 
 	ind := g.width*y*3 + x*3
-	g.pixBuffer[ind] = g.pixBuffer[ind]*oldWeight + newWiehgt*float32(ri)/65535.0
-	g.pixBuffer[ind+1] = g.pixBuffer[ind+1]*oldWeight + newWiehgt*float32(gi)/65535.0
-	g.pixBuffer[ind+2] = g.pixBuffer[ind+2]*oldWeight + newWiehgt*float32(bi)/65535.0
+	g.pixBuffer[ind] = g.pixBuffer[ind]*oldWeight + newWeight*float32(ri)/65535.0
+	g.pixBuffer[ind+1] = g.pixBuffer[ind+1]*oldWeight + newWeight*float32(gi)/65535.0
+	g.pixBuffer[ind+2] = g.pixBuffer[ind+2]*oldWeight + newWeight*float32(bi)/65535.0
 
 	g.pixSamples[sampleInd]++
 

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/mat"
 
 	"github.com/ironsmile/raytracer/bbox"
@@ -98,7 +99,7 @@ func NewObject(filePath string) (*Object, error) {
 			if matLib != nil {
 				if foundMat, ok := matLib.FindMaterial(mesh.MaterialName); ok {
 					faceMath := mat.Material{
-						Color: geometry.NewColor(
+						Color: color.NewColor(
 							foundMat.DiffuseColor.R,
 							foundMat.DiffuseColor.G,
 							foundMat.DiffuseColor.B,

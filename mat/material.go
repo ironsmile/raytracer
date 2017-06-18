@@ -1,16 +1,16 @@
 package mat
 
 import (
-	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/color"
 )
 
 var defaultMat = Material{
-	Color: geometry.NewColor(1, 0, 0),
+	Color: color.NewColor(1, 0, 0),
 	Diff:  1,
 }
 
 type Material struct {
-	Color     *geometry.Color
+	Color     *color.Color
 	Refl      float64
 	Diff      float64
 	Refr      float64

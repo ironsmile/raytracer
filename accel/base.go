@@ -2,6 +2,7 @@ package accel
 
 import (
 	"github.com/ironsmile/raytracer/bbox"
+	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
@@ -39,7 +40,7 @@ func (b *Base) Refine() []primitive.Primitive {
 }
 
 // GetColor implements the primivite interface
-func (b *Base) GetColor() *geometry.Color {
+func (b *Base) GetColor() *color.Color {
 	panic("GetColor should not be called for accelerator")
 }
 

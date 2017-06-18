@@ -3,6 +3,7 @@ package example
 import (
 	"fmt"
 
+	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
@@ -17,12 +18,12 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	wallMaterial := mat.Material{}
 	wallMaterial.Refl = 0
 	wallMaterial.Diff = 0.95
-	wallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	wallMaterial.Color = color.NewColor(0.4, 0.3, 0.3)
 
 	reflectiveWallMaterial := mat.Material{}
 	reflectiveWallMaterial.Refl = 1.0
 	reflectiveWallMaterial.Diff = 0.4
-	reflectiveWallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	reflectiveWallMaterial.Color = color.NewColor(0.4, 0.3, 0.3)
 
 	// "rect-floor"
 	rect := primitive.NewQuad(
@@ -95,7 +96,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
@@ -107,7 +108,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, 1)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 
@@ -119,7 +120,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 

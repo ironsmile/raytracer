@@ -3,6 +3,7 @@ package example
 import (
 	"fmt"
 
+	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
@@ -17,12 +18,12 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	wallMaterial := mat.Material{}
 	wallMaterial.Refl = 0
 	wallMaterial.Diff = 0.95
-	wallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	wallMaterial.Color = color.NewColor(0.4, 0.3, 0.3)
 
 	reflectiveWallMaterial := mat.Material{}
 	reflectiveWallMaterial.Refl = 1.0
 	reflectiveWallMaterial.Diff = 0.4
-	reflectiveWallMaterial.Color = geometry.NewColor(0.4, 0.3, 0.3)
+	reflectiveWallMaterial.Color = color.NewColor(0.4, 0.3, 0.3)
 
 	// "rect-floor"
 	rect := primitive.NewQuad(
@@ -95,7 +96,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
 		Diff:  0.9,
-		Color: geometry.NewColor(1, 0, 0),
+		Color: color.NewColor(1, 0, 0),
 	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(1, -0.8, 3)))
 	primitive.SetName(sphere.GetID(), "big red sphere")
@@ -108,7 +109,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		Refr:      0.6,
 		RefrIndex: 1.5,
 		Diff:      0.4,
-		Color:     geometry.NewColor(0.7, 0.7, 1),
+		Color:     color.NewColor(0.7, 0.7, 1),
 	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-5.5, -0.5, 7)))
 	primitive.SetName(sphere.GetID(), "small sphere")
@@ -119,7 +120,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Shape().SetMaterial(mat.Material{
 		Refl:  0.9,
 		Diff:  0.4,
-		Color: geometry.NewColor(0.5, 1, 0),
+		Color: color.NewColor(0.5, 1, 0),
 	})
 	sphere.SetTransform(transform.Translate(geometry.NewVector(-6.5, -2.5, 25)))
 	primitive.SetName(sphere.GetID(), "small sphere far away")
@@ -134,7 +135,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	triangle.Shape().SetMaterial(mat.Material{
 		Refl:  0.0,
 		Diff:  0.3,
-		Color: geometry.NewColor(0.3, 1, 0),
+		Color: color.NewColor(0.3, 1, 0),
 	})
 	primitive.SetName(triangle.GetID(), "green triangle")
 	primitives = append(primitives, triangle)
@@ -144,7 +145,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(0, 5, 5)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Visible light source")
@@ -157,7 +158,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, 1)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Invisible light source")
@@ -170,7 +171,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	sphere.Light = true
 	sphere.LightSource = geometry.NewVector(2, 5, -10)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: geometry.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(0.9, 0.9, 0.9),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Behind the shoulder lightsource")
@@ -200,7 +201,7 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	quad.Shape().SetMaterial(mat.Material{
 		Refl:  0.5,
 		Diff:  0.8,
-		Color: geometry.NewColor(0, 0, 1),
+		Color: color.NewColor(0, 0, 1),
 	})
 	quad.SetTransform(
 		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(

@@ -1,4 +1,4 @@
-package geometry
+package color
 
 import (
 	"github.com/ironsmile/raytracer/utils"
