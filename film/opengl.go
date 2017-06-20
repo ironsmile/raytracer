@@ -12,7 +12,7 @@ import (
 	rColor "github.com/ironsmile/raytracer/color"
 )
 
-// GLWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
+// GlWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
 // The scene is renderd in a texture which is applied on a two whole screen triangles.
 type GlWindow struct {
 	width  int
