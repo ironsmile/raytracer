@@ -23,7 +23,7 @@ type SubSampler struct {
 }
 
 // GetSample returns a single sample which should be raytraced
-func (s *SubSampler) GetSample() (x, y float64, err error) {
+func (s *SubSampler) GetSample(rnd *rand.Rand) (x, y float64, err error) {
 	if s.current >= s.end {
 		if s.samplesDone+1 >= s.perPixel {
 			err = ErrSubSamplerEnd
@@ -36,8 +36,8 @@ func (s *SubSampler) GetSample() (x, y float64, err error) {
 		err = ErrEndOfSampling
 		return
 	}
-	x = float64(s.current%s.w+s.x) + rand.Float64()
-	y = float64(s.current/s.w+s.y) + rand.Float64()
+	x = float64(s.current%s.w+s.x) + rnd.Float64()
+	y = float64(s.current/s.w+s.y) + rnd.Float64()
 	s.current++
 	return
 }

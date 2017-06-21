@@ -46,7 +46,11 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 
 // Raytrace returns intersection information for particular ray in the engine's
 // scene.
-func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) color.Color {
+func (e *Engine) Raytrace(
+	ray geometry.Ray,
+	depth int64,
+	rnd *rand.Rand,
+	in *primitive.Intersection) color.Color {
 
 	if depth > TraceDepth {
 		return color.Black
@@ -86,10 +90,10 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	// 		prim.GetName(), inNormal, retdist)
 	// }
 
-	directLight := e.calculateLight(pi, inNormal)
+	directLight := e.calculateLight(pi, inNormal, rnd)
 
-	indirectRay := e.getBRDFRay(ray, primMat, inNormal, pi)
-	indirectLight := e.Raytrace(indirectRay, depth+1, in)
+	indirectRay := e.getBRDFRay(ray, primMat, inNormal, pi, rnd)
+	indirectLight := e.Raytrace(indirectRay, depth+1, rnd, in)
 
 	return *primMat.Color.Multiply(directLight.Plus(&indirectLight))
 }
@@ -99,15 +103,16 @@ func (e *Engine) getBRDFRay(
 	primMat *mat.Material,
 	inNormal geometry.Vector,
 	pi geometry.Vector,
+	rnd *rand.Rand,
 ) geometry.Ray {
 
-	rnd := rand.Float64()
+	chance := rnd.Float64()
 
 	cosI := -inNormal.Dot(ray.Direction)
 	reflectionDirection := ray.Direction.Plus(inNormal.MultiplyScalar(2 * cosI))
 
 	// Reflection
-	if rnd <= primMat.Refl {
+	if chance <= primMat.Refl {
 		refRay := geometry.NewRay(pi, reflectionDirection)
 		refRay.Mint = geometry.EPSILON
 		return refRay
@@ -126,9 +131,9 @@ func (e *Engine) getBRDFRay(
 			reflectance = geometry.Schlick2(inNormal, ray.Direction, n1, n2)
 		}
 
-		rnd = rand.Float64()
+		chance = rnd.Float64()
 
-		if rnd <= reflectance {
+		if chance <= reflectance {
 			refRay := geometry.NewRay(pi, reflectionDirection)
 			refRay.Mint = geometry.EPSILON
 			return refRay
@@ -142,9 +147,9 @@ func (e *Engine) getBRDFRay(
 
 	// Generating a ray in a hemiosphere around the normal of intersection
 	rndDirection := geometry.Vector{
-		X: rand.Float64() - 0.5,
-		Y: rand.Float64() - 0.5,
-		Z: rand.Float64() - 0.5,
+		X: rnd.Float64() - 0.5,
+		Y: rnd.Float64() - 0.5,
+		Z: rnd.Float64() - 0.5,
 	}
 
 	if rndDirection.Product(inNormal) < 0 {
@@ -157,8 +162,8 @@ func (e *Engine) getBRDFRay(
 	return refRay
 }
 
-func (e *Engine) calculateLight(pi, inNormal geometry.Vector) color.Color {
-	l := rand.Intn(e.Scene.GetNrLights() - 1)
+func (e *Engine) calculateLight(pi, inNormal geometry.Vector, rnd *rand.Rand) color.Color {
+	l := rnd.Intn(e.Scene.GetNrLights() - 1)
 	light := e.Scene.GetLight(l)
 
 	source := light.GetLightSource()
@@ -208,6 +213,8 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 	var accColor color.Color
 	var in primitive.Intersection
 
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	for {
 
 		subSampler, err := e.Sampler.GetSubSampler()
@@ -217,7 +224,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 		}
 
 		for {
-			x, y, err := subSampler.GetSample()
+			x, y, err := subSampler.GetSample(rnd)
 
 			if err == sampler.ErrEndOfSampling {
 				return
@@ -233,7 +240,7 @@ func (e *Engine) subRender(wg *sync.WaitGroup) {
 			// fmt.Printf("x: %f, y: %f\n", x, y)
 
 			ray := e.Camera.GenerateRay(x, y)
-			accColor = e.Raytrace(ray, 1, &in)
+			accColor = e.Raytrace(ray, 1, rnd, &in)
 
 			if e.ShowBBoxes {
 				if in.Primitive != nil {
