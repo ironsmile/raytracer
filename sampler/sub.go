@@ -14,10 +14,8 @@ type SubSampler struct {
 	y uint32
 	w uint32
 
-	current     uint32
-	end         uint32
-	perPixel    uint32
-	samplesDone uint32
+	current uint32
+	end     uint32
 
 	parent *SimpleSampler
 }
@@ -25,12 +23,8 @@ type SubSampler struct {
 // GetSample returns a single sample which should be raytraced
 func (s *SubSampler) GetSample(rnd *rand.Rand) (x, y float64, err error) {
 	if s.current >= s.end {
-		if s.samplesDone+1 >= s.perPixel {
-			err = ErrSubSamplerEnd
-			return
-		}
-		s.current = 0
-		s.samplesDone++
+		err = ErrSubSamplerEnd
+		return
 	}
 	if s.parent.stopped {
 		err = ErrEndOfSampling
@@ -44,7 +38,6 @@ func (s *SubSampler) GetSample(rnd *rand.Rand) (x, y float64, err error) {
 
 // Reset returns this sub sampler to its initial condition and ready for the next frame
 func (s *SubSampler) Reset() {
-	s.samplesDone = 0
 	s.current = 0
 }
 
@@ -52,13 +45,12 @@ func (s *SubSampler) Reset() {
 // represent the coordinates of this sampler in image space. w and h are the width and
 // height of the sampled space respectively. perPixel dictates how many samples per
 // pixle should be generated.
-func NewSubSampler(x, y, w, h uint32, perPixel uint32, p *SimpleSampler) *SubSampler {
+func NewSubSampler(x, y, w, h uint32, p *SimpleSampler) *SubSampler {
 	return &SubSampler{
-		x:        x,
-		y:        y,
-		w:        w,
-		perPixel: perPixel,
-		end:      w * h,
-		parent:   p,
+		x:      x,
+		y:      y,
+		w:      w,
+		end:    w * h,
+		parent: p,
 	}
 }

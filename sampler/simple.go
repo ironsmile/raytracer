@@ -20,6 +20,9 @@ type SimpleSampler struct {
 	subSamplersCount uint32
 	current          uint32
 
+	perPixel    uint32
+	samplesDone uint32
+
 	stopped    bool
 	continuous bool
 }
@@ -34,11 +37,6 @@ func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
 
 	sample := atomic.AddUint32(&s.current, 1) - 1
 
-	if !s.continuous && sample >= s.subSamplersCount {
-		e = ErrEndOfSampling
-		return
-	}
-
 	if s.continuous && sample >= s.subSamplersCount {
 		sample = sample % s.subSamplersCount
 	}
@@ -46,10 +44,26 @@ func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
 	ss = s.subSamplers[sample]
 	ss.Reset()
 
-	if sample == 0 {
-		s.output.DoneFrame()
-		s.output.StartFrame()
+	if sample != 0 {
+		return
 	}
+
+	finishedSamples := atomic.AddUint32(&s.samplesDone, 1) - 1
+
+	if finishedSamples < s.perPixel {
+		return
+	}
+
+	s.output.DoneFrame()
+
+	if !s.continuous {
+		e = ErrEndOfSampling
+		return
+	}
+
+	s.output.StartFrame()
+
+	s.samplesDone = 1
 
 	return
 }
@@ -74,7 +88,8 @@ func (s *SimpleSampler) MakeContinuous() {
 // would take into consideration the film's width and height.
 func NewSimple(f film.Film, samples uint) *SimpleSampler {
 	s := &SimpleSampler{
-		output: f,
+		output:   f,
+		perPixel: uint32(samples),
 	}
 
 	var splits = uint32(f.Width() / 32)
@@ -103,7 +118,7 @@ func NewSimple(f film.Film, samples uint) *SimpleSampler {
 			sh = uint32(f.Height()) - sy
 		}
 
-		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, uint32(samples), s)
+		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, s)
 	}
 	return s
 }
