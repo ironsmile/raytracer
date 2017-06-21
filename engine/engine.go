@@ -11,6 +11,7 @@ import (
 	"github.com/ironsmile/raytracer/color"
 	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
+	"github.com/ironsmile/raytracer/mat"
 	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/sampler"
 	"github.com/ironsmile/raytracer/scene"
@@ -18,7 +19,7 @@ import (
 
 const (
 	// TraceDepth is the limit of generated rays recursion
-	TraceDepth = 9
+	TraceDepth = 5
 )
 
 // Engine is the type which is resposible for bringing the camera, scene and
@@ -46,14 +47,13 @@ func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
 // Raytrace returns intersection information for particular ray in the engine's
 // scene.
 func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersection) color.Color {
-	var retColor color.Color
 
 	if depth > TraceDepth {
-		return retColor
+		return color.Black
 	}
 
 	if ok := e.Scene.Intersect(ray, in); !ok {
-		return retColor
+		return color.Black
 	}
 
 	prim := in.Primitive
@@ -86,70 +86,75 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	// 		prim.GetName(), inNormal, retdist)
 	// }
 
-	light := e.calculateLight(pi, inNormal)
+	directLight := e.calculateLight(pi, inNormal)
 
-	if primMat.Diff > 0 {
-		retColor.PlusIP(primMat.Color.Multiply(&light))
-	}
+	indirectRay := e.getBRDFRay(ray, primMat, inNormal, pi)
+	indirectLight := e.Raytrace(indirectRay, depth+1, in)
+
+	return *primMat.Color.Multiply(directLight.Plus(&indirectLight))
+}
+
+func (e *Engine) getBRDFRay(
+	ray geometry.Ray,
+	primMat *mat.Material,
+	inNormal geometry.Vector,
+	pi geometry.Vector,
+) geometry.Ray {
+
+	rnd := rand.Float64()
+
+	cosI := -inNormal.Dot(ray.Direction)
+	reflectionDirection := ray.Direction.Plus(inNormal.MultiplyScalar(2 * cosI))
 
 	// Reflection
-	if primMat.Refl > 0.0 {
-
-		R := ray.Direction.Minus(inNormal.MultiplyScalar(
-			ray.Direction.Product(inNormal) * 2.0),
-		)
-
-		refRay := geometry.NewRay(pi, R)
+	if rnd <= primMat.Refl {
+		refRay := geometry.NewRay(pi, reflectionDirection)
 		refRay.Mint = geometry.EPSILON
-
-		// refRay.Debug = ray.Debug
-		refColor := e.Raytrace(refRay, depth+1, in)
-
-		retColor.PlusIP(primMat.Color.Multiply(
-			&refColor).MultiplyScalarIP(primMat.Refl))
+		return refRay
 	}
 
 	// Refraction
 	if primMat.Refr > 0.0 && primMat.RefrIndex > 0 {
-
-		var refrNormal = inNormal
 		var n1, n2 = 1.0, primMat.RefrIndex
-		var reflectance, transmittance float64
+		var reflectance float64
 
-		refrDirection, tir := ray.Refract(refrNormal, n1, n2)
+		refrDirection, tir := ray.Refract(inNormal, n1, n2)
 
 		if tir {
 			reflectance = 1
 		} else {
-			reflectance = geometry.Schlick2(refrNormal, ray.Direction, n1, n2)
+			reflectance = geometry.Schlick2(inNormal, ray.Direction, n1, n2)
 		}
 
-		var endColor color.Color
+		rnd = rand.Float64()
 
-		transmittance = 1 - reflectance
-
-		if transmittance > 0 {
-			reflRay := geometry.NewRay(pi, refrDirection)
-			reflRay.Mint = geometry.EPSILON * 2
-			refrColor := e.Raytrace(reflRay, depth+1, in)
-			endColor.PlusIP(refrColor.MultiplyScalarIP(transmittance))
-		}
-
-		if reflectance > 0 {
-			cosI := -refrNormal.Dot(ray.Direction)
-			R := ray.Direction.Plus(refrNormal.MultiplyScalar(2 * cosI))
-
-			refRay := geometry.NewRay(pi, R)
+		if rnd <= reflectance {
+			refRay := geometry.NewRay(pi, reflectionDirection)
 			refRay.Mint = geometry.EPSILON
-			refColor := e.Raytrace(refRay, depth+1, in)
-			endColor.PlusIP(refColor.MultiplyScalarIP(reflectance))
+			return refRay
 		}
 
-		retColor.MultiplyScalarIP(1 - primMat.Refr).PlusIP(
-			(&endColor).MultiplyScalarIP(primMat.Refr))
+		// transmittance
+		reflRay := geometry.NewRay(pi, refrDirection)
+		reflRay.Mint = geometry.EPSILON * 2
+		return reflRay
 	}
 
-	return retColor
+	// Generating a ray in a hemiosphere around the normal of intersection
+	rndDirection := geometry.Vector{
+		X: rand.Float64() - 0.5,
+		Y: rand.Float64() - 0.5,
+		Z: rand.Float64() - 0.5,
+	}
+
+	if rndDirection.Product(inNormal) < 0 {
+		rndDirection = rndDirection.Neg()
+	}
+
+	refRay := geometry.NewRay(pi, rndDirection)
+	refRay.Mint = geometry.EPSILON
+
+	return refRay
 }
 
 func (e *Engine) calculateLight(pi, inNormal geometry.Vector) color.Color {
