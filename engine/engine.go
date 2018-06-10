@@ -57,7 +57,7 @@ func (e *Engine) Raytrace(
 	}
 
 	if ok := e.Scene.Intersect(ray, in); !ok {
-		return color.Black
+		return color.Sky
 	}
 
 	prim := in.Primitive
@@ -90,12 +90,19 @@ func (e *Engine) Raytrace(
 	// 		prim.GetName(), inNormal, retdist)
 	// }
 
-	directLight := e.calculateLight(pi, inNormal, rnd)
+	if true {
+		directLight := e.calculateLight(pi, inNormal, rnd)
+
+		indirectRay := e.getBRDFRay(ray, primMat, inNormal, pi, rnd)
+		indirectLight := e.Raytrace(indirectRay, depth+1, rnd, in)
+
+		return *primMat.Color.Multiply(directLight.Plus(&indirectLight))
+	}
 
 	indirectRay := e.getBRDFRay(ray, primMat, inNormal, pi, rnd)
 	indirectLight := e.Raytrace(indirectRay, depth+1, rnd, in)
 
-	return *primMat.Color.Multiply(directLight.Plus(&indirectLight))
+	return *primMat.Color.Multiply(&indirectLight)
 }
 
 func (e *Engine) getBRDFRay(
@@ -165,6 +172,7 @@ func (e *Engine) getBRDFRay(
 func (e *Engine) calculateLight(pi, inNormal geometry.Vector, rnd *rand.Rand) color.Color {
 	l := rnd.Intn(e.Scene.GetNrLights() - 1)
 	light := e.Scene.GetLight(l)
+	in := primitive.Intersection{}
 
 	source := light.GetLightSource()
 	shadowRayStart := pi.Plus(inNormal.MultiplyScalar(geometry.EPSILON))
@@ -172,7 +180,11 @@ func (e *Engine) calculateLight(pi, inNormal geometry.Vector, rnd *rand.Rand) co
 	shadowRay := geometry.NewRay(shadowRayStart, L)
 	shadowRay.Maxt = shadowRayStart.Distance(source)
 
-	if intersected := e.Scene.IntersectP(shadowRay); intersected {
+	if intersected := e.Scene.Intersect(shadowRay, &in); !intersected {
+		return color.Black
+	}
+
+	if in.Primitive != light {
 		return color.Black
 	}
 

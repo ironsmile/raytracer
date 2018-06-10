@@ -85,10 +85,6 @@ func (b *BasePrimitive) GetID() uint64 {
 // Intersect returns whether a ray intersects this primitive and at what distance from
 // the ray origin is this intersection.
 func (b *BasePrimitive) Intersect(ray geometry.Ray, in *Intersection) bool {
-	if b.IsLight() {
-		return false
-	}
-
 	ray = b.worldToObj.Ray(ray)
 
 	if hit := b.shape.Intersect(ray, &in.DfGeometry); !hit {
@@ -101,10 +97,6 @@ func (b *BasePrimitive) Intersect(ray geometry.Ray, in *Intersection) bool {
 
 // IntersectP returns whether a ray intersects this primitive and nothing more
 func (b *BasePrimitive) IntersectP(ray geometry.Ray) bool {
-	if b.IsLight() {
-		return false
-	}
-
 	ray = b.worldToObj.Ray(ray)
 	return b.shape.IntersectP(ray)
 }

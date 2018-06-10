@@ -36,16 +36,16 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitive.SetName(rect.GetID(), "rect-floor")
 	primitives = append(primitives, rect)
 
-	// "rect-ceiling"
-	rect = primitive.NewQuad(
-		geometry.NewVector(-25, 16, 30),
-		geometry.NewVector(-25, 16, -25),
-		geometry.NewVector(10, 16, -25),
-		geometry.NewVector(10, 16, 30),
-	)
-	rect.Shape().SetMaterial(wallMaterial)
-	primitive.SetName(rect.GetID(), "rect-ceiling")
-	primitives = append(primitives, rect)
+	// // "rect-ceiling"
+	// rect = primitive.NewQuad(
+	// 	geometry.NewVector(-25, 16, 30),
+	// 	geometry.NewVector(-25, 16, -25),
+	// 	geometry.NewVector(10, 16, -25),
+	// 	geometry.NewVector(10, 16, 30),
+	// )
+	// rect.Shape().SetMaterial(wallMaterial)
+	// primitive.SetName(rect.GetID(), "rect-ceiling")
+	// primitives = append(primitives, rect)
 
 	// "rect-left"
 	rect = primitive.NewQuad(
@@ -141,11 +141,11 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitives = append(primitives, triangle)
 
 	// "Visible light source"
-	sphere = primitive.NewSphere(0.1)
+	sphere = primitive.NewSphere(20)
 	sphere.Light = true
-	sphere.LightSource = geometry.NewVector(0, 5, 5)
+	sphere.LightSource = geometry.NewVector(0, 70, 5)
 	sphere.Shape().SetMaterial(mat.Material{
-		Color: color.NewColor(0.9, 0.9, 0.9),
+		Color: color.NewColor(1, 1, 1).MultiplyScalar(10),
 	})
 	sphere.SetTransform(transform.Translate(sphere.LightSource))
 	primitive.SetName(sphere.GetID(), "Visible light source")

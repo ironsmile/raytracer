@@ -1,6 +1,8 @@
 package color
 
 import (
+	"math"
+
 	"github.com/ironsmile/raytracer/utils"
 )
 
@@ -12,19 +14,18 @@ type Color struct {
 	blue  float64
 }
 
+// Common colors
 var (
-	// Black is simply the black color
-	Black = Color{
-		red:   0,
-		green: 0,
-		blue:  0,
-	}
+	Black = Color{}
+	Sky   = Color{0.517, 0.807, 0.921}
 )
 
-func (c *Color) clamp() {
-	c.red = utils.Clamp(c.red, 0, 1)
-	c.green = utils.Clamp(c.green, 0, 1)
-	c.blue = utils.Clamp(c.blue, 0, 1)
+func (c *Color) Clamp() *Color {
+	return &Color{
+		red:   utils.Clamp(c.red, 0, 1),
+		green: utils.Clamp(c.green, 0, 1),
+		blue:  utils.Clamp(c.blue, 0, 1),
+	}
 }
 
 // Red returns the red color's intensity as a float
@@ -50,15 +51,25 @@ func (c *Color) RGBA() (r, g, b, a uint32) {
 // Plus "adds" two colors together and returns the result
 func (c *Color) Plus(other *Color) *Color {
 	r := &Color{c.red + other.red, c.green + other.green, c.blue + other.blue}
-	r.clamp()
 	return r
+}
+
+// Minus "substracts" two colors one from the other
+func (c *Color) Minus(other *Color) *Color {
+	r := &Color{c.red - other.red, c.green - other.green, c.blue - other.blue}
+	return r
+}
+
+// Pow applies math.pow to every component of the color and returns the result as a
+// new color
+func (c *Color) Pow(n float64) *Color {
+	return &Color{math.Pow(c.red, n), math.Pow(c.green, n), math.Pow(c.blue, n)}
 }
 
 // PlusIP means "Plus In Place". Its "adds" the other (pass as an argument) color into the
 // current (represented by the point receiver) one.
 func (c *Color) PlusIP(other *Color) *Color {
 	c.red, c.green, c.blue = c.red+other.red, c.green+other.green, c.blue+other.blue
-	c.clamp()
 	return c
 }
 
@@ -79,7 +90,6 @@ func (c *Color) MultiplyIP(other *Color) *Color {
 // the result as a new color.
 func (c *Color) MultiplyScalar(sclr float64) *Color {
 	r := &Color{c.red * sclr, c.green * sclr, c.blue * sclr}
-	r.clamp()
 	return r
 }
 
@@ -87,7 +97,6 @@ func (c *Color) MultiplyScalar(sclr float64) *Color {
 // color.
 func (c *Color) MultiplyScalarIP(sclr float64) *Color {
 	c.red, c.green, c.blue = c.red*sclr, c.green*sclr, c.blue*sclr
-	c.clamp()
 	return c
 }
 
