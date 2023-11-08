@@ -3,6 +3,7 @@ package sampler
 import (
 	"errors"
 	"math/rand"
+	"time"
 )
 
 // ErrSubSamplerEnd represents the end this sub-sampler's cycle
@@ -22,6 +23,8 @@ type SubSampler struct {
 	sampleWeight float64
 
 	parent *SimpleSampler
+
+	rand *rand.Rand
 }
 
 // GetSample returns a single sample which should be raytraced
@@ -38,8 +41,8 @@ func (s *SubSampler) GetSample() (x, y, w float64, err error) {
 		err = ErrEndOfSampling
 		return
 	}
-	x = float64(s.current%s.w+s.x) + rand.Float64()
-	y = float64(s.current/s.w+s.y) + rand.Float64()
+	x = float64(s.current%s.w+s.x) + s.rand.Float64()
+	y = float64(s.current/s.w+s.y) + s.rand.Float64()
 	w = s.sampleWeight
 	s.current++
 	return
@@ -56,6 +59,9 @@ func (s *SubSampler) Reset() {
 // height of the sampled space respectively. perPixel dictates how many samples per
 // pixle should be generated.
 func NewSubSampler(x, y, w, h uint32, perPixel uint32, p *SimpleSampler) *SubSampler {
+	src := rand.NewSource(time.Now().UnixMicro())
+	rnd := rand.New(src)
+
 	return &SubSampler{
 		x:            x,
 		y:            y,
@@ -64,5 +70,6 @@ func NewSubSampler(x, y, w, h uint32, perPixel uint32, p *SimpleSampler) *SubSam
 		sampleWeight: 1.0 / float64(perPixel),
 		end:          w * h,
 		parent:       p,
+		rand:         rnd,
 	}
 }
