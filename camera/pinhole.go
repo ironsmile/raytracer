@@ -3,7 +3,6 @@ package camera
 import (
 	"sync"
 
-	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/transform"
 )
@@ -11,7 +10,6 @@ import (
 // PinholeCamera is the most basic type of camera. One in which the scene is projected on a
 // rectangle and the viewer is a single point behind the screen.
 type PinholeCamera struct {
-	Film       film.Film
 	camToWorld *transform.Transform
 	distance   float64
 	screen     [4]float64
@@ -116,11 +114,15 @@ func (p *PinholeCamera) rotate(rotation *transform.Transform) {
 }
 
 // NewPinhole returns a new camera which is set up for writing in particular output
-func NewPinhole(camPosition, camLookAtPoint geometry.Vector,
-	camUp geometry.Vector, dist float64, f film.Film) *PinholeCamera {
-
+func NewPinhole(
+	camPosition geometry.Vector,
+	camLookAtPoint geometry.Vector,
+	camUp geometry.Vector,
+	dist float64,
+	width float64,
+	height float64,
+) *PinholeCamera {
 	cam := &PinholeCamera{
-		Film:     f,
 		origin:   camPosition,
 		lookAt:   camLookAtPoint,
 		up:       camUp,
@@ -128,8 +130,8 @@ func NewPinhole(camPosition, camLookAtPoint geometry.Vector,
 
 	cam.computeMatrix()
 
-	cam.rasterW = float64(f.Width())
-	cam.rasterH = float64(f.Height())
+	cam.rasterW = width
+	cam.rasterH = height
 
 	frame := cam.rasterW / cam.rasterH
 

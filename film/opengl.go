@@ -3,14 +3,34 @@ package film
 import (
 	"fmt"
 	"image/color"
+	"os"
+	"runtime/trace"
 	"sync"
 	"time"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/ironsmile/raytracer/camera"
+	"github.com/ironsmile/raytracer/engine"
+	"github.com/ironsmile/raytracer/sampler"
+	"github.com/ironsmile/raytracer/scene"
 )
 
-// GLWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
+// GlWinArgs are passed to the GlWindow.Run() and control some aspects on how
+// the application would be ran.
+type GlWinArgs struct {
+	Fullscreen  bool
+	VSync       bool
+	Width       int
+	Height      int
+	Interactive bool
+	ShowBBoxes  bool
+	FPSCap      uint
+	ShowFPS     bool
+	SceneName   string
+}
+
+// GlWindow is a `film` which renders the scene in an OpenGL window using GLFW3.
 // The scene is renderd in a texture which is applied on a two whole screen triangles.
 type GlWindow struct {
 	width  int
@@ -33,6 +53,21 @@ type GlWindow struct {
 	glTexture uint32 // Texture with the rendered scene
 
 	glInited bool
+
+	args GlWinArgs
+
+	// Engine stuff
+
+	sampler *sampler.SimpleSampler
+	tracer  *engine.FPSEngine
+	cam     camera.Camera
+}
+
+func NewGlWIndow(args GlWinArgs) *GlWindow {
+	gwWin := &GlWindow{
+		args: args,
+	}
+	return gwWin
 }
 
 func (g *GlWindow) Init(width int, height int) error {
@@ -209,7 +244,224 @@ func (g *GlWindow) Height() int {
 	return g.height
 }
 
-func NewGlWIndow(window *glfw.Window) *GlWindow {
-	gwWin := &GlWindow{window: window}
-	return gwWin
+// Run initializes GLFW, creates window, initializes OpenGL and then starts the FPS
+// engine tracing in this window.
+func (g *GlWindow) Run() error {
+	if err := g.initWindow(); err != nil {
+		return fmt.Errorf("initGLFW: %w", err)
+	}
+	defer g.cleanWindow()
+
+	winW, winH := g.window.GetFramebufferSize()
+	if err := g.Init(winW, winH); err != nil {
+		return fmt.Errorf("g.Init(): %w", err)
+	}
+
+	if err := g.initEngine(); err != nil {
+		return fmt.Errorf("g.initEngine(): %w", err)
+	}
+	defer g.cleanEngine()
+
+	g.mainLoop()
+
+	return nil
+}
+
+func (g *GlWindow) initWindow() error {
+	args := g.args
+
+	if err := glfw.Init(); err != nil {
+		return fmt.Errorf("initializing glfw failed. %w", err)
+	}
+
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+
+	var err error
+	var window *glfw.Window
+
+	if args.Fullscreen {
+		monitor := glfw.GetPrimaryMonitor()
+		vm := monitor.GetVideoMode()
+		monW, monH := vm.Width, vm.Height
+
+		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
+
+		window, err = glfw.CreateWindow(monW, monH, "Raytracer", monitor, nil)
+	} else {
+		window, err = glfw.CreateWindow(args.Width, args.Height, "Raytracer", nil, nil)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error creating window: %w", err)
+	}
+
+	window.MakeContextCurrent()
+	g.window = window
+
+	if args.VSync {
+		window.MakeContextCurrent()
+		glfw.SwapInterval(1)
+	}
+
+	window.SetCloseCallback(func(w *glfw.Window) {
+		window.SetShouldClose(true)
+	})
+
+	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
+		action glfw.Action, mods glfw.ModifierKey) {
+		if key == glfw.KeyEscape {
+			window.SetShouldClose(true)
+			return
+		}
+	})
+
+	return nil
+}
+
+func (g *GlWindow) cleanWindow() {
+	g.window.Destroy()
+	glfw.Terminate()
+}
+
+func (g *GlWindow) initEngine() error {
+	smpl := sampler.NewSimple(g.Width(), g.Height(), g)
+
+	if g.args.Interactive {
+		smpl.MakeContinuous()
+	}
+
+	cam := scene.GetCamera(float64(g.Width()), float64(g.Height()))
+
+	tracer := engine.NewFPS(smpl)
+	tracer.SetTarget(g, cam)
+	tracer.ShowBBoxes = g.args.ShowBBoxes
+
+	fmt.Printf("Loading scene...\n")
+	loadingStart := time.Now()
+	tracer.Scene.InitScene(g.args.SceneName)
+	fmt.Printf("Loading scene took %s\n", time.Since(loadingStart))
+
+	g.sampler = smpl
+	g.tracer = tracer
+	g.cam = cam
+
+	return nil
+}
+
+func (g *GlWindow) cleanEngine() {
+	g.sampler.Stop()
+	g.tracer.StopRendering()
+}
+
+func (g *GlWindow) mainLoop() {
+	g.tracer.Render()
+
+	minFrameTime, _ := time.ParseDuration(
+		fmt.Sprintf("%dms", int(1000.0/float32(g.args.FPSCap))),
+	)
+
+	g.window.MakeContextCurrent()
+
+	var traceStarted bool
+	var bPressed bool
+
+	for !g.window.ShouldClose() {
+		renderStart := time.Now()
+		g.Render()
+		renderTime := time.Since(renderStart)
+
+		glfw.PollEvents()
+		if g.args.Interactive {
+			handleInteractionEvents(g.window, g.cam)
+
+			if !bPressed && g.window.GetKey(glfw.KeyB) == glfw.Press {
+				g.tracer.ShowBBoxes = !g.tracer.ShowBBoxes
+				bPressed = true
+			}
+
+			if bPressed && g.window.GetKey(glfw.KeyB) == glfw.Release {
+				bPressed = false
+			}
+
+			if !traceStarted && g.window.GetKey(glfw.KeyT) == glfw.Press {
+				traceStarted = true
+				go func() {
+					collectTrace()
+					traceStarted = false
+				}()
+			}
+		}
+		g.window.SwapBuffers()
+
+		elapsed := time.Since(renderStart)
+		if elapsed < minFrameTime {
+			time.Sleep(minFrameTime - elapsed)
+			elapsed = minFrameTime
+		}
+
+		if g.args.ShowFPS {
+			fps := 1 / elapsed.Seconds()
+			fmt.Printf("\r                                                               ")
+			fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
+				g.LastFrameRederTime())
+		}
+	}
+
+	fmt.Println("\nClosing window, rendering stopped.")
+	g.Wait()
+}
+
+func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
+	moveSpeed := 0.15
+	rotateSpeed := 3.0
+	if window.GetKey(glfw.KeyW) == glfw.Press {
+		cam.Forward(moveSpeed)
+	}
+	if window.GetKey(glfw.KeyS) == glfw.Press {
+		cam.Backward(moveSpeed)
+	}
+	if window.GetKey(glfw.KeyA) == glfw.Press {
+		cam.Left(moveSpeed)
+	}
+	if window.GetKey(glfw.KeyD) == glfw.Press {
+		cam.Right(moveSpeed)
+	}
+	if window.GetKey(glfw.KeyUp) == glfw.Press {
+		cam.Pitch(rotateSpeed)
+	}
+	if window.GetKey(glfw.KeyDown) == glfw.Press {
+		cam.Pitch(-rotateSpeed)
+	}
+	if window.GetKey(glfw.KeyLeft) == glfw.Press {
+		cam.Yaw(-rotateSpeed)
+	}
+	if window.GetKey(glfw.KeyRight) == glfw.Press {
+		cam.Yaw(rotateSpeed)
+	}
+}
+
+func collectTrace() {
+	traceFile := "trace.out"
+
+	fh, err := os.Create(traceFile)
+
+	if err != nil {
+		fmt.Printf("Error creating trace file: %s\n", err)
+		return
+	}
+
+	defer fh.Close()
+
+	if err := trace.Start(fh); err != nil {
+		fmt.Printf("Error staring trace: %s\n", err)
+		return
+	}
+
+	defer trace.Stop()
+
+	time.Sleep(2 * time.Second)
+	fmt.Printf("Creating trace in %s\n", traceFile)
 }

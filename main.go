@@ -9,21 +9,17 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
-	"runtime/trace"
 	"time"
 
-	"github.com/go-gl/glfw/v3.1/glfw"
-
-	"github.com/ironsmile/raytracer/camera"
 	"github.com/ironsmile/raytracer/engine"
 	"github.com/ironsmile/raytracer/film"
-	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/sampler"
+	"github.com/ironsmile/raytracer/scene"
 )
 
 func init() {
 	// This is needed to arrange that main() runs on main thread.
-	// GLFW3.1 requires this.
+	// GLFW requires this.
 	runtime.LockOSThread()
 }
 
@@ -42,19 +38,29 @@ var (
 		"continuously print the OpenGL FPS stats in the console")
 	fullscreen = flag.Bool("fullscreen", false,
 		"run fullscreen in native resolution")
-	WIDTH = flag.Int("w", 1024,
+	renderWidth = flag.Int("w", 1024,
 		"image or window width in pixels")
-	HEIGHT = flag.Int("h", 768,
+	renderHeight = flag.Int("h", 768,
 		"image or window height in pixels")
 	fpsCap = flag.Uint("fps-cap", 30,
 		"maximum number of frames per second")
 	showBBoxes = flag.Bool("show-bboxes", false,
 		"show bounding boxes around objects")
+	withVulkan = flag.Bool("vulkan", false,
+		"use Vulkan instead of OpenGL")
+	sceneName = flag.String("scene", "teapot",
+		"scene to render. Possible values: teapot, car")
+	debugMode = flag.Bool("D", false,
+		"debug mode, will print diagnostics information")
 )
 
 func main() {
 
 	flag.Parse()
+
+	if *sceneName != "car" && *sceneName != "teapot" {
+		log.Fatalf("scenem ust be either `car` or `teapot`")
+	}
 
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6464", nil))
@@ -71,6 +77,8 @@ func main() {
 
 	if *filename != "" {
 		infileRenderer()
+	} else if *withVulkan {
+		vulkanWindowRenderer()
 	} else {
 		openglWindowRenderer()
 	}
@@ -88,15 +96,15 @@ func main() {
 
 func infileRenderer() {
 	output := film.NewImage(*filename)
-	if err := output.Init(*WIDTH, *HEIGHT); err != nil {
+	if err := output.Init(*renderWidth, *renderHeight); err != nil {
 		log.Fatalf("%s\n", err)
 	}
 
-	smpl := sampler.NewSimple(output)
-	cam := MakePinholeCamera(output)
+	smpl := sampler.NewSimple(output.Width(), output.Height(), output)
+	cam := scene.GetCamera(float64(output.Width()), float64(output.Height()))
 	tracer := engine.New(smpl)
 	tracer.SetTarget(output, cam)
-	tracer.Scene.InitScene()
+	tracer.Scene.InitScene(*sceneName)
 	tracer.ShowBBoxes = *showBBoxes
 
 	renderTimer := time.Now()
@@ -108,197 +116,39 @@ func infileRenderer() {
 }
 
 func openglWindowRenderer() {
-
-	if err := glfw.Init(); err != nil {
-		log.Fatalf("Initializing glfw failed. %s", err)
+	args := film.GlWinArgs{
+		Fullscreen:  *fullscreen,
+		VSync:       *vsync,
+		Width:       *renderWidth,
+		Height:      *renderHeight,
+		Interactive: *interactive,
+		ShowBBoxes:  *showBBoxes,
+		FPSCap:      *fpsCap,
+		ShowFPS:     *showFPS,
+		SceneName:   *sceneName,
 	}
-	defer glfw.Terminate()
-
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-
-	var err error
-	var window *glfw.Window
-
-	if *fullscreen {
-		monitor := glfw.GetPrimaryMonitor()
-		vm := monitor.GetVideoMode()
-		monW, monH := vm.Width, vm.Height
-
-		fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
-
-		window, err = glfw.CreateWindow(monW, monH, "Raytracer", monitor, nil)
-	} else {
-		window, err = glfw.CreateWindow(*WIDTH, *HEIGHT, "Raytracer", nil, nil)
-	}
-
-	if err != nil {
-		log.Fatalf("%s\n", err.Error())
-	}
-
-	window.MakeContextCurrent()
-
-	defer func() {
-		window.MakeContextCurrent()
-		window.Destroy()
-	}()
-
-	if *vsync {
-		window.MakeContextCurrent()
-		glfw.SwapInterval(1)
-	}
-
-	window.SetCloseCallback(func(w *glfw.Window) {
-		window.SetShouldClose(true)
-	})
-
-	output := film.NewGlWIndow(window)
-	winW, winH := window.GetFramebufferSize()
-	if err := output.Init(winW, winH); err != nil {
-		log.Fatalf("%s\n", err.Error())
-	}
-
-	smpl := sampler.NewSimple(output)
-
-	if *interactive {
-		smpl.MakeContinuous()
-	}
-
-	cam := MakePinholeCamera(output)
-
-	tracer := engine.NewFPS(smpl)
-	tracer.SetTarget(output, cam)
-	tracer.ShowBBoxes = *showBBoxes
-
-	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int,
-		action glfw.Action, mods glfw.ModifierKey) {
-		if key == glfw.KeyEscape {
-			window.SetShouldClose(true)
-			return
-		}
-	})
-
-	fmt.Printf("Loading scene...\n")
-	loadingStart := time.Now()
-	tracer.Scene.InitScene()
-	fmt.Printf("Loading scene took %s\n", time.Since(loadingStart))
-
-	tracer.Render()
-
-	minFrameTime, _ := time.ParseDuration(fmt.Sprintf("%dms", int(1000.0/float32(*fpsCap))))
-
-	window.MakeContextCurrent()
-
-	var traceStarted bool
-	var bPressed bool
-
-	for !window.ShouldClose() {
-		renderStart := time.Now()
-		output.Render()
-		renderTime := time.Since(renderStart)
-
-		glfw.PollEvents()
-		if *interactive {
-			handleInteractionEvents(window, cam)
-
-			if !bPressed && window.GetKey(glfw.KeyB) == glfw.Press {
-				tracer.ShowBBoxes = !tracer.ShowBBoxes
-				bPressed = true
-			}
-
-			if bPressed && window.GetKey(glfw.KeyB) == glfw.Release {
-				bPressed = false
-			}
-
-			if !traceStarted && window.GetKey(glfw.KeyT) == glfw.Press {
-				traceStarted = true
-				go func() {
-					collectTrace()
-					traceStarted = false
-				}()
-			}
-		}
-		window.SwapBuffers()
-
-		elapsed := time.Since(renderStart)
-		if elapsed < minFrameTime {
-			time.Sleep(minFrameTime - elapsed)
-			elapsed = minFrameTime
-		}
-
-		if *showFPS {
-			fps := 1 / elapsed.Seconds()
-			fmt.Printf("\r                                                               ")
-			fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
-				output.LastFrameRederTime())
-		}
-	}
-
-	fmt.Println("\nClosing window, rendering stopped.")
-	output.Wait()
-
-	smpl.Stop()
-	tracer.StopRendering()
-}
-
-func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
-	moveSpeed := 0.15
-	rotateSpeed := 3.0
-	if window.GetKey(glfw.KeyW) == glfw.Press {
-		cam.Forward(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyS) == glfw.Press {
-		cam.Backward(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyA) == glfw.Press {
-		cam.Left(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyD) == glfw.Press {
-		cam.Right(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyUp) == glfw.Press {
-		cam.Pitch(rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyDown) == glfw.Press {
-		cam.Pitch(-rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyLeft) == glfw.Press {
-		cam.Yaw(-rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyRight) == glfw.Press {
-		cam.Yaw(rotateSpeed)
+	glWin := film.NewGlWIndow(args)
+	if err := glWin.Run(); err != nil {
+		log.Fatalf("Error running GL window: %s", err)
 	}
 }
 
-func MakePinholeCamera(f film.Film) camera.Camera {
-	pos := geometry.NewVector(0, 0, -5)
-	lookAtPoint := geometry.NewVector(0, 0, 1)
-	up := geometry.NewVector(0, 1, 0)
-
-	return camera.NewPinhole(pos, lookAtPoint, up, 1, f)
-}
-
-func collectTrace() {
-	traceFile := "trace.out"
-
-	fh, err := os.Create(traceFile)
-
-	if err != nil {
-		fmt.Printf("Error creating trace file: %s\n", err)
-		return
+func vulkanWindowRenderer() {
+	args := film.VulkanAppArgs{
+		Debug:       *debugMode,
+		Fullscreen:  *fullscreen,
+		VSync:       *vsync,
+		Width:       *renderWidth,
+		Height:      *renderHeight,
+		Interactive: *interactive,
+		ShowBBoxes:  *showBBoxes,
+		FPSCap:      *fpsCap,
+		ShowFPS:     *showFPS,
+		SceneName:   *sceneName,
 	}
 
-	defer fh.Close()
-
-	if err := trace.Start(fh); err != nil {
-		fmt.Printf("Error staring trace: %s\n", err)
-		return
+	app := film.NewVulkanWindow(args)
+	if err := app.Run(); err != nil {
+		log.Fatalf("error running: %s", err)
 	}
-
-	defer trace.Stop()
-
-	time.Sleep(2 * time.Second)
-	fmt.Printf("Creating trace in %s\n", traceFile)
 }

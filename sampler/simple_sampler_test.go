@@ -8,7 +8,7 @@ import (
 
 func BenchmarkGetSample(t *testing.B) {
 	nullFilm := film.NewNullFilm()
-	s := NewSimple(nullFilm)
+	s := NewSimple(nullFilm.Width(), nullFilm.Height(), nullFilm)
 
 	for i := 0; i < t.N; i++ {
 		s.GetSample()

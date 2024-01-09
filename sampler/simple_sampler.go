@@ -6,8 +6,6 @@ import (
 	"image/color"
 	"math"
 	"sync/atomic"
-
-	"github.com/ironsmile/raytracer/film"
 )
 
 // ErrEndOfSampling would be returned by the sampler when no further sampling is needed
@@ -15,7 +13,7 @@ var ErrEndOfSampling = errors.New("End of sampling")
 
 // SimpleSampler implements the most simple of samplers. It generates one sample per pixel
 type SimpleSampler struct {
-	output           film.Film
+	output           Output
 	subSamplers      []*SubSampler
 	subSamplersCount uint32
 	current          uint32
@@ -70,17 +68,17 @@ func (s *SimpleSampler) MakeContinuous() {
 	s.continuous = true
 }
 
-// NewSimple returns a SimpleSampler, suited for a film. This means that the sampler
-// would take into consideration the film's width and height.
-func NewSimple(f film.Film) *SimpleSampler {
+// NewSimple returns a SimpleSampler which would generate samples for a 2D output
+// with certain width and height.
+func NewSimple(width, height int, out Output) *SimpleSampler {
 	s := &SimpleSampler{
-		output: f,
+		output: out,
 	}
 
-	var splits = uint32(f.Width() / 32)
+	var splits = uint32(width / 32)
 
-	var sizeW = uint32(math.Ceil(float64(f.Width()) / float64(splits)))
-	var sizeH = uint32(math.Ceil(float64(f.Height()) / float64(splits)))
+	var sizeW = uint32(math.Ceil(float64(width) / float64(splits)))
+	var sizeH = uint32(math.Ceil(float64(height) / float64(splits)))
 	var count = splits * splits
 
 	fmt.Printf("Creating %d sub samplers\n", count)
@@ -95,12 +93,12 @@ func NewSimple(f film.Film) *SimpleSampler {
 		var sw uint32 = sizeW
 		var sh uint32 = sizeH
 
-		if sx+sw > uint32(f.Width()) {
-			sw = uint32(f.Width()) - sx
+		if sx+sw > uint32(width) {
+			sw = uint32(width) - sx
 		}
 
-		if sy+sh > uint32(f.Height()) {
-			sh = uint32(f.Height()) - sy
+		if sy+sh > uint32(height) {
+			sh = uint32(height) - sy
 		}
 
 		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 10, s)

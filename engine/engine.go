@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ironsmile/raytracer/camera"
-	"github.com/ironsmile/raytracer/film"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
 	"github.com/ironsmile/raytracer/sampler"
@@ -20,12 +19,12 @@ const (
 	TraceDepth = 9
 )
 
-// Engine is the type which is resposible for bringing the camera, scene and
+// Engine is the type which is responsible for bringing the camera, scene and
 // everything else together. It generates the rays, intersects them and then
 // paints the result in the output film.
 type Engine struct {
 	Scene         *scene.Scene
-	Dest          film.Film
+	Dest          Destination
 	Width, Height int
 	Camera        camera.Camera
 	Sampler       *sampler.SimpleSampler
@@ -35,7 +34,7 @@ type Engine struct {
 }
 
 // SetTarget sets the camera and film for rendering.
-func (e *Engine) SetTarget(target film.Film, cam camera.Camera) {
+func (e *Engine) SetTarget(target Destination, cam camera.Camera) {
 	e.Width = target.Width()
 	e.Height = target.Height()
 	e.Dest = target

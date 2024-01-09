@@ -58,9 +58,17 @@ func (s *Scene) IntersectBBoxEdge(ray geometry.Ray) bool {
 }
 
 // InitScene programatically creates and loads a demo scene
-func (s *Scene) InitScene() {
-	prims, lights := example.GetTeapotScene()
-	// prims, lights := example.GetCarScene()
+func (s *Scene) InitScene(name string) {
+	var (
+		prims  []primitive.Primitive
+		lights []primitive.Primitive
+	)
+
+	if name == "car" {
+		prims, lights = example.GetCarScene()
+	} else {
+		prims, lights = example.GetTeapotScene()
+	}
 
 	s.Lights = lights
 	s.Primitives = prims
