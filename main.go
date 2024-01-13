@@ -43,7 +43,7 @@ var (
 	renderHeight = flag.Int("h", 768,
 		"image or window height in pixels")
 	fpsCap = flag.Uint("fps-cap", 30,
-		"maximum number of frames per second")
+		"maximum number of frames per second. Zero means no FPS cap.")
 	showBBoxes = flag.Bool("show-bboxes", false,
 		"show bounding boxes around objects")
 	withVulkan = flag.Bool("vulkan", false,

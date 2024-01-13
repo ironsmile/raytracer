@@ -397,7 +397,7 @@ func (g *GlWindow) mainLoop() {
 		g.window.SwapBuffers()
 
 		elapsed := time.Since(renderStart)
-		if elapsed < minFrameTime {
+		if g.args.FPSCap > 0 && elapsed < minFrameTime {
 			time.Sleep(minFrameTime - elapsed)
 			elapsed = minFrameTime
 		}

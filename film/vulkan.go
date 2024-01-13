@@ -1688,6 +1688,10 @@ func (a *VulkanApp) chooseSwapSurfaceFormat(
 func (a *VulkanApp) chooseSwapPresentMode(
     available []vk.PresentMode,
 ) vk.PresentMode {
+    if a.args.VSync {
+        return vk.PresentModeFifo
+    }
+
     for _, mode := range available {
         if mode == vk.PresentModeMailbox {
             return mode
@@ -1891,7 +1895,8 @@ func (a *VulkanApp) mainLoop() error {
         }
 
         elapsed := time.Since(renderStart)
-        if elapsed < minFrameTime {
+
+        if !a.args.VSync && a.args.FPSCap > 0 && elapsed < minFrameTime {
             time.Sleep(minFrameTime - elapsed)
             elapsed = minFrameTime
         }
