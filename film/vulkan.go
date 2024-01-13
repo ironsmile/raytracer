@@ -119,6 +119,7 @@ type VulkanApp struct {
     filmStagingBufferMemory vk.DeviceMemory
     filmBufferData          unsafe.Pointer
 
+    filmImageFormat vk.Format
     filmImage       vk.Image
     filmImageMemory vk.DeviceMemory
 }
@@ -414,11 +415,12 @@ func (a *VulkanApp) createSwapChain() error {
         ImageFormat:      surfaceFormat.Format,
         ImageExtent:      extend,
         ImageArrayLayers: 1,
-        ImageUsage:       vk.ImageUsageFlags(vk.ImageUsageColorAttachmentBit),
-        PreTransform:     swapChainSupport.capabilities.CurrentTransform,
-        CompositeAlpha:   vk.CompositeAlphaOpaqueBit,
-        PresentMode:      presentMode,
-        Clipped:          vk.True,
+        ImageUsage: vk.ImageUsageFlags(vk.ImageUsageColorAttachmentBit) |
+            vk.ImageUsageFlags(vk.ImageUsageTransferDstBit),
+        PreTransform:   swapChainSupport.capabilities.CurrentTransform,
+        CompositeAlpha: vk.CompositeAlphaOpaqueBit,
+        PresentMode:    presentMode,
+        Clipped:        vk.True,
     }
 
     indices := a.findQueueFamilies(a.physicalDevice)
@@ -906,20 +908,20 @@ func (a *VulkanApp) transitionImageLayout(
         newLayout == vk.ImageLayoutTransferDstOptimal {
 
         barrier.SrcAccessMask = 0
-        barrier.DstAccessMask = vk.AccessFlags(vk.AccessTransferWriteBit)
+        barrier.DstAccessMask = vk.AccessFlags(vk.AccessHostWriteBit)
+
+        sourceStage = vk.PipelineStageFlags(vk.PipelineStageTopOfPipeBit)
+        destinationStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
+
+    } else if oldLayout == vk.ImageLayoutUndefined &&
+        newLayout == vk.ImageLayoutTransferSrcOptimal {
+
+        barrier.SrcAccessMask = 0
+        barrier.DstAccessMask = vk.AccessFlags(vk.AccessTransferReadBit)
 
         sourceStage = vk.PipelineStageFlags(vk.PipelineStageTopOfPipeBit)
         destinationStage = vk.PipelineStageFlags(vk.PipelineStageTransferBit)
 
-    } else if oldLayout == vk.ImageLayoutUndefined &&
-        newLayout == vk.ImageLayoutTransferSrcOptimal {
-
-        barrier.SrcAccessMask = 0
-        barrier.DstAccessMask = vk.AccessFlags(vk.AccessTransferReadBit)
-
-        sourceStage = vk.PipelineStageFlags(vk.PipelineStageTopOfPipeBit)
-        destinationStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
-
     } else if oldLayout == vk.ImageLayoutTransferDstOptimal &&
         newLayout == vk.ImageLayoutShaderReadOnlyOptimal {
 
@@ -941,20 +943,20 @@ func (a *VulkanApp) transitionImageLayout(
     } else if oldLayout == vk.ImageLayoutTransferDstOptimal &&
         newLayout == vk.ImageLayoutTransferSrcOptimal {
 
-        barrier.SrcAccessMask = vk.AccessFlags(vk.AccessTransferWriteBit)
+        barrier.SrcAccessMask = vk.AccessFlags(vk.AccessHostWriteBit)
         barrier.DstAccessMask = vk.AccessFlags(vk.AccessTransferReadBit)
 
-        sourceStage = vk.PipelineStageFlags(vk.PipelineStageTransferBit)
-        destinationStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
+        sourceStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
+        destinationStage = vk.PipelineStageFlags(vk.PipelineStageTransferBit)
 
     } else if oldLayout == vk.ImageLayoutTransferSrcOptimal &&
         newLayout == vk.ImageLayoutTransferDstOptimal {
 
         barrier.SrcAccessMask = vk.AccessFlags(vk.AccessTransferReadBit)
-        barrier.DstAccessMask = vk.AccessFlags(vk.AccessTransferWriteBit)
+        barrier.DstAccessMask = vk.AccessFlags(vk.AccessHostWriteBit)
 
-        sourceStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
-        destinationStage = vk.PipelineStageFlags(vk.PipelineStageTransferBit)
+        sourceStage = vk.PipelineStageFlags(vk.PipelineStageTransferBit)
+        destinationStage = vk.PipelineStageFlags(vk.PipelineStageHostBit)
 
     } else {
         return fmt.Errorf("unsupported layout transition from %d to %d",
@@ -1156,7 +1158,8 @@ func (a *VulkanApp) createFilmImage() error {
     texWidth := uint32(a.swapChainExtend.Width)
     texHeight := uint32(a.swapChainExtend.Height)
 
-    imgSize := vk.DeviceSize(texWidth * texHeight * 3 * 4)
+    imgSize := vk.DeviceSize(texWidth * texHeight * 4)
+    a.filmImageFormat = vk.FormatR8g8b8a8Srgb
 
     var (
         stagingBuffer       vk.Buffer
@@ -1190,9 +1193,10 @@ func (a *VulkanApp) createFilmImage() error {
     err = a.createImage(
         texWidth,
         texHeight,
-        vk.FormatR32g32b32Sfloat,
+        a.filmImageFormat,
         vk.ImageTilingOptimal,
         vk.ImageUsageFlags(vk.ImageUsageTransferDstBit)|
+            vk.ImageUsageFlags(vk.ImageUsageTransferSrcBit)|
             vk.ImageUsageFlags(vk.ImageUsageSampledBit),
         vk.MemoryPropertyFlags(vk.MemoryPropertyDeviceLocalBit),
         &filmImage,
@@ -1206,7 +1210,7 @@ func (a *VulkanApp) createFilmImage() error {
 
     err = a.transitionImageLayout(
         a.filmImage,
-        vk.FormatR32g32b32Sfloat,
+        a.filmImageFormat,
         vk.ImageLayoutUndefined,
         vk.ImageLayoutTransferSrcOptimal,
     )
@@ -1246,7 +1250,7 @@ func (a *VulkanApp) copyFilmToGPUImage() error {
 
     err := a.transitionImageLayout(
         a.filmImage,
-        vk.FormatR32g32b32Sfloat,
+        a.filmImageFormat,
         vk.ImageLayoutTransferSrcOptimal,
         vk.ImageLayoutTransferDstOptimal,
     )
@@ -1261,7 +1265,7 @@ func (a *VulkanApp) copyFilmToGPUImage() error {
 
     err = a.transitionImageLayout(
         a.filmImage,
-        vk.FormatR32g32b32Sfloat,
+        a.filmImageFormat,
         vk.ImageLayoutTransferDstOptimal,
         vk.ImageLayoutTransferSrcOptimal,
     )
@@ -1359,6 +1363,36 @@ func (a *VulkanApp) recordCommandBuffer(
     }
     vk.CmdSetScissor(commandBuffer, 0, 1, []vk.Rect2D{scissor})
 
+    vk.CmdEndRenderPass(commandBuffer)
+
+    barrier := vk.ImageMemoryBarrier{
+        SType:               vk.StructureTypeImageMemoryBarrier,
+        OldLayout:           vk.ImageLayoutPresentSrc,
+        NewLayout:           vk.ImageLayoutTransferDstOptimal,
+        SrcQueueFamilyIndex: vk.QueueFamilyIgnored,
+        DstQueueFamilyIndex: vk.QueueFamilyIgnored,
+        Image:               a.swapChainImages[imageIndex],
+        SubresourceRange: vk.ImageSubresourceRange{
+            AspectMask:     vk.ImageAspectFlags(vk.ImageAspectColorBit),
+            BaseMipLevel:   0,
+            LevelCount:     1,
+            BaseArrayLayer: 0,
+            LayerCount:     1,
+        },
+        SrcAccessMask: vk.AccessFlags(vk.AccessShaderWriteBit),
+        DstAccessMask: vk.AccessFlags(vk.AccessTransferWriteBit),
+    }
+
+    vk.CmdPipelineBarrier(
+        commandBuffer,
+        vk.PipelineStageFlags(vk.PipelineStageVertexShaderBit),
+        vk.PipelineStageFlags(vk.PipelineStageTransferBit),
+        0,
+        0, nil,
+        0, nil,
+        1, []vk.ImageMemoryBarrier{barrier},
+    )
+
     blitRegion := vk.ImageBlit{
         SrcSubresource: vk.ImageSubresourceLayers{
             AspectMask:     vk.ImageAspectFlags(vk.ImageAspectColorBit),
@@ -1394,7 +1428,33 @@ func (a *VulkanApp) recordCommandBuffer(
         vk.FilterLinear,
     )
 
-    vk.CmdEndRenderPass(commandBuffer)
+    barrier = vk.ImageMemoryBarrier{
+        SType:               vk.StructureTypeImageMemoryBarrier,
+        OldLayout:           vk.ImageLayoutTransferDstOptimal,
+        NewLayout:           vk.ImageLayoutPresentSrc,
+        SrcQueueFamilyIndex: vk.QueueFamilyIgnored,
+        DstQueueFamilyIndex: vk.QueueFamilyIgnored,
+        Image:               a.swapChainImages[imageIndex],
+        SubresourceRange: vk.ImageSubresourceRange{
+            AspectMask:     vk.ImageAspectFlags(vk.ImageAspectColorBit),
+            BaseMipLevel:   0,
+            LevelCount:     1,
+            BaseArrayLayer: 0,
+            LayerCount:     1,
+        },
+        SrcAccessMask: vk.AccessFlags(vk.AccessTransferWriteBit),
+        DstAccessMask: vk.AccessFlags(vk.AccessShaderWriteBit),
+    }
+
+    vk.CmdPipelineBarrier(
+        commandBuffer,
+        vk.PipelineStageFlags(vk.PipelineStageTransferBit),
+        vk.PipelineStageFlags(vk.PipelineStageVertexShaderBit),
+        0,
+        0, nil,
+        0, nil,
+        1, []vk.ImageMemoryBarrier{barrier},
+    )
 
     if err := vk.Error(vk.EndCommandBuffer(commandBuffer)); err != nil {
         return fmt.Errorf("recording commands to buffer failed: %w", err)
@@ -1795,16 +1855,6 @@ func (a *VulkanApp) mainLoop() error {
         fmt.Sprintf("%dms", int(1000.0/float32(a.args.FPSCap))),
     )
 
-    // Will blit to these images
-    for _, image := range a.swapChainImages {
-        a.transitionImageLayout(
-            image,
-            a.swapChainImageFormat,
-            vk.ImageLayoutUndefined,
-            vk.ImageLayoutTransferDstOptimal,
-        )
-    }
-
     var (
         traceStarted bool
         bPressed     bool
@@ -1981,7 +2031,7 @@ func (f *QueueFamilyIndices) IsComplete() bool {
 }
 
 type vulkanFilm struct {
-    pixBuffer  []float32
+    pixBuffer  []uint8
     pixSamples []uint16
 
     width  uint32
@@ -1996,7 +2046,7 @@ func newVulkanFilm(width, height uint32) *vulkanFilm {
     return &vulkanFilm{
         width:      width,
         height:     height,
-        pixBuffer:  make([]float32, width*height*3),
+        pixBuffer:  make([]uint8, width*height*4),
         pixSamples: make([]uint16, width*height),
 
         frameTimeLock: &sync.RWMutex{},
@@ -2008,14 +2058,17 @@ func (f *vulkanFilm) Set(x int, y int, clr color.Color) error {
     samples := f.pixSamples[sampleInd]
 
     oldWeight := float32(samples) / float32(samples+1)
-    newWiehgt := 1 - oldWeight
+    newWeight := 1 - oldWeight
 
     ri, gi, bi, _ := clr.RGBA()
 
-    ind := f.width*uint32(y)*3 + uint32(x)*3
-    f.pixBuffer[ind] = f.pixBuffer[ind]*oldWeight + newWiehgt*float32(ri)/65535.0
-    f.pixBuffer[ind+1] = f.pixBuffer[ind+1]*oldWeight + newWiehgt*float32(gi)/65535.0
-    f.pixBuffer[ind+2] = f.pixBuffer[ind+2]*oldWeight + newWiehgt*float32(bi)/65535.0
+    ind := f.width*uint32(y)*4 + uint32(x)*4
+    f.pixBuffer[ind] = uint8(float32(f.pixBuffer[ind])*oldWeight) +
+        uint8((float32(ri)/65535.0)*newWeight*math.MaxUint8)
+    f.pixBuffer[ind+1] = uint8(float32(f.pixBuffer[ind+1])*oldWeight) +
+        uint8((float32(gi)/65535.0)*newWeight*math.MaxUint8)
+    f.pixBuffer[ind+2] = uint8(float32(f.pixBuffer[ind+2])*oldWeight) +
+        uint8((float32(bi)/65535.0)*newWeight*math.MaxUint8)
 
     f.pixSamples[sampleInd]++
 
