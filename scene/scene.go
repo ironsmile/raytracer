@@ -64,9 +64,12 @@ func (s *Scene) InitScene(name string) {
 		lights []primitive.Primitive
 	)
 
-	if name == "car" {
+	switch name {
+	case "car":
 		prims, lights = example.GetCarScene()
-	} else {
+	case "empty":
+		prims, lights = example.GetEmptyScene()
+	default:
 		prims, lights = example.GetTeapotScene()
 	}
 
@@ -81,4 +84,11 @@ func (s *Scene) InitScene(name string) {
 func NewScene() *Scene {
 	scn := new(Scene)
 	return scn
+}
+
+// PossibleScenes is a list of scenes which are supported by `InitScene`.
+var PossibleScenes = []string{
+	"car",
+	"teapot",
+	"empty",
 }

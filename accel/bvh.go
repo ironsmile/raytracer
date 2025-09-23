@@ -73,6 +73,7 @@ func NewBVH(p []primitive.Primitive, mp uint8) *BVH {
 	}
 
 	bvh.primitives = FullyRefinePrimitives(p)
+	fmt.Printf("Number of primitive in BVH: %d\n", len(bvh.primitives))
 
 	// Nothing else to do, this would be an empty BVH
 	if len(bvh.primitives) == 0 {

@@ -9,6 +9,8 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/ironsmile/raytracer/engine"
@@ -58,8 +60,8 @@ func main() {
 
 	flag.Parse()
 
-	if *sceneName != "car" && *sceneName != "teapot" {
-		log.Fatalf("scenem ust be either `car` or `teapot`")
+	if !slices.Contains(scene.PossibleScenes, *sceneName) {
+		log.Fatalf("scene must be one of: %s", strings.Join(scene.PossibleScenes, ", "))
 	}
 
 	go func() {
