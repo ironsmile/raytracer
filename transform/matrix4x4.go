@@ -244,9 +244,6 @@ func (m *Matrix4x4) String() string {
 	out += "]"
 
 	return out
-
-	return fmt.Sprintf("[%s %s %s %s]", m.els[0], m.els[1], m.els[2],
-		m.els[3])
 }
 
 func NewMatrix(

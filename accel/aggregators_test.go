@@ -109,8 +109,9 @@ func testIntersectionsWithAggregator(
 		}
 
 		if hitAll {
-			lastHit = ray.At(isectAll.DfGeometry.Distance).Plus(
-				isectAll.DfGeometry.Normal.MultiplyScalar(geometry.EPSILON),
+			pi := ray.At(isectAll.DfGeometry.Distance)
+			lastHit = pi.Plus(
+				isectAll.DfGeometry.Shape.NormalAt(pi).MultiplyScalar(geometry.EPSILON),
 			)
 		}
 
