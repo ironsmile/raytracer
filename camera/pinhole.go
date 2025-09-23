@@ -25,9 +25,6 @@ type PinholeCamera struct {
 
 // GenerateRay creates a ray from the camera source through one single point of the screen
 func (p *PinholeCamera) GenerateRay(x, y float64) geometry.Ray {
-	p.RLock()
-	defer p.RUnlock()
-
 	posX := p.screen[0] + (x/p.rasterW)*p.screen[1]*2
 	posY := p.screen[3] + (y/p.rasterH)*p.screen[2]*2
 	ray := geometry.NewRay(
