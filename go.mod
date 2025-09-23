@@ -1,6 +1,6 @@
 module github.com/ironsmile/raytracer
 
-go 1.20
+go 1.25
 
 require (
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
