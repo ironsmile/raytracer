@@ -8,64 +8,106 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
-func BenchmarkPrimitiveIntersection(t *testing.B) {
-	ray := geometry.NewRay(
-		geometry.Vector{X: 0, Y: 0, Z: -3},
-		geometry.Vector{X: 0, Y: 0, Z: 1},
-	)
+func BenchmarkPrimitiveIntersection(b *testing.B) {
+	tests := []struct {
+		desc string
+		ray  geometry.Ray
+	}{
+		{
+			desc: "hit",
+			ray: geometry.NewRay(
+				geometry.Vector{X: 0, Y: 0, Z: -3},
+				geometry.Vector{X: 0, Y: 0, Z: 1},
+			),
+		},
+		{
+			desc: "miss",
+			ray: geometry.NewRay(
+				geometry.Vector{X: 0, Y: 0, Z: -10},
+				geometry.Vector{X: 0, Y: 0, Z: -1},
+			),
+		},
+	}
 
-	in := Intersection{}
-	shpere := NewSphere(2)
+	for _, test := range tests {
+		b.Run(test.desc, func(b *testing.B) {
+			ray := test.ray
 
-	t.Run("Sphere.Intersect", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			shpere.Intersect(ray, &in)
-		}
-	})
+			in := Intersection{}
+			shpere := NewSphere(2)
 
-	t.Run("Sphere.IntersectP", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			shpere.IntersectP(ray)
-		}
-	})
+			b.Run("Sphere.Intersect", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					shpere.Intersect(ray, &in)
+				}
+			})
 
-	triangle := NewTriangle([3]geometry.Vector{
-		geometry.NewVector(-1, -1, 0), // a
-		geometry.NewVector(0, 1, -3),  // b
-		geometry.NewVector(1, -1, 3),  // c
-	})
+			b.Run("Sphere.IntersectP", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					shpere.IntersectP(ray)
+				}
+			})
 
-	t.Run("Triangle.Intersect", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			triangle.Intersect(ray, &in)
-		}
-	})
+			b.Run("Sphere.BBox.IntersectP", func(t *testing.B) {
+				bbox := shpere.GetWorldBBox()
+				for i := 0; i < t.N; i++ {
+					bbox.IntersectP(ray)
+				}
+			})
 
-	t.Run("Triangle.IntersectP", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			triangle.IntersectP(ray)
-		}
-	})
+			triangle := NewTriangle([3]geometry.Vector{
+				geometry.NewVector(-1, -1, 0), // a
+				geometry.NewVector(0, 1, -3),  // b
+				geometry.NewVector(1, -1, 3),  // c
+			})
 
-	rect := NewQuad(
-		geometry.NewVector(-1, 1, 0),
-		geometry.NewVector(1, 1, 0),
-		geometry.NewVector(1, -1, 0),
-		geometry.NewVector(-1, -1, 0),
-	)
-	rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
+			b.Run("Triangle.Intersect", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					triangle.Intersect(ray, &in)
+				}
+			})
 
-	t.Run("Rectangle.Intersect", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			rect.Intersect(ray, &in)
-		}
-	})
+			b.Run("Triangle.IntersectP", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					triangle.IntersectP(ray)
+				}
+			})
 
-	t.Run("Rectangle.IntersectP", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
-			rect.IntersectP(ray)
-		}
-	})
+			b.Run("Triangle.BBox.IntersectP", func(t *testing.B) {
+				bbox := triangle.GetWorldBBox()
+				for i := 0; i < t.N; i++ {
+					bbox.IntersectP(ray)
+				}
+			})
+
+			rect := NewQuad(
+				geometry.NewVector(-1, 1, 0),
+				geometry.NewVector(1, 1, 0),
+				geometry.NewVector(1, -1, 0),
+				geometry.NewVector(-1, -1, 0),
+			)
+			rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
+
+			b.Run("Rectangle.Intersect", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					rect.Intersect(ray, &in)
+				}
+			})
+
+			b.Run("Rectangle.IntersectP", func(t *testing.B) {
+				for i := 0; i < t.N; i++ {
+					rect.IntersectP(ray)
+				}
+			})
+
+			b.Run("Rectangle.BBox.IntersectP", func(t *testing.B) {
+				bbox := rect.GetWorldBBox()
+				for i := 0; i < t.N; i++ {
+					bbox.IntersectP(ray)
+				}
+			})
+		})
+	}
 }
 
 func TestRectangleReturnedDistanceToIntersection(t *testing.T) {
