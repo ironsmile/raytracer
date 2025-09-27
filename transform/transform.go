@@ -13,15 +13,16 @@ type Transform struct {
 }
 
 func (t *Transform) Inverse() *Transform {
-	return NewTransformationWihtInverse(&t.matInv, &t.mat)
+	return NewTransformationWihtInverse(t.matInv, t.mat)
 }
 
 func (t *Transform) IsIdentity() bool {
-	return t.mat.Equals(NewMatrix(
+	ident := NewMatrix(
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		0, 0, 0, 1))
+		0, 0, 0, 1)
+	return t.mat.Equals(ident)
 }
 
 func (t *Transform) Point(point geometry.Vector) geometry.Vector {
@@ -87,13 +88,13 @@ func (t *Transform) BBox(bb *bbox.BBox) *bbox.BBox {
 }
 
 func (t *Transform) Multiply(other *Transform) *Transform {
-	mat := t.mat.Multiply(&other.mat)
-	invMat := other.matInv.Multiply(&t.matInv)
+	mat := t.mat.Multiply(other.mat)
+	invMat := other.matInv.Multiply(t.matInv)
 	return NewTransformationWihtInverse(mat, invMat)
 }
 
 func (t *Transform) Equals(other *Transform) bool {
-	return t.mat.Equals(&other.mat) && t.matInv.Equals(&other.matInv)
+	return t.mat.Equals(other.mat) && t.matInv.Equals(other.matInv)
 }
 
 func (t *Transform) String() string {
@@ -114,11 +115,11 @@ func (t *Transform) SwapsHandedness() bool {
 	return det < 0.0
 }
 
-func NewTransformation(mat *Matrix4x4) *Transform {
+func NewTransformation(mat Matrix4x4) *Transform {
 	inv, _ := mat.Inverse()
-	return &Transform{*mat, *inv}
+	return &Transform{mat, inv}
 }
 
-func NewTransformationWihtInverse(mat *Matrix4x4, inv *Matrix4x4) *Transform {
-	return &Transform{*mat, *inv}
+func NewTransformationWihtInverse(mat Matrix4x4, inv Matrix4x4) *Transform {
+	return &Transform{mat, inv}
 }

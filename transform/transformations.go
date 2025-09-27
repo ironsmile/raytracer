@@ -93,7 +93,7 @@ func Rotate(angle float64, a geometry.Vector) *Transform {
 	s := math.Sin(geometry.Radians(angle))
 	c := math.Cos(geometry.Radians(angle))
 
-	m := &Matrix4x4{}
+	m := Matrix4x4{}
 
 	m.els[0][0] = a.X*a.X + (1.0-a.X*a.X)*c
 	m.els[0][1] = a.X*a.Y*(1.0-c) - a.Z*s
@@ -119,7 +119,7 @@ func Rotate(angle float64, a geometry.Vector) *Transform {
 }
 
 func LookAt(pos, look geometry.Vector, up geometry.Vector) *Transform {
-	m := &Matrix4x4{}
+	m := Matrix4x4{}
 
 	m.els[0][3] = pos.X
 	m.els[1][3] = pos.Y

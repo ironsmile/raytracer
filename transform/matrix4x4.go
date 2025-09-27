@@ -15,7 +15,7 @@ func (m *Matrix4x4) Get(i, j int) float64 {
 	return m.els[i][j]
 }
 
-func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
+func (m *Matrix4x4) Multiply(other Matrix4x4) Matrix4x4 {
 	// // slower:
 	// mat := &Matrix4x4{}
 
@@ -30,7 +30,7 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 	// return mat
 
 	// faster:
-	return &Matrix4x4{
+	return Matrix4x4{
 		[4][4]float64{
 			[4]float64{
 				m.els[0][0]*other.els[0][0] +
@@ -120,7 +120,7 @@ func (m *Matrix4x4) Multiply(other *Matrix4x4) *Matrix4x4 {
 	}
 }
 
-func (m *Matrix4x4) Transpose() *Matrix4x4 {
+func (m *Matrix4x4) Transpose() Matrix4x4 {
 
 	// // slower:
 	// mat := &Matrix4x4{}
@@ -133,7 +133,7 @@ func (m *Matrix4x4) Transpose() *Matrix4x4 {
 	// return mat
 
 	// faster:
-	return &Matrix4x4{
+	return Matrix4x4{
 		[4][4]float64{
 			[4]float64{m.els[0][0], m.els[1][0], m.els[2][0], m.els[3][0]},
 			[4]float64{m.els[0][1], m.els[1][1], m.els[2][1], m.els[3][1]},
@@ -147,7 +147,8 @@ func (m *Matrix4x4) GetColumn(index int) [4]float64 {
 		m.els[3][index]}
 }
 
-func (m *Matrix4x4) Inverse() (*Matrix4x4, error) {
+func (m *Matrix4x4) Inverse() (Matrix4x4, error) {
+	inverted := Matrix4x4{}
 	indxc, indxr, ipiv := [4]int{}, [4]int{}, [4]int{}
 	minv := m.els
 
@@ -167,7 +168,7 @@ func (m *Matrix4x4) Inverse() (*Matrix4x4, error) {
 						icol = k
 					}
 				} else if ipiv[k] > 1 {
-					return nil, fmt.Errorf("Singular matrix in Invert")
+					return inverted, fmt.Errorf("Singular matrix in Invert")
 				}
 			}
 		}
@@ -181,7 +182,7 @@ func (m *Matrix4x4) Inverse() (*Matrix4x4, error) {
 		indxr[i] = irow
 		indxc[i] = icol
 		if minv[icol][icol] == 0.0 {
-			return nil, fmt.Errorf("Singular matrix in Invert")
+			return inverted, fmt.Errorf("Singular matrix in Invert")
 		}
 
 		pivinv := 1.0 / minv[icol][icol]
@@ -212,13 +213,11 @@ func (m *Matrix4x4) Inverse() (*Matrix4x4, error) {
 		}
 	}
 
-	inverted := &Matrix4x4{}
 	inverted.els = minv
-
 	return inverted, nil
 }
 
-func (m *Matrix4x4) Equals(other *Matrix4x4) bool {
+func (m *Matrix4x4) Equals(other Matrix4x4) bool {
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			if math.Abs(float64(m.els[i][j]-other.els[i][j])) > COMPARE_PRECISION {
@@ -230,7 +229,7 @@ func (m *Matrix4x4) Equals(other *Matrix4x4) bool {
 	return true
 }
 
-func (m *Matrix4x4) String() string {
+func (m Matrix4x4) String() string {
 
 	out := "[\n"
 
@@ -250,9 +249,10 @@ func NewMatrix(
 	a00, a10, a20, a30,
 	a01, a11, a21, a31,
 	a02, a12, a22, a32,
-	a03, a13, a23, a33 float64) *Matrix4x4 {
+	a03, a13, a23, a33 float64,
+) Matrix4x4 {
 
-	return &Matrix4x4{
+	return Matrix4x4{
 		[4][4]float64{
 			[4]float64{a00, a10, a20, a30},
 			[4]float64{a01, a11, a21, a31},
