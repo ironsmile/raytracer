@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
@@ -178,7 +179,8 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
 
-	if obj, err := primitive.NewObject("data/objs/teapot.obj"); err != nil {
+	teapotPath := filepath.Join("data", "objs", "teapot.obj")
+	if obj, err := primitive.NewObject(teapotPath); err != nil {
 		fmt.Printf("Error loading obj teapot: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(

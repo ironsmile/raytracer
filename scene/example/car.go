@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
@@ -126,7 +127,8 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
 
-	if obj, err := primitive.NewObject("data/objs/alfa147.obj"); err != nil {
+	alfaPath := filepath.Join("data", "objs", "alfa147.obj")
+	if obj, err := primitive.NewObject(alfaPath); err != nil {
 		fmt.Printf("Error loading obj alfa147: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-2.5, -5, 3)).Multiply(

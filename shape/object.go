@@ -3,6 +3,7 @@ package shape
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ironsmile/raytracer/mat"
@@ -42,14 +43,38 @@ func (o *Object) IntersectP(geometry.Ray) bool {
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents
 // it. It places the object at the position, given by its second argument - `center`.
 func NewObject(filePath string) (*Object, error) {
-	objDecoder := obj.NewDecoder(obj.DefaultLimits())
-	mtlDecoder := mtl.NewDecoder(mtl.DefaultLimits())
-	objFile, err := os.Open(filePath)
+	filesToTry := []string{
+		filePath,
+	}
 
+	if gopath := os.Getenv("GOPATH"); gopath != "" {
+		filesToTry = append(
+			filesToTry,
+			filepath.Join(gopath, "src", "github.com", "ironsmile", "raytracer", filePath),
+		)
+	}
+
+	var (
+		objFile *os.File
+		err     error
+	)
+	for _, tryFile := range filesToTry {
+		objFile, err = os.Open(tryFile)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err == nil {
+			filePath = tryFile
+		}
+		break
+	}
 	if err != nil {
 		return nil, err
 	}
 	defer objFile.Close()
+
+	objDecoder := obj.NewDecoder(obj.DefaultLimits())
+	mtlDecoder := mtl.NewDecoder(mtl.DefaultLimits())
 
 	model, err := objDecoder.Decode(objFile)
 
