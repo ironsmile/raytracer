@@ -212,5 +212,15 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitive.SetName(quad.GetID(), "Blue Rectangle")
 	primitives = append(primitives, quad)
 
+	// "Debug Ray"
+	r := geometry.NewRay(
+		geometry.NewVector(-10.000000, 0.358992, -0.733734),
+		geometry.NewVector(0.139581, -0.293208, 0.945805).Normalize(),
+	)
+	r.Maxt = 18.277103
+	dray := primitive.NewRay(r)
+	primitive.SetName(dray.GetID(), "Debug Ray")
+	primitives = append(primitives, dray)
+
 	return primitives, lights
 }
