@@ -1,7 +1,6 @@
 package accel
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 	"github.com/ironsmile/raytracer/scene/example"
 )
 
-func TestAggregatorsIntersections(t *testing.T) {
+func TestAcceleratorsIntersections(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	prims, _ := example.GetTeapotScene()
 	prims = FullyRefinePrimitives(prims)
@@ -124,27 +123,36 @@ func testIntersectionsWithAggregator(
 		if hitAccel != hitAll ||
 			(hitAll && isectAll.DfGeometry.Distance != isectAccel.DfGeometry.Distance) {
 
-			msg := fmt.Sprintf(
-				"\nDisagreement: hit accel: %t, hit exhaustive: %t\n"+
-					"Distance: accel %f, exhaustive %f\n"+
-					"Ray: org [%f, %f, %f] dir [%f, %f, %f], mint: %f",
-				hitAccel, hitAll,
+			t.Logf("hit accel: %t, hit exhaustive: %t\n", hitAccel, hitAll)
+			t.Logf("distance: accel %f, exhaustive %f\n",
 				isectAccel.DfGeometry.Distance, isectAll.DfGeometry.Distance,
+			)
+			t.Logf("ray: org [%f, %f, %f] dir [%f, %f, %f], mint: %f\n",
 				ray.Origin.X, ray.Origin.Y, ray.Origin.Z,
 				ray.Direction.X, ray.Direction.Y, ray.Direction.Z, ray.Mint,
 			)
 
 			if hitAll {
-				msg += fmt.Sprintf("\nAll hit prim: %d (%s)", isectAll.Primitive.GetID(),
+				t.Logf("exhaustive hit prim: %d (%s)\n", isectAll.Primitive.GetID(),
 					primitive.GetName(isectAll.Primitive.GetID()))
 			}
 
 			if hitAccel {
-				msg += fmt.Sprintf("\nAccel hit prim: %d (%s)", isectAccel.Primitive.GetID(),
+				t.Logf("accel hit prim: %d (%s)\n", isectAccel.Primitive.GetID(),
 					primitive.GetName(isectAccel.Primitive.GetID()))
 			}
 
-			t.Fatal(msg)
+			primBB := isectAll.Primitive.GetWorldBBox()
+			t.Logf("primitive bbox: %s\n", primBB)
+
+			ray.Maxt = isectAll.DfGeometry.Distance
+			bbHit, d1, d2 := primBB.IntersectP(ray)
+			if !bbHit {
+				t.Log("ray does not interesect the pritimive bounding box, ignore?")
+			}
+			t.Logf("ray intersects primitive bounding box at %f, %f\n", d1, d2)
+
+			t.Fatal("disagreement between exhaustive intersection and accelerator")
 		}
 	}
 }
