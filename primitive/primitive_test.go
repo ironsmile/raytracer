@@ -37,20 +37,20 @@ func BenchmarkPrimitiveIntersection(b *testing.B) {
 			shpere := NewSphere(2)
 
 			b.Run("Sphere.Intersect", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					shpere.Intersect(ray, &in)
 				}
 			})
 
 			b.Run("Sphere.IntersectP", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					shpere.IntersectP(ray)
 				}
 			})
 
 			b.Run("Sphere.BBox.IntersectP", func(t *testing.B) {
 				bbox := shpere.GetWorldBBox()
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					bbox.IntersectP(ray)
 				}
 			})
@@ -62,20 +62,20 @@ func BenchmarkPrimitiveIntersection(b *testing.B) {
 			})
 
 			b.Run("Triangle.Intersect", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					triangle.Intersect(ray, &in)
 				}
 			})
 
 			b.Run("Triangle.IntersectP", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					triangle.IntersectP(ray)
 				}
 			})
 
 			b.Run("Triangle.BBox.IntersectP", func(t *testing.B) {
 				bbox := triangle.GetWorldBBox()
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					bbox.IntersectP(ray)
 				}
 			})
@@ -89,20 +89,20 @@ func BenchmarkPrimitiveIntersection(b *testing.B) {
 			rect.SetTransform(transform.Translate(geometry.NewVector(0, 0, 30)))
 
 			b.Run("Rectangle.Intersect", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					rect.Intersect(ray, &in)
 				}
 			})
 
 			b.Run("Rectangle.IntersectP", func(t *testing.B) {
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					rect.IntersectP(ray)
 				}
 			})
 
 			b.Run("Rectangle.BBox.IntersectP", func(t *testing.B) {
 				bbox := rect.GetWorldBBox()
-				for i := 0; i < t.N; i++ {
+				for t.Loop() {
 					bbox.IntersectP(ray)
 				}
 			})

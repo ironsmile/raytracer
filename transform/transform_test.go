@@ -132,7 +132,7 @@ func BenchmarkTransformationMultiplication(t *testing.B) {
 	t1 := NewTransformation(one)
 	t2 := NewTransformation(other)
 
-	for i := 0; i < t.N; i++ {
+	for t.Loop() {
 		t1.Multiply(t2)
 	}
 }
@@ -150,7 +150,7 @@ func BenchmarkRayTransformation(t *testing.B) {
 		0, 0.23, 3.2, 2.12))
 
 	t.Run("new ray", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
+		for t.Loop() {
 			t1.Ray(ray)
 		}
 	})
@@ -166,7 +166,7 @@ func BenchmarkVectorTransformation(t *testing.B) {
 		0, 0.23, 3.2, 2.12))
 
 	t.Run("new vector", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
+		for t.Loop() {
 			t1.Vector(vec)
 		}
 	})

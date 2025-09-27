@@ -71,7 +71,7 @@ func BenchmarkBBoxIntersections(t *testing.B) {
 	)
 
 	t.Run("intersected", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
+		for t.Loop() {
 			box.IntersectP(throughMiddleRay)
 		}
 	})
@@ -82,7 +82,7 @@ func BenchmarkBBoxIntersections(t *testing.B) {
 	)
 
 	t.Run("oppositeDirection", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
+		for t.Loop() {
 			box.IntersectP(opposideDirectionRay)
 		}
 	})
@@ -93,7 +93,7 @@ func BenchmarkBBoxIntersections(t *testing.B) {
 	)
 
 	t.Run("sideWays", func(t *testing.B) {
-		for i := 0; i < t.N; i++ {
+		for t.Loop() {
 			box.IntersectP(sideWaysRay)
 		}
 	})

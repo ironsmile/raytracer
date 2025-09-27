@@ -208,7 +208,7 @@ func BenchmarkMatrixMultiplication(t *testing.B) {
 		1, 1, 0, 0,
 		0, 1, 0, 1)
 
-	for i := 0; i < t.N; i++ {
+	for t.Loop() {
 		one.Multiply(other)
 	}
 }
@@ -220,7 +220,7 @@ func BenchmarkMatrixTransposition(t *testing.B) {
 		2, 3, 0, 0,
 		0, 0, 3, 2)
 
-	for i := 0; i < t.N; i++ {
+	for t.Loop() {
 		one.Transpose()
 	}
 }
@@ -232,7 +232,7 @@ func BenchmarkMatrixInversion(t *testing.B) {
 		2, 3, 0, 0,
 		0, 0, 3, 2)
 
-	for i := 0; i < t.N; i++ {
+	for t.Loop() {
 		one.Inverse()
 	}
 }
