@@ -28,9 +28,9 @@ type bvhPrimitiveInfo struct {
 	bounds          *bbox.BBox
 }
 
-// bvhBuildNode represents a node in the BVH. All nodes store a BBox , which stores
+// bvhBuildNode represents a node in the BVH. All nodes store a BBox, which stores
 // the bounds of all of the children beneath the node. Each interior node stores pointers to
-// its two children in children . Interior nodes also record the coordinate axis along which
+// its two children in `children`. Interior nodes also record the coordinate axis along which
 // primitives were sorted for distribution to their two children; this information is used to
 // improve the performance of the traversal algorithm. Leaf nodes need to record which
 // primitive or primitives are stored in them.
@@ -56,12 +56,22 @@ func (bn *bvhBuildNode) InitInterior(axis int, c0, c1 *bvhBuildNode) {
 	bn.nPrimitives = 0
 }
 
-// linearBVHNode represents a node in the compact tree of bvh
+// linearBVHNode represents a node in the compact tree of BVH.
 type linearBVHNode struct {
-	bounds      bbox.BBox
-	offset      uint32
+	// bounds is the bounding box which encapsulates all primitives in this node.
+	bounds bbox.BBox
+
+	// offset is the index of the first primitive which belongs to this node in the
+	// compact primitives list.
+	offset uint32
+
+	// nPrimitives is the number of primitives this bounding box holds. The first
+	// primitive has an index `offset` in the compact primitive list and the
+	// last one is at index `offset+nPrimitives-1`.
 	nPrimitives uint8
-	axis        uint8
+
+	// axis along which primitives were sorted for distribution to the two children.
+	axis uint8
 }
 
 // NewBVH returns a new BVH structure which would accelerate the intersection of the
@@ -277,39 +287,48 @@ func (bvh *BVH) Intersect(ray geometry.Ray, in *primitive.Intersection) bool {
 	var todo [256]uint32
 	for {
 		node := &bvh.nodes[nodeNum]
-		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
-			if node.nPrimitives > 0 {
-				// intersect with all primitives
-				for i := uint32(0); i < uint32(node.nPrimitives); i++ {
-					if bvh.primitives[node.offset+i].Intersect(ray, in) {
-						hit = true
-						ray.Maxt = in.DfGeometry.Distance
-					}
-				}
-				if todoOffset == 0 {
-					break
-				}
-				todoOffset--
-				nodeNum = todo[todoOffset]
-			} else {
-				// put far bvh node on todo stack
-				if dirIsNeg[node.axis] {
-					todo[todoOffset] = nodeNum + 1
-					todoOffset++
-					nodeNum = node.offset
-				} else {
-					todo[todoOffset] = node.offset
-					todoOffset++
-					nodeNum = nodeNum + 1
-				}
-			}
-		} else {
+		if !node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
+			// Ray does not intersect this node's BBox. Continue with the next
+			// one.
+
 			if todoOffset == 0 {
 				break
 			}
 			todoOffset--
 			nodeNum = todo[todoOffset]
+			continue
 		}
+
+		if node.nPrimitives == 0 {
+			// This is not a leaf node. So add the appropriate child in the
+			// todo list and try it out next.
+
+			// put far bvh node on todo stack
+			if dirIsNeg[node.axis] {
+				todo[todoOffset] = nodeNum + 1
+				todoOffset++
+				nodeNum = node.offset
+			} else {
+				todo[todoOffset] = node.offset
+				todoOffset++
+				nodeNum = nodeNum + 1
+			}
+			continue
+		}
+
+		// The node is an leaf node. So intersect with all of its primitives
+		// searching for a hit.
+		for i := uint32(0); i < uint32(node.nPrimitives); i++ {
+			if bvh.primitives[node.offset+i].Intersect(ray, in) {
+				hit = true
+				ray.Maxt = in.DfGeometry.Distance
+			}
+		}
+		if todoOffset == 0 {
+			break
+		}
+		todoOffset--
+		nodeNum = todo[todoOffset]
 	}
 
 	return hit
@@ -334,38 +353,47 @@ func (bvh *BVH) IntersectP(ray geometry.Ray) bool {
 	var todo [256]uint32
 	for {
 		node := &bvh.nodes[nodeNum]
-		if node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
-			if node.nPrimitives > 0 {
-				// intersect with all primitives
-				for i := uint32(0); i < uint32(node.nPrimitives); i++ {
-					if bvh.primitives[node.offset+i].IntersectP(ray) {
-						return true
-					}
-				}
-				if todoOffset == 0 {
-					break
-				}
-				todoOffset--
-				nodeNum = todo[todoOffset]
-			} else {
-				// put far bvh node on todo stack
-				if dirIsNeg[node.axis] {
-					todo[todoOffset] = nodeNum + 1
-					todoOffset++
-					nodeNum = node.offset
-				} else {
-					todo[todoOffset] = node.offset
-					todoOffset++
-					nodeNum = nodeNum + 1
-				}
-			}
-		} else {
+		if !node.bounds.IntersectPOptimized(&ray, &invDir, dirIsNeg) {
+			// Ray does not intersect this node's BBox. Continue with the next
+			// one.
+
 			if todoOffset == 0 {
 				break
 			}
 			todoOffset--
 			nodeNum = todo[todoOffset]
+			continue
 		}
+
+		if node.nPrimitives == 0 {
+			// This is not a leaf node. So add the appropriate child in the
+			// todo list and try it out next.
+
+			// put far bvh node on todo stack
+			if dirIsNeg[node.axis] {
+				todo[todoOffset] = nodeNum + 1
+				todoOffset++
+				nodeNum = node.offset
+			} else {
+				todo[todoOffset] = node.offset
+				todoOffset++
+				nodeNum = nodeNum + 1
+			}
+			continue
+		}
+
+		// The node is an leaf node. So intersect with all of its primitives
+		// searching for a hit.
+		for i := uint32(0); i < uint32(node.nPrimitives); i++ {
+			if bvh.primitives[node.offset+i].IntersectP(ray) {
+				return true
+			}
+		}
+		if todoOffset == 0 {
+			break
+		}
+		todoOffset--
+		nodeNum = todo[todoOffset]
 	}
 
 	return false
