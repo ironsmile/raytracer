@@ -99,8 +99,7 @@ func NewBVH(p []primitive.Primitive, mp uint8) *BVH {
 	}
 
 	//WIP
-	var totalNodes int
-	root, orderedPrims := bvh.bvhRecursiveBuild(buildData, &totalNodes, nil)
+	root, orderedPrims, totalNodes := bvh.bvhRecursiveBuild(buildData, nil)
 	bvh.primitives = orderedPrims
 
 	bvh.nodes = make([]linearBVHNode, totalNodes)
@@ -134,10 +133,9 @@ func (bvh *BVH) flattenBVHTree(node *bvhBuildNode, offset *uint32) uint32 {
 
 func (bvh *BVH) bvhRecursiveBuild(
 	buildData []bvhPrimitiveInfo,
-	totalNodes *int,
 	orderedPrims []primitive.Primitive,
-) (*bvhBuildNode, []primitive.Primitive) {
-	(*totalNodes)++
+) (*bvhBuildNode, []primitive.Primitive, int) {
+	totalNodes := 1
 
 	var centroidBound *bbox.BBox
 	var start, dim, mid int
@@ -159,7 +157,7 @@ func (bvh *BVH) bvhRecursiveBuild(
 			orderedPrims = append(orderedPrims, bvh.primitives[primNum])
 		}
 		node.InitLeaf(firstPrimOffset, nPrimitives, bb)
-		return node, orderedPrims
+		return node, orderedPrims, totalNodes
 	}
 
 	// build of primitive centroid and dim
@@ -178,14 +176,15 @@ func (bvh *BVH) bvhRecursiveBuild(
 				orderedPrims = append(orderedPrims, bvh.primitives[primNum])
 			}
 			node.InitLeaf(firstPrimOffset, nPrimitives, bb)
-			return node, orderedPrims
+			return node, orderedPrims, totalNodes
 		}
 
-		c0, c0ordered := bvh.bvhRecursiveBuild(buildData[start:mid], totalNodes, orderedPrims)
-		c1, c1ordered := bvh.bvhRecursiveBuild(buildData[mid:], totalNodes, c0ordered)
+		c0, c0ordered, c0t := bvh.bvhRecursiveBuild(buildData[start:mid], orderedPrims)
+		c1, c1ordered, c1t := bvh.bvhRecursiveBuild(buildData[mid:], c0ordered)
+		totalNodes += (c0t + c1t)
 		orderedPrims = c1ordered
 		node.InitInterior(dim, c0, c1)
-		return node, orderedPrims
+		return node, orderedPrims, totalNodes
 	}
 
 	// Partition primitives base on the Serfice Area Heuristic split method
@@ -255,16 +254,17 @@ func (bvh *BVH) bvhRecursiveBuild(
 				orderedPrims = append(orderedPrims, bvh.primitives[primNum])
 			}
 			node.InitLeaf(firstPrimOffset, nPrimitives, bb)
-			return node, orderedPrims
+			return node, orderedPrims, totalNodes
 		}
 	}
 
-	c0, c0ordered := bvh.bvhRecursiveBuild(buildData[start:mid], totalNodes, orderedPrims)
-	c1, c1ordered := bvh.bvhRecursiveBuild(buildData[mid:], totalNodes, c0ordered)
+	c0, c0ordered, c0t := bvh.bvhRecursiveBuild(buildData[start:mid], orderedPrims)
+	c1, c1ordered, c1t := bvh.bvhRecursiveBuild(buildData[mid:], c0ordered)
 	orderedPrims = c1ordered
+	totalNodes += (c0t + c1t)
 	node.InitInterior(dim, c0, c1)
 
-	return node, orderedPrims
+	return node, orderedPrims, totalNodes
 }
 
 // Intersect implements the Primitive interface
