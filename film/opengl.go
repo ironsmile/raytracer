@@ -414,9 +414,13 @@ func (g *GlWindow) mainLoop() {
 	g.Wait()
 }
 
+var (
+	moveSpeed   = 0.15
+	rotateSpeed = 3.0
+)
+
 func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
-	moveSpeed := 0.15
-	rotateSpeed := 3.0
+	// camera transform controls.
 	if window.GetKey(glfw.KeyW) == glfw.Press {
 		cam.Forward(moveSpeed)
 	}
@@ -429,6 +433,12 @@ func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
 	if window.GetKey(glfw.KeyD) == glfw.Press {
 		cam.Right(moveSpeed)
 	}
+	if window.GetKey(glfw.KeyE) == glfw.Press {
+		cam.Up(moveSpeed)
+	}
+	if window.GetKey(glfw.KeyQ) == glfw.Press {
+		cam.Down(moveSpeed)
+	}
 	if window.GetKey(glfw.KeyUp) == glfw.Press {
 		cam.Pitch(rotateSpeed)
 	}
@@ -440,6 +450,28 @@ func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
 	}
 	if window.GetKey(glfw.KeyRight) == glfw.Press {
 		cam.Yaw(rotateSpeed)
+	}
+
+	// movement speed controls.
+	if window.GetKey(glfw.Key1) == glfw.Press {
+		moveSpeed = 0.03
+		rotateSpeed = 0.4
+	}
+	if window.GetKey(glfw.Key2) == glfw.Press {
+		moveSpeed = 0.06
+		rotateSpeed = 1.2
+	}
+	if window.GetKey(glfw.Key3) == glfw.Press {
+		moveSpeed = 0.09
+		rotateSpeed = 2.2
+	}
+	if window.GetKey(glfw.Key4) == glfw.Press {
+		moveSpeed = 0.15
+		rotateSpeed = 3.0
+	}
+	if window.GetKey(glfw.Key5) == glfw.Press {
+		moveSpeed = 0.18
+		rotateSpeed = 3.8
 	}
 }
 

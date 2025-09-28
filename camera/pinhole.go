@@ -66,6 +66,24 @@ func (p *PinholeCamera) Left(speed float64) error {
 	return nil
 }
 
+// Up moves the camera straight up regardless of its orientation.
+func (p *PinholeCamera) Up(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
+	p.move(geometry.NewVector(0, 1, 0).MultiplyScalar(speed))
+	return nil
+}
+
+// Down moves the camera straight down regardless of its orientation.
+func (p *PinholeCamera) Down(speed float64) error {
+	p.Lock()
+	defer p.Unlock()
+
+	p.move(geometry.NewVector(0, -1, 0).MultiplyScalar(speed))
+	return nil
+}
+
 // Right moves the camera to the right relative to its lookAt and up directions
 func (p *PinholeCamera) Right(speed float64) error {
 	p.Lock()
