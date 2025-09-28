@@ -7,6 +7,8 @@ import (
 )
 
 // Ray represents a ray in the world. It has a particular "width" along its direction.
+//
+// TODO: explore implementation based on the [geometry.Ray.Intersect] function.
 type Ray struct {
 	BasePrimitive
 

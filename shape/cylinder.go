@@ -1,6 +1,7 @@
 package shape
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/ironsmile/raytracer/bbox"
@@ -120,11 +121,18 @@ func (c *Cylinder) Intersect(ray geometry.Ray, dg *DifferentialGeometry) bool {
 
 // NormalAt implements the Shape interface
 func (c *Cylinder) NormalAt(at geometry.Vector) geometry.Vector {
-	o := geometry.NewVector(
-		0, at.Y, 0,
-	)
+	dir := c.endcapTop.Minus(c.endcapBottom)
+	vat := at.Minus(c.endcapBottom)
+	th := math.Acos(dir.Dot(vat) / (dir.Length() * vat.Length()))
+	if math.IsNaN(th) {
+		fmt.Printf("NaN acos in normal calculations for cylinder at %#v\n", at)
+		return at.Minus(c.endcapBottom)
+	}
 
-	return at.Minus(o).Normalize()
+	vatProjLen := vat.Length() * math.Cos(th)
+	axisAt := dir.Normalize().MultiplyScalar(vatProjLen)
+
+	return at.Minus(axisAt).Normalize()
 }
 
 // IntersectP implements the Shape interface
