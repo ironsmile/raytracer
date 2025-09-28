@@ -3,6 +3,7 @@ package primitive
 import (
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/mat"
+	"github.com/ironsmile/raytracer/shape"
 	"github.com/ironsmile/raytracer/transform"
 )
 
@@ -13,6 +14,11 @@ type Ray struct {
 	BasePrimitive
 
 	ray geometry.Ray
+
+	line Primitive
+
+	rayMat *mat.Material
+	endMat *mat.Material
 }
 
 // NewRay returns a new Ray [Primitive] which could be seen in the world.
@@ -22,6 +28,23 @@ func NewRay(ray geometry.Ray) *Ray {
 	}
 	r.SetTransform(transform.Identity())
 	r.id = GetNewID()
+
+	r.rayMat = mat.NewMaterial()
+	r.rayMat.Color = geometry.NewColor(1, 1, 0)
+	r.rayMat.Diff = 1
+
+	r.endMat = mat.NewMaterial()
+	r.endMat.Color = geometry.NewColor(0, 0, 1)
+	r.endMat.Diff = 1
+
+	rayEnd := r.ray.Origin.Plus(
+		r.ray.Direction.Normalize().MultiplyScalar(r.ray.Maxt),
+	)
+
+	r.line = FromShape(shape.NewCylinder(0.03, r.ray.Origin, rayEnd))
+	r.shape = r.line.Shape()
+	r.shape.SetMaterial(*r.rayMat)
+
 	return r
 }
 
@@ -32,35 +55,25 @@ func (r *Ray) CanIntersect() bool {
 
 // Refine returns the primitives from which this ray is composed of.
 func (r *Ray) Refine() []Primitive {
-	rayMat := mat.NewMaterial()
-	rayMat.Color = geometry.NewColor(1, 1, 0)
-	rayMat.Diff = 1
-
 	origin := NewSphere(0.04)
 	origin.SetTransform(
 		transform.Translate(r.ray.Origin),
 	)
-	origin.Shape().SetMaterial(*rayMat)
+	origin.Shape().SetMaterial(*r.rayMat)
 
 	rayEnd := r.ray.Origin.Plus(
 		r.ray.Direction.Normalize().MultiplyScalar(r.ray.Maxt),
 	)
 
-	endMat := mat.NewMaterial()
-	endMat.Color = geometry.NewColor(0, 1, 1)
-	endMat.Diff = 1
 	end := NewSphere(0.04)
 	end.SetTransform(
 		transform.Translate(rayEnd),
 	)
-	end.Shape().SetMaterial(*endMat)
-
-	line := NewCylinder(0.03, r.ray.Origin, rayEnd)
-	line.Shape().SetMaterial(*rayMat)
+	end.Shape().SetMaterial(*r.endMat)
 
 	return []Primitive{
 		origin,
-		line,
+		r.line,
 		end,
 	}
 }
