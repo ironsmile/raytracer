@@ -54,6 +54,10 @@ var (
 		"scene to render. Possible values: teapot, car")
 	debugMode = flag.Bool("D", false,
 		"debug mode, will print diagnostics information")
+	debugRays = flag.String("debug-rays", "",
+		"file nam which contains a list of rays which will be added to the scene\n"+
+			"with deubgging purposes. For the format of the file see the code\n"+
+			"comment on [scene.Scene.SetDebugRaysFile] function.")
 )
 
 func main() {
@@ -75,6 +79,10 @@ func main() {
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
+	}
+
+	if *debugRays != "" {
+		scene.SetDebugRaysFile(*debugRays)
 	}
 
 	if *filename != "" {

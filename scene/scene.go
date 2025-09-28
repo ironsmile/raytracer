@@ -1,6 +1,8 @@
 package scene
 
 import (
+	"fmt"
+
 	"github.com/ironsmile/raytracer/accel"
 	"github.com/ironsmile/raytracer/geometry"
 	"github.com/ironsmile/raytracer/primitive"
@@ -76,8 +78,12 @@ func (s *Scene) InitScene(name string) {
 	s.Lights = lights
 	s.Primitives = prims
 
-	s.accel = accel.NewBVH(prims, 1)
-	// s.accel = accel.NewGrid(prims)
+	if err := s.initDebugRays(); err != nil {
+		fmt.Printf("error adding debug rays to the scene: %s\n", err)
+	}
+
+	s.accel = accel.NewBVH(s.Primitives, 1)
+	// s.accel = accel.NewGrid(s.Primitives)
 }
 
 // NewScene returns a new demo scene
