@@ -1852,8 +1852,6 @@ func (a *VulkanApp) cleanEngine() {
 }
 
 func (a *VulkanApp) mainLoop() error {
-    fmt.Printf("main loop!\n")
-
     a.tracer.Render()
     minFrameTime, _ := time.ParseDuration(
         fmt.Sprintf("%dms", int(1000.0/float32(a.args.FPSCap))),
@@ -1909,8 +1907,8 @@ func (a *VulkanApp) mainLoop() error {
         }
     }
 
+    fmt.Println("\nClosing window, rendering stopped.")
     vk.DeviceWaitIdle(a.device)
-
     return nil
 }
 
