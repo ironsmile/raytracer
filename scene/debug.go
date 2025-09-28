@@ -13,13 +13,15 @@ var debugRaysFile string
 // SetDebugRaysFile sets a name for a file which should include debug rays.
 // This file is read and such rays are added to the scene as primitives.
 //
-// The file format is a text file with ray description per line. A description
+// The file format is a text file with ray description per line. The file
+// starts with a line which holds a single integer. This is the number of
+// rays in the rest of the file. The the ray descriptions follow. A description
 // is a 7 floats separated by spaces. It looks like so:
 //
 //	ox oy oz dx dy dz l
 //
 // `(ox, oy, oz)` is the ray origin. `(dx, dy, dz)` is the ray direction and
-// l is its length.
+// `l` is its length.
 func SetDebugRaysFile(fileName string) {
 	debugRaysFile = fileName
 }
