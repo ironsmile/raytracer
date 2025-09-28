@@ -22,10 +22,6 @@ const mtlFileSuffix = ".mtl"
 type Object struct {
 	BasicShape
 
-	// A model wich contains the parsed .obj information such as objects, meshes,
-	// faces and raw vertices.
-	model *obj.Model
-
 	// All the meshes which compose this object
 	meshes []Shape
 }
@@ -105,7 +101,6 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("model %s has has a material: %p\n", filePath, matLib)
 
 	o := &Object{}
-	o.model = model
 	var trianglesCount int
 
 	for _, modelObj := range model.Objects {
