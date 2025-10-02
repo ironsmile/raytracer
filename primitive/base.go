@@ -151,5 +151,6 @@ func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
 func FromShape(s shape.Shape) *BasePrimitive {
 	b := &BasePrimitive{shape: s}
 	b.SetTransform(transform.Identity())
+	b.id = GetNewID()
 	return b
 }
