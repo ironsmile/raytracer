@@ -30,6 +30,19 @@ func NewCylinder(radius float64, bottom, top geometry.Vector) *Cylinder {
 	c.bbox = bbox.FromPoint(bottom)
 	c.bbox = bbox.UnionPoint(c.bbox, top)
 
+	spPoints := [6]geometry.Vector{
+		bottom.Plus(geometry.NewVector(1, 0, 0).MultiplyScalar(radius)),
+		bottom.Plus(geometry.NewVector(-1, 0, 0).MultiplyScalar(radius)),
+		bottom.Plus(geometry.NewVector(0, 1, 0).MultiplyScalar(radius)),
+		bottom.Plus(geometry.NewVector(0, -1, 0).MultiplyScalar(radius)),
+		bottom.Plus(geometry.NewVector(0, 0, 1).MultiplyScalar(radius)),
+		bottom.Plus(geometry.NewVector(0, 0, -1).MultiplyScalar(radius)),
+	}
+
+	for _, p := range spPoints {
+		c.bbox = bbox.UnionPoint(c.bbox, p)
+	}
+
 	return c
 }
 

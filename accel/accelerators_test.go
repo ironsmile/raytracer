@@ -57,15 +57,6 @@ func testIntersectionsWithAggregator(
 	var lastHit geometry.Vector
 
 	for i := 0; i < 40000; i++ {
-		// Choos ray origin for testing accelerator
-		orig := geometry.NewVector(
-			randInRange(bb.Min.X, bb.Max.X),
-			randInRange(bb.Min.Y, bb.Max.Y),
-			randInRange(bb.Min.Z, bb.Max.Z),
-		)
-		if rand.Int()%4 == 0 {
-			orig = lastHit
-		}
 
 		// Choose ray direction for testing accelerator
 		dir := uniformRandomSphere()
@@ -77,6 +68,7 @@ func testIntersectionsWithAggregator(
 		} else if rand.Int()%32 == 0 {
 			dir.Y, dir.Z = 0, 0
 		}
+		dir = dir.Normalize()
 
 		// Choose ray epsilon for testing accelerator 248
 		var eps float64
@@ -84,8 +76,17 @@ func testIntersectionsWithAggregator(
 		if rand.Float64() < 0.25 {
 			eps = geometry.EPSILON
 		}
+		// Choose ray origin for testing accelerator
+		orig := geometry.NewVector(
+			randInRange(bb.Min.X, bb.Max.X),
+			randInRange(bb.Min.Y, bb.Max.Y),
+			randInRange(bb.Min.Z, bb.Max.Z),
+		)
+		if rand.Int()%4 == 0 {
+			orig = lastHit.Plus(dir.MultiplyScalar(geometry.EPSILON * 2))
+		}
 
-		ray := geometry.NewRay(orig, dir.Normalize())
+		ray := geometry.NewRay(orig, dir)
 		ray.Mint = eps
 		rayAll := ray
 

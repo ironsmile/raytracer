@@ -212,5 +212,19 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitive.SetName(quad.GetID(), "Blue Rectangle")
 	primitives = append(primitives, quad)
 
+	// Cyan cylinder
+	cyl := primitive.NewCylinder(0.5, geometry.NewVector(0, 0, 0), geometry.NewVector(0, 2, 0))
+	cyl.Shape().SetMaterial(mat.Material{
+		Diff:  1,
+		Color: geometry.NewColor(0, 1, 1),
+	})
+	cyl.SetTransform(
+		transform.Translate(geometry.NewVector(
+			-4, -5, -1,
+		)),
+	)
+	primitive.SetName(cyl.GetID(), "Cyan Cylinder")
+	primitives = append(primitives, cyl)
+
 	return primitives, lights
 }
