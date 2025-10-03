@@ -119,6 +119,12 @@ func testIntersectionsWithAggregator(
 			continue
 		}
 
+		if isectAll.DfGeometry.Distance == 0 || isectAccel.DfGeometry.Distance == 0 {
+			// This is a self hit which is not interesting. It is very likely that
+			// the bounding box does not work register for self hits at its edge.
+			continue
+		}
+
 		hitAccel := accel.Intersect(ray, &isectAccel)
 
 		if hitAccel != hitAll ||
