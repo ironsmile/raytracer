@@ -40,9 +40,9 @@ func (i *Image) Height() int {
 
 func (i *Image) DoneFrame() {
 	out, err := os.Create(i.filename)
-
 	if err != nil {
-		fmt.Errorf("%s\n", err.Error())
+		fmt.Printf("failed to open image file: %s\n", err.Error())
+		return
 	}
 
 	defer func() {
@@ -52,10 +52,11 @@ func (i *Image) DoneFrame() {
 	err = png.Encode(out, i.img)
 
 	if err != nil {
-		fmt.Errorf("%s\n", err.Error())
-	} else {
-		fmt.Printf("Image saved to %s\n", i.filename)
+		fmt.Printf("failed to encode image: %s\n", err.Error())
+		return
 	}
+
+	fmt.Printf("Image saved to %s\n", i.filename)
 }
 
 func (i *Image) StartFrame() {
