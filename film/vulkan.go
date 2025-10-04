@@ -1161,8 +1161,8 @@ func (a *VulkanApp) createFilmImage() error {
 
     a.film = newVulkanFilm(texWidth, texHeight)
 
-    imgSize := vk.DeviceSize(texWidth * texHeight * 4 * 4)
-    a.filmImageFormat = vk.FormatR32g32b32a32Sfloat
+    imgSize := vk.DeviceSize(texWidth * texHeight * 4 * 3)
+    a.filmImageFormat = vk.FormatR32g32b32Sfloat
 
     var (
         stagingBuffer       vk.Buffer

@@ -22,7 +22,7 @@ func newVulkanFilm(width, height uint32) *vulkanFilm {
 	return &vulkanFilm{
 		width:      width,
 		height:     height,
-		pixBuffer:  make([]float32, width*height*4),
+		pixBuffer:  make([]float32, width*height*3),
 		pixSamples: make([]uint16, width*height),
 
 		frameTimeLock: &sync.RWMutex{},
@@ -38,7 +38,7 @@ func (f *vulkanFilm) Set(x int, y int, clr color.Color) error {
 
 	ri, gi, bi, _ := clr.RGBA()
 
-	ind := f.width*uint32(y)*4 + uint32(x)*4
+	ind := f.width*uint32(y)*3 + uint32(x)*3
 	f.pixBuffer[ind] = f.pixBuffer[ind]*oldWeight + (float32(ri)/0xffff)*newWeight
 	f.pixBuffer[ind+1] = f.pixBuffer[ind+1]*oldWeight + (float32(gi)/0xffff)*newWeight
 	f.pixBuffer[ind+2] = f.pixBuffer[ind+2]*oldWeight + (float32(bi)/0xffff)*newWeight
