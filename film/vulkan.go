@@ -1882,7 +1882,7 @@ func (a *VulkanApp) mainLoop() error {
 
         glfw.PollEvents()
         if a.args.Interactive {
-            handleInteractionEvents(a.window, a.cam)
+            handleInteractionEvents(a.window, a.cam, renderTime)
 
             if !bPressed && a.window.GetKey(glfw.KeyB) == glfw.Press {
                 a.tracer.ShowBBoxes = !a.tracer.ShowBBoxes

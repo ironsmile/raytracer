@@ -3,8 +3,6 @@ package film
 import (
 	"fmt"
 	"image/color"
-	"os"
-	"runtime/trace"
 	"sync"
 	"time"
 
@@ -375,7 +373,7 @@ func (g *GlWindow) mainLoop() {
 
 		glfw.PollEvents()
 		if g.args.Interactive {
-			handleInteractionEvents(g.window, g.cam)
+			handleInteractionEvents(g.window, g.cam, renderTime)
 
 			if !bPressed && g.window.GetKey(glfw.KeyB) == glfw.Press {
 				g.tracer.ShowBBoxes = !g.tracer.ShowBBoxes
@@ -412,88 +410,4 @@ func (g *GlWindow) mainLoop() {
 
 	fmt.Println("\nClosing window, rendering stopped.")
 	g.Wait()
-}
-
-var (
-	moveSpeed   = 0.15
-	rotateSpeed = 3.0
-)
-
-func handleInteractionEvents(window *glfw.Window, cam camera.Camera) {
-	// camera transform controls.
-	if window.GetKey(glfw.KeyW) == glfw.Press {
-		cam.Forward(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyS) == glfw.Press {
-		cam.Backward(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyA) == glfw.Press {
-		cam.Left(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyD) == glfw.Press {
-		cam.Right(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyE) == glfw.Press {
-		cam.Up(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyQ) == glfw.Press {
-		cam.Down(moveSpeed)
-	}
-	if window.GetKey(glfw.KeyUp) == glfw.Press {
-		cam.Pitch(rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyDown) == glfw.Press {
-		cam.Pitch(-rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyLeft) == glfw.Press {
-		cam.Yaw(-rotateSpeed)
-	}
-	if window.GetKey(glfw.KeyRight) == glfw.Press {
-		cam.Yaw(rotateSpeed)
-	}
-
-	// movement speed controls.
-	if window.GetKey(glfw.Key1) == glfw.Press {
-		moveSpeed = 0.03
-		rotateSpeed = 0.4
-	}
-	if window.GetKey(glfw.Key2) == glfw.Press {
-		moveSpeed = 0.06
-		rotateSpeed = 1.2
-	}
-	if window.GetKey(glfw.Key3) == glfw.Press {
-		moveSpeed = 0.09
-		rotateSpeed = 2.2
-	}
-	if window.GetKey(glfw.Key4) == glfw.Press {
-		moveSpeed = 0.15
-		rotateSpeed = 3.0
-	}
-	if window.GetKey(glfw.Key5) == glfw.Press {
-		moveSpeed = 0.18
-		rotateSpeed = 3.8
-	}
-}
-
-func collectTrace() {
-	traceFile := "trace.out"
-
-	fh, err := os.Create(traceFile)
-
-	if err != nil {
-		fmt.Printf("Error creating trace file: %s\n", err)
-		return
-	}
-
-	defer fh.Close()
-
-	if err := trace.Start(fh); err != nil {
-		fmt.Printf("Error staring trace: %s\n", err)
-		return
-	}
-
-	defer trace.Stop()
-
-	time.Sleep(2 * time.Second)
-	fmt.Printf("Creating trace in %s\n", traceFile)
 }
