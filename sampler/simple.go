@@ -11,7 +11,8 @@ import (
 // ErrEndOfSampling would be returned by the sampler when no further sampling is needed
 var ErrEndOfSampling = errors.New("End of sampling")
 
-// SimpleSampler implements the most simple of samplers. It generates one sample per pixel
+// SimpleSampler implements the most simple of samplers. It generates a fixed amount of
+// sample per pixel
 type SimpleSampler struct {
 	output           Output
 	subSamplers      []*SubSampler
@@ -86,7 +87,7 @@ func NewSimple(width, height int, out Output) *SimpleSampler {
 	s.subSamplersCount = count
 	s.subSamplers = make([]*SubSampler, count)
 
-	for i := uint32(0); i < count; i++ {
+	for i := range count {
 		sy := (i / splits) * sizeH
 		sx := (i % splits) * sizeW
 
