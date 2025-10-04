@@ -101,7 +101,7 @@ func NewSimple(width, height int, out Output) *SimpleSampler {
 			sh = uint32(height) - sy
 		}
 
-		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 10, s)
+		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 4, s)
 	}
 	return s
 }
