@@ -421,8 +421,11 @@ func (a *VulkanApp) createSwapChain() error {
         Clipped:        vk.True,
     }
 
-    fmt.Printf("Selected swapchain image format: %#v\n", createInfo.ImageFormat)
-    fmt.Printf("Selected swapchain image color space: %#v\n", createInfo.ImageColorSpace)
+    if a.args.Debug {
+        fmt.Printf("Selected swapchain image format: %#v, color space: %#v\n",
+            createInfo.ImageFormat, createInfo.ImageColorSpace,
+        )
+    }
 
     indices := a.findQueueFamilies(a.physicalDevice)
     if indices.Graphics.Get() != indices.Present.Get() {
@@ -1678,6 +1681,13 @@ func (a *VulkanApp) isDeviceSuitable(device vk.PhysicalDevice) bool {
 func (a *VulkanApp) chooseSwapSurfaceFormat(
     availableFormats []vk.SurfaceFormat,
 ) vk.SurfaceFormat {
+    if a.args.Debug {
+        fmt.Println("Available swapchanin formats:")
+        for _, format := range availableFormats {
+            fmt.Printf("\t* %#v\n", format.Format)
+        }
+    }
+
     for _, format := range availableFormats {
         if format.Format == vk.FormatB8g8r8a8Srgb &&
             format.ColorSpace == vk.ColorSpaceSrgbNonlinear {
