@@ -245,6 +245,43 @@ func (m Matrix4x4) String() string {
 	return out
 }
 
+func (m Matrix4x4) MultiplyScalar(val float64) Matrix4x4 {
+	other := Matrix4x4{}
+
+	other.els[0][0] = m.els[0][0] * val
+	other.els[0][1] = m.els[0][1] * val
+	other.els[0][2] = m.els[0][2] * val
+	other.els[0][3] = m.els[0][3] * val
+
+	other.els[1][0] = m.els[1][0] * val
+	other.els[1][1] = m.els[1][1] * val
+	other.els[1][2] = m.els[1][2] * val
+	other.els[1][3] = m.els[1][3] * val
+
+	other.els[2][0] = m.els[2][0] * val
+	other.els[2][1] = m.els[2][1] * val
+	other.els[2][2] = m.els[2][2] * val
+	other.els[2][3] = m.els[2][3] * val
+
+	other.els[3][0] = m.els[3][0] * val
+	other.els[3][1] = m.els[3][1] * val
+	other.els[3][2] = m.els[3][2] * val
+	other.els[3][3] = m.els[3][3] * val
+
+	return other
+}
+
+func (m Matrix4x4) Plus(other Matrix4x4) Matrix4x4 {
+	res := Matrix4x4{}
+	for i := range 4 {
+		for j := range 4 {
+			res.els[i][j] = m.els[i][j] + other.els[i][j]
+		}
+	}
+
+	return res
+}
+
 func NewMatrix(
 	a00, a10, a20, a30,
 	a01, a11, a21, a31,
