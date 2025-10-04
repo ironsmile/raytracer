@@ -421,6 +421,9 @@ func (a *VulkanApp) createSwapChain() error {
         Clipped:        vk.True,
     }
 
+    fmt.Printf("Selected swapchain image format: %#v\n", createInfo.ImageFormat)
+    fmt.Printf("Selected swapchain image color space: %#v\n", createInfo.ImageColorSpace)
+
     indices := a.findQueueFamilies(a.physicalDevice)
     if indices.Graphics.Get() != indices.Present.Get() {
         createInfo.ImageSharingMode = vk.SharingModeConcurrent
@@ -1156,6 +1159,8 @@ func (a *VulkanApp) createFilmImage() error {
     texWidth := uint32(a.swapChainExtend.Width)
     texHeight := uint32(a.swapChainExtend.Height)
 
+    a.film = newVulkanFilm(texWidth, texHeight)
+
     imgSize := vk.DeviceSize(texWidth * texHeight * 4 * 4)
     a.filmImageFormat = vk.FormatR32g32b32a32Sfloat
 
@@ -1817,9 +1822,7 @@ func (a *VulkanApp) createShaderModule(code []byte) (vk.ShaderModule, error) {
 func (a *VulkanApp) initEngine() error {
     width, height := a.swapChainExtend.Width, a.swapChainExtend.Height
 
-    vfilm := newVulkanFilm(width, height)
-
-    smpl := sampler.NewSimple(int(width), int(height), vfilm)
+    smpl := sampler.NewSimple(int(width), int(height), a.film)
 
     if a.args.Interactive {
         smpl.MakeContinuous()
@@ -1828,7 +1831,7 @@ func (a *VulkanApp) initEngine() error {
     cam := scene.GetCamera(float64(width), float64(height))
 
     tracer := engine.NewFPS(smpl)
-    tracer.SetTarget(vfilm, cam)
+    tracer.SetTarget(a.film, cam)
     tracer.ShowBBoxes = a.args.ShowBBoxes
 
     fmt.Printf("Loading scene...\n")
@@ -1836,7 +1839,6 @@ func (a *VulkanApp) initEngine() error {
     tracer.Scene.InitScene(a.args.SceneName)
     fmt.Printf("Loading scene took %s\n", time.Since(loadingStart))
 
-    a.film = vfilm
     a.sampler = smpl
     a.tracer = tracer
     a.cam = cam
