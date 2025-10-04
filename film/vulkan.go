@@ -1247,7 +1247,7 @@ func (a *VulkanApp) cleanFilmImage() {
 }
 
 func (a *VulkanApp) copyFilmToGPUImage() error {
-    filmBytes := unsafer.SliceToBytes(a.film.pixBuffer)
+    filmBytes := a.film.asVkBuffer(a.filmImageFormat)
 
     // copy data to the staging buffer
     vk.Memcopy(a.filmBufferData, filmBytes)

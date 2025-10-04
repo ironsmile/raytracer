@@ -1,14 +1,20 @@
 package film
 
 import (
+	"fmt"
 	"image/color"
 	"sync"
 	"time"
+
+	"github.com/ironsmile/raytracer/unsafer"
+	vk "github.com/vulkan-go/vulkan"
 )
 
 type vulkanFilm struct {
 	pixBuffer  []float32
 	pixSamples []uint16
+
+	pixBufferFormat vk.Format
 
 	width  uint32
 	height uint32
@@ -20,10 +26,11 @@ type vulkanFilm struct {
 
 func newVulkanFilm(width, height uint32) *vulkanFilm {
 	return &vulkanFilm{
-		width:      width,
-		height:     height,
-		pixBuffer:  make([]float32, width*height*4),
-		pixSamples: make([]uint16, width*height),
+		width:           width,
+		height:          height,
+		pixBuffer:       make([]float32, width*height*4),
+		pixSamples:      make([]uint16, width*height),
+		pixBufferFormat: vk.FormatR32g32b32a32Sfloat,
 
 		frameTimeLock: &sync.RWMutex{},
 	}
@@ -77,4 +84,17 @@ func (f *vulkanFilm) Height() int {
 
 func (f *vulkanFilm) Wait() {
 
+}
+
+// asVkBuffer interprets returns the film pixel buffer as a byte slice suitable
+// for copying in a Vulkan buffer for Vulkan Image in the given format.
+//
+// This function uses the pixel buffer data "in-place" where possible in order
+// to avoid copying.
+func (f *vulkanFilm) asVkBuffer(format vk.Format) []byte {
+	if format != f.pixBufferFormat {
+		panic(fmt.Sprintf("unsupported image format: %#v", format))
+	}
+
+	return unsafer.SliceToBytes(f.pixBuffer)
 }
