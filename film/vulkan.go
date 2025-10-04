@@ -1164,8 +1164,8 @@ func (a *VulkanApp) createFilmImage() error {
 
     a.film = newVulkanFilm(texWidth, texHeight)
 
-    imgSize := vk.DeviceSize(texWidth * texHeight * 4 * 4)
-    a.filmImageFormat = vk.FormatR32g32b32a32Sfloat
+    imgSize := vk.DeviceSize(a.film.getBufferSize())
+    a.filmImageFormat = a.film.getFormat()
 
     var (
         stagingBuffer       vk.Buffer
@@ -1247,7 +1247,7 @@ func (a *VulkanApp) cleanFilmImage() {
 }
 
 func (a *VulkanApp) copyFilmToGPUImage() error {
-    filmBytes := a.film.asVkBuffer(a.filmImageFormat)
+    filmBytes := a.film.asVkBuffer()
 
     // copy data to the staging buffer
     vk.Memcopy(a.filmBufferData, filmBytes)
