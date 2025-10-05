@@ -37,14 +37,14 @@ var (
 	vsync = flag.Bool("vsync", true,
 		"control vsync for interactive renderer")
 	showFPS = flag.Bool("show-fps", true,
-		"continuously print the OpenGL FPS stats in the console")
+		"continuously print FPS stats in the console")
 	fullscreen = flag.Bool("fullscreen", false,
 		"run fullscreen in native resolution")
 	renderWidth = flag.Int("w", 1024,
 		"image or window width in pixels")
 	renderHeight = flag.Int("h", 768,
 		"image or window height in pixels")
-	fpsCap = flag.Uint("fps-cap", 30,
+	fpsCap = flag.Uint("fps-cap", 165,
 		"maximum number of frames per second. Zero means no FPS cap.")
 	showBBoxes = flag.Bool("show-bboxes", false,
 		"show bounding boxes around objects")

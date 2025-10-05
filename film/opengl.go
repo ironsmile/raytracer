@@ -357,14 +357,17 @@ func (g *GlWindow) cleanEngine() {
 func (g *GlWindow) mainLoop() {
 	g.tracer.Render()
 
-	minFrameTime, _ := time.ParseDuration(
-		fmt.Sprintf("%dms", int(1000.0/float32(g.args.FPSCap))),
-	)
+	minFrameTime := time.Duration(1000.0/float32(g.args.FPSCap)) * time.Millisecond
 
 	g.window.MakeContextCurrent()
 
-	var traceStarted bool
-	var bPressed bool
+	var (
+		traceStarted bool
+		bPressed     bool
+
+		frameCounter uint64
+		lastShowFPS  = time.Now()
+	)
 
 	for !g.window.ShouldClose() {
 		renderStart := time.Now()
@@ -397,14 +400,23 @@ func (g *GlWindow) mainLoop() {
 		elapsed := time.Since(renderStart)
 		if g.args.FPSCap > 0 && elapsed < minFrameTime {
 			time.Sleep(minFrameTime - elapsed)
-			elapsed = minFrameTime
 		}
 
 		if g.args.ShowFPS {
-			fps := 1 / elapsed.Seconds()
-			fmt.Printf("\r                                                               ")
-			fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
-				g.LastFrameRederTime())
+			frameCounter++
+			now := time.Now()
+			elapsed = now.Sub(lastShowFPS)
+
+			if elapsed > time.Second {
+				fps := float64(frameCounter) / elapsed.Seconds()
+				fmt.Printf("\r                                                               ")
+				fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s",
+					fps, renderTime, g.LastFrameRederTime(),
+				)
+
+				frameCounter = 0
+				lastShowFPS = time.Now()
+			}
 		}
 	}
 

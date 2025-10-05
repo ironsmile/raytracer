@@ -1863,13 +1863,14 @@ func (a *VulkanApp) cleanEngine() {
 
 func (a *VulkanApp) mainLoop() error {
     a.tracer.Render()
-    minFrameTime, _ := time.ParseDuration(
-        fmt.Sprintf("%dms", int(1000.0/float32(a.args.FPSCap))),
-    )
+    minFrameTime := time.Duration(1000.0/float32(a.args.FPSCap)) * time.Millisecond
 
     var (
         traceStarted bool
         bPressed     bool
+
+        frameCounter uint64
+        lastShowFPS  = time.Now()
     )
 
     for !a.window.ShouldClose() {
@@ -1906,14 +1907,23 @@ func (a *VulkanApp) mainLoop() error {
 
         if !a.args.VSync && a.args.FPSCap > 0 && elapsed < minFrameTime {
             time.Sleep(minFrameTime - elapsed)
-            elapsed = minFrameTime
         }
 
         if a.args.ShowFPS {
-            fps := 1 / elapsed.Seconds()
-            fmt.Printf("\r                                                               ")
-            fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s", fps, renderTime,
-                a.film.FrameTime())
+            frameCounter++
+            now := time.Now()
+            elapsed = now.Sub(lastShowFPS)
+
+            if elapsed > time.Second {
+                fps := float64(frameCounter) / elapsed.Seconds()
+                fmt.Printf("\r                                                               ")
+                fmt.Printf("\rFPS: %5.3f Render time: %8s Last frame: %12s",
+                    fps, renderTime, a.film.FrameTime(),
+                )
+
+                frameCounter = 0
+                lastShowFPS = time.Now()
+            }
         }
     }
 
