@@ -4,6 +4,7 @@ import (
     "cmp"
     "fmt"
     "math"
+    "slices"
     "time"
     "unsafe"
 
@@ -1796,16 +1797,7 @@ func (a *VulkanApp) checkValidationSupport() bool {
     }
 
     for _, validationLayer := range a.validationLayers {
-        layerFound := false
-
-        for _, instanceLayer := range availableLayersStr {
-            if validationLayer == instanceLayer {
-                layerFound = true
-                break
-            }
-        }
-
-        if !layerFound {
+        if !slices.Contains(availableLayersStr, validationLayer) {
             return false
         }
     }
@@ -1930,7 +1922,7 @@ func (a *VulkanApp) mainLoop() error {
 
 func (a *VulkanApp) drawFrame() error {
     if err := a.copyFilmToGPUImage(); err != nil {
-        return fmt.Errorf("error copying film to GPU image")
+        return fmt.Errorf("error copying film to GPU image: %w", err)
     }
 
     fences := []vk.Fence{a.inFlightFences[a.curentFrame]}
