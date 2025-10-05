@@ -25,25 +25,23 @@ type SimpleSampler struct {
 }
 
 // GetSubSampler returns a rectangular sampler for a smaller section of the screen.
-func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
+func (s *SimpleSampler) GetSubSampler() (*SubSampler, error) {
 
 	if s.stopped {
-		e = ErrEndOfSampling
-		return
+		return nil, ErrEndOfSampling
 	}
 
 	sample := atomic.AddUint32(&s.current, 1) - 1
 
 	if !s.continuous && sample >= s.subSamplersCount {
-		e = ErrEndOfSampling
-		return
+		return nil, ErrEndOfSampling
 	}
 
 	if s.continuous && sample >= s.subSamplersCount {
 		sample = sample % s.subSamplersCount
 	}
 
-	ss = s.subSamplers[sample]
+	ss := s.subSamplers[sample]
 	ss.Reset()
 
 	if sample == 0 {
@@ -51,7 +49,7 @@ func (s *SimpleSampler) GetSubSampler() (ss *SubSampler, e error) {
 		s.output.StartFrame()
 	}
 
-	return
+	return ss, nil
 }
 
 // UpdateScreen sets a pixel color for this sampler's output
@@ -64,7 +62,7 @@ func (s *SimpleSampler) Stop() {
 	s.stopped = true
 }
 
-// MakeContinuous makes sure this sampler would contiuoue to generate samples
+// MakeContinuous makes sure this sampler would continue to generate samples
 // in perpetuity, eventually looping back to the start of the image
 func (s *SimpleSampler) MakeContinuous() {
 	s.continuous = true
