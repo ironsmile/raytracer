@@ -1890,11 +1890,11 @@ func (a *VulkanApp) recreateEngine() error {
     a.sampler = smpl
     a.tracer = tracer
     a.tracer.Render()
+    a.sampler.Pause()
 
     if a.args.Debug {
         fmt.Println("engine recreated")
     }
-
     return nil
 }
 
