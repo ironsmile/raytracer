@@ -3,7 +3,6 @@ module github.com/ironsmile/raytracer
 go 1.25
 
 require (
-	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20231223183121-56fa3ac82ce7
 	github.com/mokiat/go-data-front v0.0.0-20170114190357-b242029167f0
 	github.com/vulkan-go/vulkan v0.0.0-20221209234627-c0a353ae26c8

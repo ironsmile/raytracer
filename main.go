@@ -48,8 +48,6 @@ var (
 		"maximum number of frames per second. Zero means no FPS cap.")
 	showBBoxes = flag.Bool("show-bboxes", false,
 		"show bounding boxes around objects")
-	withVulkan = flag.Bool("vulkan", false,
-		"use Vulkan instead of OpenGL")
 	sceneName = flag.String("scene", "teapot",
 		"scene to render. Possible values: teapot, car")
 	debugMode = flag.Bool("D", false,
@@ -87,10 +85,8 @@ func main() {
 
 	if *filename != "" {
 		infileRenderer()
-	} else if *withVulkan {
-		vulkanWindowRenderer()
 	} else {
-		openglWindowRenderer()
+		vulkanWindowRenderer()
 	}
 
 	if *memprofile != "" {
@@ -123,24 +119,6 @@ func infileRenderer() {
 
 	smpl.Stop()
 	output.Wait()
-}
-
-func openglWindowRenderer() {
-	args := film.GlWinArgs{
-		Fullscreen:  *fullscreen,
-		VSync:       *vsync,
-		Width:       *renderWidth,
-		Height:      *renderHeight,
-		Interactive: *interactive,
-		ShowBBoxes:  *showBBoxes,
-		FPSCap:      *fpsCap,
-		ShowFPS:     *showFPS,
-		SceneName:   *sceneName,
-	}
-	glWin := film.NewGlWIndow(args)
-	if err := glWin.Run(); err != nil {
-		log.Fatalf("Error running GL window: %s", err)
-	}
 }
 
 func vulkanWindowRenderer() {
