@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
-	"math"
 	"sync/atomic"
 )
 
@@ -21,6 +20,8 @@ type SimpleSampler struct {
 
 	stopped    bool
 	continuous bool
+
+	pixList []sampledPixel
 }
 
 // GetSubSampler returns a rectangular sampler for a smaller section of the screen.
@@ -76,11 +77,24 @@ func NewSimple(width, height int, out Output) *SimpleSampler {
 		output: out,
 	}
 
-	var splits = uint32(width / 32)
+	sampleSet := make(map[sampledPixel]struct{})
+	for x := range uint32(width) {
+		for y := range uint32(height) {
+			sampleSet[sampledPixel{x: x, y: y}] = struct{}{}
+		}
+	}
 
-	var sizeW = uint32(math.Ceil(float64(width) / float64(splits)))
-	var sizeH = uint32(math.Ceil(float64(height) / float64(splits)))
+	s.pixList = make([]sampledPixel, 0, width*height)
+
+	// Take advantage of the fact that iterating over a map returns its keys in
+	// a random order.
+	for k := range sampleSet {
+		s.pixList = append(s.pixList, k)
+	}
+
+	var splits = uint32(width / 32)
 	var count = splits * splits
+	var perSampler = uint32((width * height) / int(count))
 
 	fmt.Printf("Creating %d sub samplers\n", count)
 
@@ -88,21 +102,18 @@ func NewSimple(width, height int, out Output) *SimpleSampler {
 	s.subSamplers = make([]*SubSampler, count)
 
 	for i := range count {
-		sy := (i / splits) * sizeH
-		sx := (i % splits) * sizeW
-
-		var sw uint32 = sizeW
-		var sh uint32 = sizeH
-
-		if sx+sw > uint32(width) {
-			sw = uint32(width) - sx
+		start := i * perSampler
+		end := start + perSampler
+		if end > uint32(len(s.pixList)) {
+			end = uint32(len(s.pixList))
 		}
 
-		if sy+sh > uint32(height) {
-			sh = uint32(height) - sy
-		}
-
-		s.subSamplers[i] = NewSubSampler(sx, sy, sw, sh, 4, s)
+		subPixels := s.pixList[start:end]
+		s.subSamplers[i] = NewSubSampler(subPixels, 4, s)
 	}
 	return s
+}
+
+type sampledPixel struct {
+	x, y uint32
 }

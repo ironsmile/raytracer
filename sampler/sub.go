@@ -11,16 +11,11 @@ var ErrSubSamplerEnd = errors.New("End of sub sampler")
 
 // SubSampler generates samples for a rectangular subsection of a sampler
 type SubSampler struct {
-	x uint32
-	y uint32
-	w uint32
+	pixArray []sampledPixel
 
 	current     uint32
-	end         uint32
 	perPixel    uint32
 	samplesDone uint32
-
-	sampleWeight float64
 
 	parent *SimpleSampler
 
@@ -28,8 +23,8 @@ type SubSampler struct {
 }
 
 // GetSample returns a single sample which should be raytraced
-func (s *SubSampler) GetSample() (x, y, w float64, err error) {
-	if s.current >= s.end {
+func (s *SubSampler) GetSample() (x, y float64, err error) {
+	if s.current >= uint32(len(s.pixArray)) {
 		if s.samplesDone+1 >= s.perPixel {
 			err = ErrSubSamplerEnd
 			return
@@ -41,9 +36,10 @@ func (s *SubSampler) GetSample() (x, y, w float64, err error) {
 		err = ErrEndOfSampling
 		return
 	}
-	x = float64(s.current%s.w+s.x) + s.rand.Float64()
-	y = float64(s.current/s.w+s.y) + s.rand.Float64()
-	w = s.sampleWeight
+	sample := s.pixArray[s.current]
+
+	x = float64(sample.x) + s.rand.Float64()
+	y = float64(sample.y) + s.rand.Float64()
 	s.current++
 	return
 }
@@ -54,22 +50,15 @@ func (s *SubSampler) Reset() {
 	s.current = 0
 }
 
-// NewSubSampler returns a sumb sampler for particular region of the screen. x and y
-// represent the coordinates of this sampler in image space. w and h are the width and
-// height of the sampled space respectively. perPixel dictates how many samples per
-// pixle should be generated.
-func NewSubSampler(x, y, w, h uint32, perPixel uint32, p *SimpleSampler) *SubSampler {
+// NewSubSampler returns a sumb sampler.... TODO
+func NewSubSampler(pixArray []sampledPixel, perPixel uint32, p *SimpleSampler) *SubSampler {
 	src := rand.NewSource(time.Now().UnixMicro())
 	rnd := rand.New(src)
 
 	return &SubSampler{
-		x:            x,
-		y:            y,
-		w:            w,
-		perPixel:     perPixel,
-		sampleWeight: 1.0 / float64(perPixel),
-		end:          w * h,
-		parent:       p,
-		rand:         rnd,
+		pixArray: pixArray,
+		perPixel: perPixel,
+		parent:   p,
+		rand:     rnd,
 	}
 }
