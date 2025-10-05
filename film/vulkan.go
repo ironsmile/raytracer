@@ -154,7 +154,22 @@ func (a *VulkanApp) initWindow() error {
 
     glfw.WindowHint(glfw.ClientAPI, glfw.NoAPI)
 
-    window, err := glfw.CreateWindow(a.args.Width, a.args.Height, title, nil, nil)
+    var (
+        window *glfw.Window
+        err    error
+    )
+
+    if a.args.Fullscreen {
+        monitor := glfw.GetPrimaryMonitor()
+        vm := monitor.GetVideoMode()
+        monW, monH := vm.Width, vm.Height
+
+        fmt.Printf("Running in fullscreen: %dx%d\n", monW, monH)
+
+        window, err = glfw.CreateWindow(monW, monH, title, monitor, nil)
+    } else {
+        window, err = glfw.CreateWindow(a.args.Width, a.args.Height, title, nil, nil)
+    }
     if err != nil {
         return fmt.Errorf("creating window: %w", err)
     }
