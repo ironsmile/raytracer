@@ -1245,6 +1245,27 @@ func (a *VulkanApp) cleanFilmImage() {
     }
 }
 
+func (a *VulkanApp) recreateFilmImage() error {
+    if a.args.Debug {
+        fmt.Println("recreating film image")
+    }
+
+    vk.DeviceWaitIdle(a.device)
+    a.cleanFilmImage()
+
+    if a.args.Debug {
+        fmt.Println("cleaning up old film image")
+    }
+    if err := a.createFilmImage(); err != nil {
+        return err
+    }
+
+    if a.args.Debug {
+        fmt.Println("film image recreated")
+    }
+    return nil
+}
+
 func (a *VulkanApp) copyFilmToGPUImage() error {
     filmBytes := a.film.asVkBuffer()
 
@@ -1844,7 +1865,41 @@ func (a *VulkanApp) initEngine() error {
     return nil
 }
 
+func (a *VulkanApp) recreateEngine() error {
+    if a.args.Debug {
+        fmt.Println("recreating engine")
+    }
+
+    a.cleanEngine()
+
+    width, height := a.swapChainExtend.Width, a.swapChainExtend.Height
+    smpl := sampler.NewSimple(int(width), int(height), a.film)
+    if a.args.Interactive {
+        smpl.MakeContinuous()
+    }
+
+    if a.args.Debug {
+        fmt.Println("new sampler created")
+    }
+
+    tracer := engine.NewFPS(smpl)
+    tracer.SetTarget(a.film, a.cam)
+    tracer.ShowBBoxes = a.args.ShowBBoxes
+    tracer.Scene = a.tracer.Scene
+
+    a.sampler = smpl
+    a.tracer = tracer
+    a.tracer.Render()
+
+    if a.args.Debug {
+        fmt.Println("engine recreated")
+    }
+
+    return nil
+}
+
 func (a *VulkanApp) cleanEngine() {
+    a.sampler.Resume()
     a.sampler.Stop()
     a.tracer.StopRendering()
 }
@@ -1962,7 +2017,15 @@ func (a *VulkanApp) drawFrame() error {
         &imageIndex,
     )
     if res == vk.ErrorOutOfDate {
-        a.recreateSwapChain()
+        if err := a.recreateSwapChain(); err != nil {
+            return fmt.Errorf("recreating swap chain: %w", err)
+        }
+        if err := a.recreateFilmImage(); err != nil {
+            return fmt.Errorf("recreating film image: %w", err)
+        }
+        if err := a.recreateEngine(); err != nil {
+            return fmt.Errorf("recreating engine: %w", err)
+        }
         return nil
     } else if res != vk.Success && res != vk.Suboptimal {
         return fmt.Errorf("failed to acquire swap chain image: %w", vk.Error(res))
@@ -2021,7 +2084,15 @@ func (a *VulkanApp) drawFrame() error {
     res = vk.QueuePresent(a.presentQueue, &presentInfo)
     if res == vk.ErrorOutOfDate || res == vk.Suboptimal || a.frameBufferResized {
         a.frameBufferResized = false
-        a.recreateSwapChain()
+        if err := a.recreateSwapChain(); err != nil {
+            return fmt.Errorf("recreating swap chain: %w", err)
+        }
+        if err := a.recreateFilmImage(); err != nil {
+            return fmt.Errorf("recreating film image: %w", err)
+        }
+        if err := a.recreateEngine(); err != nil {
+            return fmt.Errorf("recreating engine: %w", err)
+        }
     } else if res != vk.Success {
         return fmt.Errorf("failed to present swap chain image: %w", vk.Error(res))
     }
