@@ -15,37 +15,53 @@ var (
 	rotateSpeed = 25.0
 )
 
-func handleInteractionEvents(window *glfw.Window, cam camera.Camera, dur time.Duration) {
+func handleInteractionEvents(
+	window *glfw.Window,
+	cam camera.Camera,
+	dur time.Duration,
+) bool {
+	var moved bool
+
 	// camera transform controls.
 	if window.GetKey(glfw.KeyW) == glfw.Press {
 		cam.Forward(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyS) == glfw.Press {
 		cam.Backward(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyA) == glfw.Press {
 		cam.Left(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyD) == glfw.Press {
 		cam.Right(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyE) == glfw.Press {
 		cam.Up(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyQ) == glfw.Press {
 		cam.Down(moveSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyUp) == glfw.Press {
 		cam.Pitch(rotateSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyDown) == glfw.Press {
 		cam.Pitch(-rotateSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyLeft) == glfw.Press {
 		cam.Yaw(-rotateSpeed * dur.Seconds())
+		moved = true
 	}
 	if window.GetKey(glfw.KeyRight) == glfw.Press {
 		cam.Yaw(rotateSpeed * dur.Seconds())
+		moved = true
 	}
 
 	// movement speed controls.
@@ -69,6 +85,8 @@ func handleInteractionEvents(window *glfw.Window, cam camera.Camera, dur time.Du
 		moveSpeed = 16
 		rotateSpeed = 50
 	}
+
+	return moved
 }
 
 func collectTrace() {

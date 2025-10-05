@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
+	"sync"
 	"sync/atomic"
 )
 
@@ -21,6 +22,38 @@ type SimpleSampler struct {
 	stopped    bool
 	continuous bool
 
+	// pauseRequested stores 1 if there's an ongoing request for pausing the
+	// sampler. If the request is cancelled (set to 0) before the next request
+	// for the first sampler in the frame is made then no pausing will be initiated.
+	pauseRequested atomic.Int32
+
+	// paused stores 1 if the sampler is currently paused. It gets paused on requesting
+	// the first sampler for a new frame when the `pauseRequest` has been up for a full
+	// frame.
+	paused atomic.Int32
+
+	// resume is a chan on which requests for [SimpleSampler.GetSubSampler] will stay
+	// stuck when the sampling is paused.
+	resume chan struct{}
+
+	// pauseFrame counts for how many frames the request for pausing has been ongoing.
+	// Actually pausing will happen after a certain amount of frames. See
+	// `minFamesBeforePause`.
+	pauseFrame int
+
+	// pauseLock controls the access to `resume` and `pauseFrame`.
+	pauseLock *sync.RWMutex
+
+	// minFamesBeforePause is the number of frames which a pause request must be
+	// ongoing before the actual pausing. Setting a value lower than 1 will cause
+	// mid-frame pauses.
+	minFamesBeforePause int
+
+	// pixList is a slice of randomly ordered pixels on the screen. Every sub sampler
+	// receives a small sub-slice of this one and returns its pixels from it. This way
+	// every sub sampler receives a set of pixels which are randomly distributed around
+	// the screen. This way sub-samplers are known to sample every single pixel but also
+	// no pixel will be repeated between samplers.
 	pixList []sampledPixel
 }
 
@@ -47,6 +80,19 @@ func (s *SimpleSampler) GetSubSampler() (*SubSampler, error) {
 	if sample == 0 {
 		s.output.DoneFrame()
 		s.output.StartFrame()
+
+		if s.pauseRequested.Load() == 1 {
+			s.doPause()
+		}
+	}
+
+	if s.paused.Load() == 1 {
+		s.pauseLock.RLock()
+		ch := s.resume
+		s.pauseLock.RUnlock()
+		if ch != nil {
+			<-ch
+		}
 	}
 
 	return ss, nil
@@ -62,6 +108,50 @@ func (s *SimpleSampler) Stop() {
 	s.stopped = true
 }
 
+// Pause requests the sampler to stop handling out sub samplers. It will do that
+// at the end of the currently rendered frame. Rendering may be resumed by calling
+// [SimpleSampler.Resume].
+//
+// If the sampler is already paused this function does nothing.
+func (s *SimpleSampler) Pause() {
+	if old := s.pauseRequested.Swap(1); old == 1 {
+		return
+	}
+}
+
+// Resume starts rendering again after a pause. If the sampler hasn't been paused
+// then resume does nothing.
+func (s *SimpleSampler) Resume() {
+	if old := s.pauseRequested.Swap(0); old == 0 {
+		return
+	}
+	s.paused.Store(0)
+
+	s.pauseLock.Lock()
+	defer s.pauseLock.Unlock()
+
+	s.pauseFrame = 0
+	if s.resume != nil {
+		close(s.resume)
+		s.resume = nil
+	}
+}
+
+func (s *SimpleSampler) doPause() {
+	s.pauseLock.Lock()
+	defer s.pauseLock.Unlock()
+
+	s.pauseFrame++
+	if s.pauseFrame <= s.minFamesBeforePause {
+		// The pause request hasn't been ongoing for long enough. Defer pausing for
+		// later frame end.
+		return
+	}
+
+	s.paused.Store(1)
+	s.resume = make(chan struct{})
+}
+
 // MakeContinuous makes sure this sampler would continue to generate samples
 // in perpetuity, eventually looping back to the start of the image
 func (s *SimpleSampler) MakeContinuous() {
@@ -72,7 +162,9 @@ func (s *SimpleSampler) MakeContinuous() {
 // with certain width and height.
 func NewSimple(width, height int, out Output) *SimpleSampler {
 	s := &SimpleSampler{
-		output: out,
+		output:              out,
+		pauseLock:           &sync.RWMutex{},
+		minFamesBeforePause: 1,
 	}
 
 	sampleSet := make(map[sampledPixel]struct{})

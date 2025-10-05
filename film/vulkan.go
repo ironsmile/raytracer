@@ -1859,6 +1859,11 @@ func (a *VulkanApp) mainLoop() error {
 
         frameCounter uint64
         lastShowFPS  = time.Now()
+
+        // When `dirty` is "false" after a full raytraced frame is completed then tracing
+        // could stop for a bit and wit for some movement before continuing.
+        dirty     bool = true
+        prevDrity bool
     )
 
     for !a.window.ShouldClose() {
@@ -1871,18 +1876,23 @@ func (a *VulkanApp) mainLoop() error {
 
         glfw.PollEvents()
         if a.args.Interactive {
-            handleInteractionEvents(a.window, a.cam, renderTime)
+            if handleInteractionEvents(a.window, a.cam, renderTime) {
+                dirty = true
+            }
 
             if !bPressed && a.window.GetKey(glfw.KeyB) == glfw.Press {
                 a.tracer.ShowBBoxes = !a.tracer.ShowBBoxes
                 bPressed = true
+                dirty = true
             }
 
             if bPressed && a.window.GetKey(glfw.KeyB) == glfw.Release {
                 bPressed = false
+                dirty = true
             }
 
             if !traceStarted && a.window.GetKey(glfw.KeyT) == glfw.Press {
+                dirty = true
                 traceStarted = true
                 go func() {
                     collectTrace()
@@ -1913,8 +1923,22 @@ func (a *VulkanApp) mainLoop() error {
                 lastShowFPS = time.Now()
             }
         }
+
+        if dirty {
+            if !prevDrity {
+                a.tracer.Resume()
+            }
+            prevDrity = dirty
+            dirty = false
+        } else {
+            if prevDrity {
+                a.tracer.Pause()
+            }
+            prevDrity = dirty
+        }
     }
 
+    a.tracer.Resume()
     fmt.Println("\nClosing window, rendering stopped.")
     vk.DeviceWaitIdle(a.device)
     return nil

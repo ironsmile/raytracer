@@ -3,51 +3,45 @@ package engine
 import (
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/ironsmile/raytracer/sampler"
 )
 
+// FPSEngine is a type of [Engine] which is suitable for running in a window
+// as part of an GUI application.
 type FPSEngine struct {
 	Engine
-	wg       sync.WaitGroup
-	stopChan chan bool
+	wg sync.WaitGroup
 }
 
+// Render starts the engine and rendering.
 func (e *FPSEngine) Render() {
-
-	e.stopChan = make(chan bool)
-
 	e.Dest.StartFrame()
 
 	for i := 0; i < runtime.NumCPU(); i++ {
 		e.wg.Add(1)
 		go e.subRender(&e.wg)
 	}
-
-	e.wg.Add(1)
-	go e.screenRefresher()
 }
 
-func (e *FPSEngine) screenRefresher() {
-	defer e.wg.Done()
-
-	for {
-		select {
-		case _ = <-e.stopChan:
-			return
-		default:
-			time.Sleep(100 * time.Millisecond)
-		}
-	}
-}
-
+// StopRendering waits for the rendering to stop.
 func (e *FPSEngine) StopRendering() {
-	close(e.stopChan)
 	e.wg.Wait()
 	e.Dest.Wait()
 }
 
+// Pause pauses rendering. Rendering may be continued with [FPSEngine.Resume].
+func (e *FPSEngine) Pause() {
+	e.Sampler.Pause()
+}
+
+// Resume stats rendering after a previous [FPSEngine.Pause].
+func (e *FPSEngine) Resume() {
+	e.Sampler.Resume()
+}
+
+// NewFPS returns a new FPS engine which will use the given sampler for getting
+// samples for rendering.
 func NewFPS(smpl *sampler.SimpleSampler) *FPSEngine {
 	eng := new(FPSEngine)
 	initEngine(&eng.Engine, smpl)
