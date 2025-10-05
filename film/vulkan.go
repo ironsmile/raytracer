@@ -876,7 +876,6 @@ func (a *VulkanApp) endSingleTimeCommands(commandBuffer vk.CommandBuffer) error 
 
 func (a *VulkanApp) transitionImageLayout(
     image vk.Image,
-    format vk.Format,
     oldLayout vk.ImageLayout,
     newLayout vk.ImageLayout,
 ) error {
@@ -1216,7 +1215,6 @@ func (a *VulkanApp) createFilmImage() error {
 
     err = a.transitionImageLayout(
         a.filmImage,
-        a.filmImageFormat,
         vk.ImageLayoutUndefined,
         vk.ImageLayoutTransferSrcOptimal,
     )
@@ -1256,7 +1254,6 @@ func (a *VulkanApp) copyFilmToGPUImage() error {
 
     err := a.transitionImageLayout(
         a.filmImage,
-        a.filmImageFormat,
         vk.ImageLayoutTransferSrcOptimal,
         vk.ImageLayoutTransferDstOptimal,
     )
@@ -1271,7 +1268,6 @@ func (a *VulkanApp) copyFilmToGPUImage() error {
 
     err = a.transitionImageLayout(
         a.filmImage,
-        a.filmImageFormat,
         vk.ImageLayoutTransferDstOptimal,
         vk.ImageLayoutTransferSrcOptimal,
     )
