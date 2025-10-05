@@ -200,9 +200,10 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 		geometry.NewVector(-1, -0.5, 0),
 	)
 	quad.Shape().SetMaterial(mat.Material{
-		Refl:  0.5,
-		Diff:  0.8,
-		Color: geometry.NewColor(0, 0, 1),
+		Diff:      0.4,
+		Refr:      0.6,
+		RefrIndex: 1.0,
+		Color:     geometry.NewColor(0, 0, 1),
 	})
 	quad.SetTransform(
 		transform.Translate(geometry.NewVector(-10, 0, 0)).Multiply(

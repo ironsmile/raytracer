@@ -124,10 +124,10 @@ func NewObject(filePath string) (*Object, error) {
 							foundMat.DiffuseColor.B,
 						),
 						Refr: 1 - foundMat.Dissolve,
-						Diff: 1,
+						Diff: foundMat.Dissolve,
 					}
 					if faceMath.Refr > 0 {
-						faceMath.RefrIndex = 1.5
+						faceMath.RefrIndex = 1.0
 					}
 					faceMesh.SetMaterial(faceMath)
 				}
