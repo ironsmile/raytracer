@@ -71,6 +71,8 @@ func (s *Scene) InitScene(name string) {
 		prims, lights = example.GetCarScene()
 	case "empty":
 		prims, lights = example.GetEmptyScene()
+	case "gopher":
+		prims, lights = example.GetGopherScene()
 	default:
 		prims, lights = example.GetTeapotScene()
 	}
@@ -96,5 +98,6 @@ func NewScene() *Scene {
 var PossibleScenes = []string{
 	"car",
 	"teapot",
+	"gopher",
 	"empty",
 }

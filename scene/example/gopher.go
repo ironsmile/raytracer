@@ -10,8 +10,8 @@ import (
 	"github.com/ironsmile/raytracer/transform"
 )
 
-// GetCarScene returns a predominantly emtpy scene with the alfa147 in the middle
-func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
+// GetGopherScene returns a predominantly emtpy scene with the Gopher in focus.
+func GetGopherScene() ([]primitive.Primitive, []primitive.Primitive) {
 	var primitives []primitive.Primitive
 	var lights []primitive.Primitive
 
@@ -127,18 +127,19 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	primitives = append(primitives, sphere)
 	lights = append(lights, sphere)
 
-	alfaPath := filepath.Join("data", "objs", "alfa147.obj")
-	if obj, err := primitive.NewObject(alfaPath); err != nil {
-		fmt.Printf("Error loading obj alfa147: %s\n", err)
+	gopherPath := filepath.Join("data", "objs", "gopher.obj")
+	if obj, err := primitive.NewObject(gopherPath); err != nil {
+		fmt.Printf("Error loading obj gopher: %s\n", err)
 	} else {
-		objTransform := transform.Translate(geometry.NewVector(-2.5, -5, 3)).Multiply(
-			transform.UniformScale(1).Multiply(
-				transform.RotateX(-180),
-			),
+		objTransform := transform.UniformScale(0.25).Multiply(
+			transform.Translate(geometry.NewVector(0, -3, -15)),
+		).Multiply(
+			transform.RotateY(135),
 		)
 		obj.SetTransform(objTransform)
 
 		primitives = append(primitives, obj)
 	}
+
 	return primitives, lights
 }

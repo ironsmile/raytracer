@@ -101,7 +101,7 @@ func NewObject(filePath string) (*Object, error) {
 	fmt.Printf("model %s has has a material: %p\n", filePath, matLib)
 
 	o := &Object{}
-	var trianglesCount int
+	var facesCount int
 
 	for _, modelObj := range model.Objects {
 		fmt.Printf("object %s has %d meshes\n", modelObj.Name, len(modelObj.Meshes))
@@ -112,7 +112,7 @@ func NewObject(filePath string) (*Object, error) {
 			}
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
-			trianglesCount += len(mesh.Faces)
+			facesCount += len(mesh.Faces)
 			faceMesh := NewMesh(model, mesh)
 
 			if matLib != nil {
@@ -142,7 +142,7 @@ func NewObject(filePath string) (*Object, error) {
 		}
 	}
 
-	fmt.Printf("%s has %d triangles\n", filePath, trianglesCount)
+	fmt.Printf("%s has %d faces\n", filePath, facesCount)
 
 	return o, nil
 }

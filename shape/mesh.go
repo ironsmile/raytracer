@@ -48,15 +48,18 @@ func (m *Mesh) CanIntersect() bool {
 
 // Refine implements the Shape interface
 func (m *Mesh) Refine() []Shape {
-	meshTriangles := make([]Shape, 0, len(m.mesh.Faces))
+	meshFaces := make([]Shape, 0, len(m.mesh.Faces))
 	for faceIndex, face := range m.mesh.Faces {
-		if len(face.References) != 3 {
+		switch len(face.References) {
+		case 3:
+			meshFaces = append(meshFaces, NewMeshTriangle(m, face))
+		case 4:
+			meshFaces = append(meshFaces, NewMeshQuad(m, face))
+		default:
 			panic(fmt.Sprintf(
 				"face %d [mesh: %+v] has %d points, cannot load it",
-				faceIndex, m.mesh, len(face.References)))
+				faceIndex, m.mesh.MaterialName, len(face.References)))
 		}
-
-		meshTriangles = append(meshTriangles, NewMeshTriangle(m, face))
 	}
-	return meshTriangles
+	return meshFaces
 }
