@@ -100,6 +100,11 @@ func (m *MeshQuad) IntersectP(ray geometry.Ray) bool {
 
 // NormalAt implements the [Shape] interface.
 func (m *MeshQuad) NormalAt(geometry.Vector) geometry.Vector {
+	if m.face.References[0].HasNormal() {
+		n1 := m.mesh.model.GetNormalFromReference(m.face.References[0])
+		return geometry.NewVector(n1.X, n1.Y, n1.Z)
+	}
+
 	p0, p1, _, p3 := m.getPoints()
 
 	e01 := p1.Minus(p0)
