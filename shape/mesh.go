@@ -25,7 +25,12 @@ func NewMesh(model *obj.Model, mesh *obj.Mesh) *Mesh {
 	}
 
 	for _, face := range m.mesh.Faces {
-		m.bbox = bbox.Union(m.bbox, NewMeshTriangle(&m, face).GetObjectBBox())
+		switch len(face.References) {
+		case 3:
+			m.bbox = bbox.Union(m.bbox, NewMeshTriangle(&m, face).GetObjectBBox())
+		case 4:
+			m.bbox = bbox.Union(m.bbox, NewMeshQuad(&m, face).GetObjectBBox())
+		}
 	}
 
 	return &m

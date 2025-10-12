@@ -134,6 +134,9 @@ func GetGopherScene() ([]primitive.Primitive, []primitive.Primitive) {
 		objTransform := transform.UniformScale(0.25).Multiply(
 			transform.Translate(geometry.NewVector(0, -3, -15)),
 		).Multiply(
+			//!TODO: The rotation causes mesh vertices to become very strange.
+			// The bounding box and normals are waaay off. Maybe rotation is somehow
+			// not taken into account when tracing for some reason?
 			transform.RotateY(135),
 		)
 		obj.SetTransform(objTransform)
