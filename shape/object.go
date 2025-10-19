@@ -69,8 +69,19 @@ func NewObject(filePath string) (*Object, error) {
 	}
 	defer objFile.Close()
 
-	objDecoder := obj.NewDecoder(obj.DefaultLimits())
-	mtlDecoder := mtl.NewDecoder(mtl.DefaultLimits())
+	objDecoder := obj.NewDecoder(obj.DecodeLimits{
+		MaxVertexCount:            262144,
+		MaxTexCoordCount:          262144,
+		MaxNormalCount:            262144,
+		MaxObjectCount:            2048,
+		MaxFaceCount:              262144,
+		MaxReferenceCount:         32,
+		MaxMaterialReferenceCount: 128,
+		MaxMaterialLibraryCount:   64,
+	})
+	mtlDecoder := mtl.NewDecoder(mtl.DecodeLimits{
+		MaxMaterialCount: 1024,
+	})
 
 	model, err := objDecoder.Decode(objFile)
 

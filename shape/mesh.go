@@ -55,15 +55,26 @@ func (m *Mesh) CanIntersect() bool {
 func (m *Mesh) Refine() []Shape {
 	meshFaces := make([]Shape, 0, len(m.mesh.Faces))
 	for faceIndex, face := range m.mesh.Faces {
-		switch len(face.References) {
-		case 3:
-			meshFaces = append(meshFaces, NewMeshTriangle(m, face))
-		case 4:
-			meshFaces = append(meshFaces, NewMeshQuad(m, face))
-		default:
+		refs := len(face.References)
+		if refs < 3 {
 			panic(fmt.Sprintf(
 				"face %d [mesh: %+v] has %d points, cannot load it",
 				faceIndex, m.mesh.MaterialName, len(face.References)))
+		} else if refs == 3 {
+			meshFaces = append(meshFaces, NewMeshTriangle(m, face))
+			// } else if refs == 4 {
+			// 	meshFaces = append(meshFaces, NewMeshQuad(m, face))
+		} else {
+			for i := 1; i < refs-1; i++ {
+				trigFace := obj.Face{
+					References: []obj.Reference{
+						face.References[0],
+						face.References[i],
+						face.References[i+1],
+					},
+				}
+				meshFaces = append(meshFaces, NewMeshTriangle(m, &trigFace))
+			}
 		}
 	}
 	return meshFaces
