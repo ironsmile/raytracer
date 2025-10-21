@@ -140,8 +140,10 @@ func (b *BasePrimitive) GetTransforms() (*transform.Transform, *transform.Transf
 	return b.objToWorld, b.worldToObj
 }
 
-// GetWorldBBox returns the bound box around this primitive in world space
+// GetWorldBBox returns the bound box around this primitive in world space.
 func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
+	//!TODO: The bounding box in world space is slightly larger than the one
+	// in object space. Find out why.
 	objBBCorners := b.shape.GetObjectBBox().Corners()
 	worldBBox := bbox.FromPoint(b.objToWorld.Point(objBBCorners[0]))
 	for _, corner := range objBBCorners[1:] {
