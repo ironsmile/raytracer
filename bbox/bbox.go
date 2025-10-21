@@ -87,14 +87,14 @@ func (b *BBox) Offset(p *geometry.Vector) geometry.Vector {
 // Corners returns the coordinates of all the corners of the bounding box.
 func (b *BBox) Corners() [8]geometry.Vector {
 	return [8]geometry.Vector{
-		b.Min,
+		geometry.NewVector(b.Min.X, b.Min.Y, b.Min.Z),
 		geometry.NewVector(b.Max.X, b.Min.Y, b.Min.Z),
 		geometry.NewVector(b.Max.X, b.Max.Y, b.Min.Z),
-		geometry.NewVector(b.Min.X, b.Max.Y, b.Min.Z),
 		geometry.NewVector(b.Min.X, b.Min.Y, b.Max.Z),
-		geometry.NewVector(b.Max.X, b.Min.Z, b.Max.Z),
-		b.Max,
+		geometry.NewVector(b.Max.X, b.Min.Y, b.Max.Z),
 		geometry.NewVector(b.Min.X, b.Max.Y, b.Max.Z),
+		geometry.NewVector(b.Min.X, b.Max.Y, b.Min.Z),
+		geometry.NewVector(b.Max.X, b.Max.Y, b.Max.Z),
 	}
 }
 
