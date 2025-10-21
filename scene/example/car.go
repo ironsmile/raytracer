@@ -94,7 +94,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	// "Visible light source"
 	sphere := primitive.NewSphere(0.1)
 	sphere.Light = true
-	sphere.LightSource = geometry.NewVector(0, 5, 5)
+	sphere.LightSource = geometry.NewVector(-6, 0.07, 13)
 	sphere.Shape().SetMaterial(mat.Material{
 		Color: geometry.NewColor(0.9, 0.9, 0.9),
 	})
