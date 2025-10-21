@@ -85,6 +85,7 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 	// }
 
 	for l := 0; l < e.Scene.GetNrLights(); l++ {
+		luminousity := 0.8
 		light := e.Scene.GetLight(l)
 
 		source := light.GetLightSource()
@@ -93,12 +94,38 @@ func (e *Engine) Raytrace(ray geometry.Ray, depth int64, in *primitive.Intersect
 		shadowRay := geometry.NewRay(shadowRayStart, L)
 		shadowRay.Maxt = shadowRayStart.Distance(source)
 
-		if intersected := e.Scene.IntersectP(shadowRay); intersected {
+		var (
+			si      primitive.Intersection
+			sdepth  = depth + 1
+			blocked = true
+		)
+		for i := sdepth; i < TraceDepth; i++ {
+			intersected := e.Scene.Intersect(shadowRay, &si)
+			if !intersected {
+				blocked = false
+				break
+			}
+
+			intersectP := shadowRay.At(si.DfGeometry.Distance)
+			imat := si.Primitive.Shape().MaterialAt(intersectP)
+			if imat.Refr == 0 {
+				break
+			}
+			luminousity *= (1 - imat.Refr)
+
+			maxt := shadowRay.Maxt - si.DfGeometry.Distance
+			shadowRay = geometry.NewRay(
+				intersectP.Plus(L.MultiplyScalar(geometry.EPSILON)),
+				L,
+			)
+			shadowRay.Maxt = maxt
+		}
+
+		if blocked {
 			continue
 		}
 
 		dot := InNormal.Product(L)
-		luminousity := 0.8
 
 		if primMat.Diff > 0 && dot > 0 {
 			weight := dot * primMat.Diff * luminousity
