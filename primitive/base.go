@@ -142,9 +142,13 @@ func (b *BasePrimitive) GetTransforms() (*transform.Transform, *transform.Transf
 
 // GetWorldBBox returns the bound box around this primitive in world space
 func (b *BasePrimitive) GetWorldBBox() *bbox.BBox {
-	objBBox := b.shape.GetObjectBBox()
-	worldBBox := bbox.FromPoint(b.objToWorld.Point(objBBox.Min))
-	return bbox.UnionPoint(worldBBox, b.objToWorld.Point(objBBox.Max))
+	objBBCorners := b.shape.GetObjectBBox().Corners()
+	worldBBox := bbox.FromPoint(b.objToWorld.Point(objBBCorners[0]))
+	for _, corner := range objBBCorners[1:] {
+		worldBBox = bbox.UnionPoint(worldBBox, b.objToWorld.Point(corner))
+	}
+
+	return worldBBox
 }
 
 // FromShape returns a primitive from a given shape
