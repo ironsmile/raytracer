@@ -25,11 +25,9 @@ func NewMesh(model *obj.Model, mesh *obj.Mesh) *Mesh {
 	}
 
 	for _, face := range m.mesh.Faces {
-		switch len(face.References) {
-		case 3:
-			m.bbox = bbox.Union(m.bbox, NewMeshTriangle(&m, face).GetObjectBBox())
-		case 4:
-			m.bbox = bbox.Union(m.bbox, NewMeshQuad(&m, face).GetObjectBBox())
+		for _, ref := range face.References {
+			ver := m.model.GetVertexFromReference(ref)
+			m.bbox = bbox.UnionPoint(m.bbox, geometry.NewVector(ver.X, ver.Y, ver.Z))
 		}
 	}
 
