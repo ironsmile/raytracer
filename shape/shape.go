@@ -15,15 +15,37 @@ const (
 	INPRIM
 )
 
-// Shape is a interfece which defines a 3D shape which can be tested for intersection and stuff
+// Shape is a interface which defines a 3D shape which can be tested for intersection and stuff
 type Shape interface {
+	// Intersect calculates the nearest intersection between a ray and this shape.
+	// Returns "false" when there's no intersection at al.
 	Intersect(geometry.Ray, *DifferentialGeometry) bool
+
+	// IntersectP returns "true" if there's an intersection between the given ray
+	// and _any_ geometry in the shape. Unlike [SHape.Intersect] it may not be the
+	// nearest one to the ray's origin.
 	IntersectP(geometry.Ray) bool
+
+	// GetObjectBBox returns the bounding box of this shape in its object space.
 	GetObjectBBox() *bbox.BBox
+
+	// CanIntersect returns "true" if this shape can be intersected directly. Returns
+	// "false" when this shape has to be refined in smaller shapes before intersection.
 	CanIntersect() bool
+
+	// Refine breaks down this shape into smaller shapes which define it. Can only be
+	// called when [Shape.CanIntersect] returns "false".
 	Refine() []Shape
+
+	// MaterialAt returns the material on this shape on particular spot in world
+	// space. (??? why world space?)
 	MaterialAt(geometry.Vector) *mat.Material
+
+	// SetMaterial sets a new material for this shape.
 	SetMaterial(mat.Material)
+
+	// NormalAt returns the normal on this shape on particular spot. The spot is given
+	// in world space. (??? why world space?)
 	NormalAt(geometry.Vector) geometry.Vector
 }
 

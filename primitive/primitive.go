@@ -10,8 +10,15 @@ import (
 // Primitive is the type which marries the shape to its material. It is resposible for
 // the geometry and shading of objects.
 type Primitive interface {
+	// Intersect calculates the nearest intersection between a ray and this primitive.
+	// Returns "false" when there's no intersection at al.
 	Intersect(geometry.Ray, *Intersection) bool
+
+	// IntersectP returns "true" if there's an intersection between the given ray
+	// and _any_ point on primitive. Unlike [Primitive.Intersect] it may not be the
+	// nearest one to the ray's origin.
 	IntersectP(geometry.Ray) bool
+
 	IntersectBBoxEdge(geometry.Ray) bool
 	GetWorldBBox() *bbox.BBox
 	SetTransform(*transform.Transform)
