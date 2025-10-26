@@ -180,16 +180,18 @@ func GetTeapotScene() ([]primitive.Primitive, []primitive.Primitive) {
 	lights = append(lights, sphere)
 
 	teapotPath := filepath.Join("data", "objs", "teapot.obj")
-	if obj, err := primitive.NewObject(teapotPath); err != nil {
+	if objs, err := primitive.NewObject(teapotPath); err != nil {
 		fmt.Printf("error loading obj teapot: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-3, 0, 5)).Multiply(
 			transform.UniformScale(0.2),
 		)
-		obj.SetTransform(objTransform)
-		primitive.SetName(obj.GetID(), "teapot")
 
-		primitives = append(primitives, obj)
+		for i, obj := range objs {
+			obj.SetTransform(objTransform)
+			primitive.SetName(obj.GetID(), fmt.Sprintf("teapot-part-%d", i))
+			primitives = append(primitives, obj)
+		}
 	}
 
 	// "Blue Rectangle"

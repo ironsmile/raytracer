@@ -128,7 +128,7 @@ func GetGopherScene() ([]primitive.Primitive, []primitive.Primitive) {
 	lights = append(lights, sphere)
 
 	gopherPath := filepath.Join("data", "objs", "gopher.obj")
-	if obj, err := primitive.NewObject(gopherPath); err != nil {
+	if objs, err := primitive.NewObject(gopherPath); err != nil {
 		fmt.Printf("Error loading obj gopher: %s\n", err)
 	} else {
 		objTransform := transform.UniformScale(0.25).Multiply(
@@ -136,9 +136,11 @@ func GetGopherScene() ([]primitive.Primitive, []primitive.Primitive) {
 		).Multiply(
 			transform.RotateY(135),
 		)
-		obj.SetTransform(objTransform)
 
-		primitives = append(primitives, obj)
+		for _, obj := range objs {
+			obj.SetTransform(objTransform)
+			primitives = append(primitives, obj)
+		}
 	}
 
 	return primitives, lights

@@ -38,7 +38,7 @@ func (o *Object) IntersectP(geometry.Ray) bool {
 
 // NewObject parses an .obj file (`filePath`) and returns an Object, which represents
 // it. It places the object at the position, given by its second argument - `center`.
-func NewObject(filePath string) (*Object, error) {
+func NewObject(filePath string) ([]*Object, error) {
 	filesToTry := []string{
 		filePath,
 	}
@@ -111,10 +111,11 @@ func NewObject(filePath string) (*Object, error) {
 
 	fmt.Printf("model %s has has a material: %p\n", filePath, matLib)
 
-	o := &Object{}
 	var facesCount int
+	var objects []*Object
 
 	for _, modelObj := range model.Objects {
+		o := &Object{}
 		fmt.Printf("object %s has %d meshes\n", modelObj.Name, len(modelObj.Meshes))
 		for meshIndex, mesh := range modelObj.Meshes {
 			meshName := mesh.MaterialName
@@ -151,10 +152,12 @@ func NewObject(filePath string) (*Object, error) {
 			o.bbox = bbox.Union(o.bbox, objMesh.GetObjectBBox())
 			o.meshes = append(o.meshes, objMesh)
 		}
+
+		objects = append(objects, o)
 	}
 
 	fmt.Printf("%s has %d faces\n", filePath, facesCount)
-	return o, nil
+	return objects, nil
 }
 
 // CanIntersect implements the Shape interface

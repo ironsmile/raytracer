@@ -128,7 +128,7 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 	lights = append(lights, sphere)
 
 	alfaPath := filepath.Join("data", "objs", "alfa147.obj")
-	if obj, err := primitive.NewObject(alfaPath); err != nil {
+	if objs, err := primitive.NewObject(alfaPath); err != nil {
 		fmt.Printf("Error loading obj alfa147: %s\n", err)
 	} else {
 		objTransform := transform.Translate(geometry.NewVector(-2.5, -5, 3)).Multiply(
@@ -136,9 +136,11 @@ func GetCarScene() ([]primitive.Primitive, []primitive.Primitive) {
 				transform.RotateX(-180),
 			),
 		)
-		obj.SetTransform(objTransform)
 
-		primitives = append(primitives, obj)
+		for _, obj := range objs {
+			obj.SetTransform(objTransform)
+			primitives = append(primitives, obj)
+		}
 	}
 	return primitives, lights
 }
