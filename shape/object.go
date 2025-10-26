@@ -124,11 +124,11 @@ func NewObject(filePath string) (*Object, error) {
 			fmt.Printf("mesh %d is from `%s` and has %d faces\n", meshIndex, meshName,
 				len(mesh.Faces))
 			facesCount += len(mesh.Faces)
-			faceMesh := NewMesh(model, mesh)
+			objMesh := NewMesh(model, mesh)
 
 			if matLib != nil {
 				if foundMat, ok := matLib.FindMaterial(mesh.MaterialName); ok {
-					faceMath := mat.Material{
+					meshMat := mat.Material{
 						Color: geometry.NewColor(
 							foundMat.DiffuseColor.R,
 							foundMat.DiffuseColor.G,
@@ -137,24 +137,23 @@ func NewObject(filePath string) (*Object, error) {
 						Refr: 1 - foundMat.Dissolve,
 						Diff: foundMat.Dissolve,
 					}
-					if faceMath.Refr > 0 {
-						faceMath.RefrIndex = 1.0
+					if meshMat.Refr > 0 {
+						meshMat.RefrIndex = 1.0
 					}
-					faceMesh.SetMaterial(faceMath)
+					objMesh.SetMaterial(meshMat)
 				}
 			}
 
-			if faceMesh.material == nil {
-				faceMesh.SetMaterial(mat.DefaultMetiral())
+			if objMesh.material == nil {
+				objMesh.SetMaterial(mat.DefaultMetiral())
 			}
 
-			o.bbox = bbox.Union(o.bbox, faceMesh.GetObjectBBox())
-			o.meshes = append(o.meshes, faceMesh)
+			o.bbox = bbox.Union(o.bbox, objMesh.GetObjectBBox())
+			o.meshes = append(o.meshes, objMesh)
 		}
 	}
 
 	fmt.Printf("%s has %d faces\n", filePath, facesCount)
-
 	return o, nil
 }
 
